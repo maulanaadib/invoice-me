@@ -1,0 +1,105 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: invoice_me
+      POSTGRES_USER: invoice
+      POSTGRES_PASSWORD: invoice
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invoice -d invoice_me"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://invoice:invoice@postgres:5432/invoice_me?schema=public
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${APP_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      INTERNAL_PDF_SECRET: ${INTERNAL_PDF_SECRET}
+      INTERNAL_APP_URL: http://app:3000
+      STORAGE_ROOT: /data
+      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-2}
+      GLITCHTIP_DSN: ${GLITCHTIP_DSN:-}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-superadmin}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.test}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      BANK_ACCOUNT_ENCRYPTION_KEY: ${BANK_ACCOUNT_ENCRYPTION_KEY:-}
+    volumes:
+      - uploads:/data/uploads
+      - invoices:/data/invoices
+    networks:
+      - internal
+      - public
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pdf-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=require('http');const req=h.get('http://localhost:3000/health',(r)=>{process.exit(r.statusCode===200?0:1)});req.on('error',()=>process.exit(1));req.setTimeout(5000,()=>{req.destroy();process.exit(1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  pdf-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.pdf
+    environment:
+      NODE_ENV: production
+      INTERNAL_PDF_SECRET: ${INTERNAL_PDF_SECRET}
+      INTERNAL_APP_URL: http://app:3000
+      STORAGE_ROOT: /data
+      PORT: 3001
+    volumes:
+      - invoices:/data/invoices
+      - pdf-data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=require('http');h.get('http://localhost:3001/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - public
+    restart: unless-stopped
+    profiles:
+      - cloudflared
+
+volumes:
+  postgres-data:
+  uploads:
+  invoices:
+  pdf-data:
+
+networks:
+  internal:
+    driver: bridge
+    internal: true
+  public:
+    driver: bridge

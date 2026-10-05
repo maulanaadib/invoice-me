@@ -1,0 +1,51 @@
+# ─── invoice-me Docker ignore ─────────────────────────────────────────────────
+
+# App node_modules are copied directly (npm registry not available inside build)
+# pdf-service/node_modules are also copied from host
+
+# Build output (exclude cache but include the standalone output needed by Dockerfile)
+.next/*
+!.next/standalone
+!.next/static
+out/
+build/
+
+# Local dev data
+.data/
+
+# Environment secrets
+.env.local
+.env.production
+.env.*.local
+
+# Version control
+.git/
+.gitignore
+
+# Test artifacts
+test-results/
+playwright-report/
+coverage/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Kanban
+.kanban-cards.json
+
+# Context (not needed in image)
+context/

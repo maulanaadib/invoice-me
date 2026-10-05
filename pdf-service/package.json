@@ -1,0 +1,18 @@
+{
+  "name": "pdf-service",
+  "version": "0.1.0",
+  "description": "invoice-me PDF rendering service — Playwright Chromium headless",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "@playwright/test": "^1.63.0"
+  }
+}

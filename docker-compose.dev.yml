@@ -1,0 +1,22 @@
+# Development compose — runs postgres only.
+# App runs locally via: npm run dev
+# STORAGE_ROOT maps to .data/ for local file storage.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: invoice_me
+      POSTGRES_USER: invoice
+      POSTGRES_PASSWORD: invoice
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invoice -d invoice_me"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
