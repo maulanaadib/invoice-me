@@ -1,0 +1,8 @@
+.kanban-cards.json
+node_modules/
+.next/
+.env.local
+.data/
+test-results/
+playwright-report/
+*.log

@@ -1,0 +1,342 @@
+# Data Model
+
+The canonical entities. A feature spec may add a field or a relation, but it may not redefine an entity that already lives here. Two features describing the same entity differently is the bug this file exists to prevent.
+
+## Conventions
+
+- ID: `String @id @default(cuid())` (cuid, tidak sequential untuk hindari enumeration).
+- Timestamps: `DateTime` (UTC), `createdAt` + `updatedAt` (`@updatedAt`).
+- Uang: `Decimal @db.Decimal(18, 2)`. Persentase: `Decimal @db.Decimal(5, 2)`.
+- Soft delete: hanya Customer (`deletedAt`), Invoice issued tidak pernah dihapus.
+- Enum di Prisma (`enum`), bukan string.
+- Referential actions hati-hati: **tidak cascade-delete invoice resmi**.
+- Org scoping: setiap entity bisnis punya `organizationId`; composite unique + index selalu menyertakan.
+
+## Entities
+
+### User (Better Auth managed)
+
+Better Auth model resmi (`user`, `account`, `session`, `verification`). Tambah field platform:
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| name | String? | | |
+| email | String | unique | login alternatif |
+| username | String | unique | login alternatif |
+| emailVerified | Boolean | default false | |
+| platformRole | PlatformRole | default USER | SUPER_ADMIN atau USER |
+| mustChangePassword | Boolean | default false | force change setelah admin create/reset |
+| status | UserStatus | default ACTIVE | ACTIVE / SUSPENDED |
+| memberships | Membership[] | relation | |
+| createdAt / updatedAt | DateTime | | |
+
+### Organization
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| name | String | | |
+| slug | String | unique | |
+| status | OrgStatus | default ACTIVE | |
+| createdAt / updatedAt | DateTime | | |
+
+### Membership
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| userId | String | relation | |
+| organizationId | String | relation | |
+| role | OrganizationRole | | OWNER / ADMIN / STAFF / VIEWER |
+| permissions | Json? | | permission granular opsional |
+| status | MembershipStatus | default ACTIVE | |
+| joinedAt | DateTime | | |
+| **unique** | | `@@unique([userId, organizationId])` | |
+
+### InvoiceProfile
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| organizationId | String | relation | |
+| name | String | | mis. "Sigit Berkarya" |
+| code | String | | mis. "SB" |
+| legalName | String? | | |
+| logoPath | String? | | storage path |
+| primaryColor | String | default "#2563eb" | |
+| address | String? | | |
+| phone / whatsapp / fax / email / website | String? | | |
+| taxId | String? | | NPWP |
+| defaultBankAccountId | String? | relation BankAccount | |
+| defaultSignerId | String? | relation Signer | |
+| numberPattern | String | default "INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}" | |
+| sequenceResetPolicy | SequenceResetPolicy | default YEARLY | MONTHLY / YEARLY / NEVER |
+| defaultCurrency | String | default "IDR" | |
+| defaultTaxMode | TaxMode | default NONE | |
+| defaultTaxPercent | Decimal? | @db.Decimal(5,2) | |
+| defaultStampMode | StampMode | default NONE | |
+| defaultNotes | String? | | boleh token |
+| templateKey | String | default "corporate-blue" | |
+| settings | Json? | | logo size/posisi, hide-zero rows |
+| isActive | Boolean | default true | |
+| createdAt / updatedAt | DateTime | | |
+| **unique** | | `@@unique([organizationId, code])` | |
+
+### InvoiceSequence
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| invoiceProfileId | String | relation | |
+| sequenceKey | String | | mis. "2026-VII" (year+month untuk reset) |
+| currentValue | Int | default 0 | |
+| updatedAt | DateTime | @updatedAt | |
+| **unique** | | `@@unique([invoiceProfileId, sequenceKey])` | |
+
+### Customer
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| organizationId | String | relation | |
+| companyName | String | | |
+| legalName | String? | | |
+| businessType | String? | | |
+| taxId | String? | | NPWP |
+| address / city / province / postalCode / country | String? | | |
+| phone / whatsapp / email | String? | | |
+| notes | String? | | catatan internal |
+| isActive | Boolean | default true | |
+| deletedAt | DateTime? | | soft delete |
+| createdAt / updatedAt | DateTime | | |
+| contacts | CustomerContact[] | | |
+
+### CustomerContact (PIC)
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| customerId | String | relation | |
+| name | String | | |
+| title / division | String? | | jabatan / divisi |
+| email / phone / whatsapp | String? | | |
+| isPrimary | Boolean | default false | |
+
+### ProjectReference
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| organizationId | String | relation | |
+| customerId | String | relation | |
+| referenceType | ReferenceType | | PURCHASE_ORDER / SPK / CONTRACT / QUOTATION / OTHER / NONE |
+| referenceNumber | String | | |
+| referenceDate | DateTime? | | |
+| title | String | | |
+| description | String? | | |
+| workValue | Decimal | @db.Decimal(18,2) | |
+| currency | String | default "IDR" | |
+| startDate / endDate | DateTime? | | |
+| status | ProjectStatus | default ACTIVE | |
+| attachmentPath | String? | | |
+| notes | String? | | |
+| createdAt / updatedAt | DateTime | | |
+| **index** | | `@@index([organizationId, referenceNumber])` | |
+
+### BankAccount
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| organizationId | String | relation | |
+| profileId | String? | relation InvoiceProfile | |
+| bankName | String | | |
+| bankCode | String? | | |
+| accountNumberEncrypted | String | | ciphertext (AES-256-GCM) |
+| accountNumberLast4 | String | | untuk masking |
+| accountHolder | String | | |
+| branch | String? | | |
+| currency | String | default "IDR" | |
+| isDefault | Boolean | default false | |
+| isActive | Boolean | default true | |
+| createdAt / updatedAt | DateTime | | |
+
+### Signer
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| organizationId | String | relation | |
+| name | String | | |
+| title | String? | | jabatan |
+| location | String? | | mis. "Yogyakarta" |
+| signatureImagePath | String? | | storage path |
+| isDefault | Boolean | default false | |
+| isActive | Boolean | default true | |
+
+### Invoice
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| organizationId | String | relation | |
+| profileId | String | relation | |
+| customerId | String | relation | |
+| customerContactId | String? | relation | |
+| projectReferenceId | String? | relation | |
+| invoiceType | InvoiceType | | DOWN_PAYMENT / SETTLEMENT / FULL / TERM / CUSTOM |
+| status | InvoiceStatus | default DRAFT | DRAFT / ISSUED / SENT / PARTIALLY_PAID / PAID / OVERDUE / CANCELLED / REVISED |
+| number | String? | nullable saat draft | nomor final, dialokasikan saat ISSUED |
+| numberPreview | String? | | nomor preview untuk draft |
+| invoiceDate | DateTime | | |
+| dueDate | DateTime? | | |
+| referenceType | ReferenceType? | | snapshot relasi |
+| referenceNumber | String? | | |
+| referenceDate | DateTime? | | |
+| paymentTerms | String? | | |
+| currency | String | default "IDR" | |
+| workValue | Decimal | @db.Decimal(18,2) | |
+| itemsSubtotal | Decimal | @db.Decimal(18,2) | |
+| previouslyBilled | Decimal | @db.Decimal(18,2) default 0 | |
+| billingPercent | Decimal? | @db.Decimal(5,2) | |
+| billingBase | Decimal | @db.Decimal(18,2) | |
+| discountAmount | Decimal | @db.Decimal(18,2) default 0 | |
+| additionalAmount | Decimal | @db.Decimal(18,2) default 0 | |
+| taxMode | TaxMode | default NONE | |
+| taxPercent | Decimal? | @db.Decimal(5,2) | |
+| taxAmount | Decimal | @db.Decimal(18,2) default 0 | |
+| roundingAmount | Decimal | @db.Decimal(18,2) default 0 | |
+| grandTotal | Decimal | @db.Decimal(18,2) | |
+| remainingAfter | Decimal | @db.Decimal(18,2) | |
+| amountPaid | Decimal | @db.Decimal(18,2) default 0 | |
+| notes | String? | | boleh token ({INVOICE_NUMBER} dll.) |
+| footerText | String? | | |
+| stampMode | StampMode | default NONE | |
+| signerId | String? | relation | |
+| bankAccountId | String? | relation | |
+| issuerSnapshot / customerSnapshot / contactSnapshot / bankSnapshot / signerSnapshot / calculationSnapshot / templateSnapshot | Json | | snapshot immutability saat ISSUED |
+| createdById | String | relation | |
+| issuedById | String? | relation | |
+| issuedAt | DateTime? | | |
+| cancelledAt | DateTime? | | |
+| cancellationReason | String? | | wajib saat cancel |
+| revisedFromId | String? | relation Invoice | revision parent |
+| replacedById | String? | relation Invoice | revision replacement |
+| createdAt / updatedAt | DateTime | | |
+| items | InvoiceItem[] | | |
+| payments | Payment[] | | |
+| **unique** | | `@@unique([organizationId, number])` | |
+| **indexes** | | `@@index([organizationId, status])`, `@@index([organizationId, invoiceDate])`, `@@index([organizationId, customerId])`, `@@index([organizationId, projectReferenceId])` | |
+
+### InvoiceItem
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| invoiceId | String | relation | |
+| position | Int | | urutan (drag reorder) |
+| description | String | | |
+| details | String? | | subdeskripsi |
+| quantity | Decimal | @db.Decimal(18,2) | qty > 0 |
+| unit | String | | Unit/Pcs/Set/Lot/Paket/Jasa/Jam/Hari/Bulan/custom |
+| unitPrice | Decimal | @db.Decimal(18,2) | >= 0 |
+| discountAmount | Decimal | @db.Decimal(18,2) default 0 | |
+| lineAmount | Decimal | @db.Decimal(18,2) | qty × price − discount |
+| metadata | Json? | | |
+
+### Payment
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| paymentDate | DateTime | | |
+| amount | Decimal | @db.Decimal(18,2) | |
+| method | PaymentMethod | | BANK_TRANSFER / CASH / QRIS / OTHER |
+| referenceNumber | String? | | |
+| proofPath | String? | | bukti pembayaran |
+| notes | String? | | |
+| createdById | String | relation | recorded by |
+| createdAt | DateTime | | |
+
+### InvoicePdf
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| invoiceId | String | relation | |
+| version | Int | | |
+| storagePath | String | | |
+| originalFilename | String | | |
+| mimeType | String | | |
+| sizeBytes | BigInt | | |
+| sha256 | String | | |
+| templateVersion | String | | |
+| generatedById | String | relation | |
+| generatedAt | DateTime | | |
+| isOfficial | Boolean | default false | |
+| **unique** | | `@@unique([invoiceId, version])` | |
+
+### PdfJob
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| invoiceId | String | relation | |
+| status | PdfJobStatus | default PENDING | PENDING / RUNNING / SUCCESS / FAILED |
+| attempt | Int | default 0 | retry terbatas (maks 3) |
+| errorMessage | String? | | |
+| startedAt / finishedAt | DateTime? | | |
+| durationMs | Int? | | |
+| createdAt | DateTime | | |
+
+### AuditLog
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| actorUserId | String? | relation | nullable untuk system action |
+| organizationId | String? | relation | |
+| action | AuditAction | enum | 22 action (lihat feature 11) |
+| entityType | String | | |
+| entityId | String | | |
+| metadata | Json | | disanitasi (no secret/PII) |
+| ipAddress | String? | | atau ipHash sesuai kebijakan |
+| userAgent | String? | | |
+| createdAt | DateTime | | |
+| **indexes** | | `@@index([organizationId, createdAt])`, `@@index([actorUserId, createdAt])` | |
+
+## Enums
+
+- PlatformRole: `SUPER_ADMIN` | `USER`
+- UserStatus: `ACTIVE` | `SUSPENDED`
+- OrgStatus: `ACTIVE` | `SUSPENDED`
+- OrganizationRole: `OWNER` | `ADMIN` | `STAFF` | `VIEWER`
+- MembershipStatus: `ACTIVE` | `INVITED` | `REMOVED`
+- InvoiceType: `DOWN_PAYMENT` | `SETTLEMENT` | `FULL` | `TERM` | `CUSTOM`
+- InvoiceStatus: `DRAFT` | `ISSUED` | `SENT` | `PARTIALLY_PAID` | `PAID` | `OVERDUE` | `CANCELLED` | `REVISED`
+- ReferenceType: `PURCHASE_ORDER` | `SPK` | `CONTRACT` | `QUOTATION` | `OTHER` | `NONE`
+- ProjectStatus: `ACTIVE` | `COMPLETED` | `ON_HOLD` | `CANCELLED`
+- SequenceResetPolicy: `MONTHLY` | `YEARLY` | `NEVER`
+- TaxMode: `NONE` | `EXCLUSIVE` | `INCLUSIVE` | `MANUAL`
+- StampMode: `NONE` | `E_METERAI` | `PHYSICAL` | `BLANK_SPACE`
+- PdfJobStatus: `PENDING` | `RUNNING` | `SUCCESS` | `FAILED`
+- PaymentMethod: `BANK_TRANSFER` | `CASH` | `QRIS` | `OTHER`
+- AuditAction: enum 22 action (feature 11 canonical list: LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT, USER_CREATED, USER_SUSPENDED, PASSWORD_RESET, ORGANIZATION_CREATED, MEMBERSHIP_CHANGED, PROFILE_CHANGED, CUSTOMER_CREATED, CUSTOMER_UPDATED, CUSTOMER_DELETED, PROJECT_CREATED, PROJECT_UPDATED, INVOICE_DRAFT_CREATED, INVOICE_UPDATED, INVOICE_ISSUED, PDF_GENERATED, PDF_DOWNLOADED, INVOICE_SENT, INVOICE_CANCELLED, INVOICE_REVISED, PAYMENT_RECORDED, ADMIN_VIEWED_INVOICE)
+
+## Indexes
+
+- Semua composite index menyertakan `organizationId` (lihat per-entity di atas).
+- `AuditLog`: `[organizationId, createdAt]` dan `[actorUserId, createdAt]` untuk panel admin.
+- `Invoice`: `[organizationId, status]`, `[organizationId, invoiceDate]`, `[organizationId, customerId]`, `[organizationId, projectReferenceId]`.
+- `ProjectReference`: `[organizationId, referenceNumber]`.
+- Unique constraint: `[organizationId, number]` di Invoice, `[organizationId, code]` di InvoiceProfile, `[invoiceProfileId, sequenceKey]` di InvoiceSequence, `[invoiceId, version]` di InvoicePdf, `[userId, organizationId]` di Membership.
+
+## Migration Rules
+
+- Migrations are forward only and additive first. A breaking migration is a spec decision, not a build time surprise.
+- `prisma migrate deploy` di Docker entrypoint (production); `prisma migrate dev` untuk dev.
+- **Tidak ada migrasi yang menghapus data invoice issued.** Tidak ada `DROP TABLE` di invoice-related setelah ada data.
+- Setiap feature yang menambah entity wajib membuat migration baru via `prisma migrate dev --name <feature>`.
+- Seed (`prisma db seed`) terpisah dari migration, idempotent, hanya untuk dev/acceptance test data (master prompt bagian 33: Sigit Berkarya, PT Dharma Polimetal Tbk, PO 5198021181).
+- Breaking migration (rename column, change type) hanya jika feature spec eksplisit dan ada data migration script.
