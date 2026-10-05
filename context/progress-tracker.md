@@ -4,15 +4,15 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 00 implemented, Verify passed; awaiting engineer commit/push (reserved for engineer)
+- Feature 00 committed and pushed to main (commit 6536704). Starting feature 01.
 
 ## Current Goal
 
-- Implement feature 01: auth-multi-tenant (next chat)
+- Implement feature 01: auth-multi-tenant
 
 ## Completed
 
-- Feature 00: project-setup — scaffold Next.js + Prisma + Better Auth + Docker Compose; boilerplate cleanup; `/health`, env validation, pino logger, pdf-service skeleton. Verify checklist semua lolos (lint, typecheck, build, dev postgres reachable + `prisma db push`, production compose 3 service healthy). **Belum di-commit** — commit/push dilakukan engineer.
+- Feature 00: project-setup — scaffold Next.js + Prisma + Better Auth + Docker Compose; boilerplate cleanup; `/health`, env validation, pino logger, pdf-service skeleton. Verify checklist semua lolos (lint, typecheck, build, dev postgres reachable + `prisma db push`, production compose 3 service healthy). Committed as `6536704` dan di-push ke `main`. Builder model: MiMo-V2.6-Flash (verified working).
 
 ## In Progress
 
