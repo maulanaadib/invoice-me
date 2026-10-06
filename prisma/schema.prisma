@@ -1,6 +1,5 @@
-// Prisma schema — feature 00 baseline.
-// Only enums + Better Auth core models are defined here.
-// Business entities (Organization, Invoice, etc.) are added per-feature via migration.
+// Prisma schema — feature 00 baseline + feature 01 auth/multi-tenant.
+// Business entities (Invoice, Customer, etc.) are added per-feature via migration.
 
 datasource db {
   provider = "postgresql"
@@ -23,6 +22,57 @@ enum UserStatus {
   SUSPENDED
 }
 
+enum OrgStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  STAFF
+  VIEWER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  REMOVED
+}
+
+// Audit actions. The canonical admin-facing list is finalized in feature 11
+// (see context/data-model.md). USER_ACTIVATED / SESSION_REVOKED / PASSWORD_CHANGED
+// added in feature 01 because feature 01 performs those audited actions.
+enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGOUT
+  USER_CREATED
+  USER_SUSPENDED
+  USER_ACTIVATED
+  PASSWORD_RESET
+  PASSWORD_CHANGED
+  SESSION_REVOKED
+  ORGANIZATION_CREATED
+  MEMBERSHIP_CHANGED
+  PROFILE_CHANGED
+  CUSTOMER_CREATED
+  CUSTOMER_UPDATED
+  CUSTOMER_DELETED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  INVOICE_DRAFT_CREATED
+  INVOICE_UPDATED
+  INVOICE_ISSUED
+  PDF_GENERATED
+  PDF_DOWNLOADED
+  INVOICE_SENT
+  INVOICE_CANCELLED
+  INVOICE_REVISED
+  PAYMENT_RECORDED
+  ADMIN_VIEWED_INVOICE
+}
+
 // ─── Better Auth core models ──────────────────────────────────────────────────
 
 model user {
@@ -40,8 +90,18 @@ model user {
   mustChangePassword Boolean     @default(false)
   status            UserStatus   @default(ACTIVE)
 
-  accounts account[]
-  sessions session[]
+  // Better Auth admin plugin fields (kept in sync with platformRole:
+  // SUPER_ADMIN -> "admin", USER -> "user"; Better Auth's hasPermission reads
+  // this column to authorize admin plugin endpoints).
+  role       String?
+  banned     Boolean   @default(false)
+  banReason  String?
+  banExpires DateTime?
+
+  accounts    account[]
+  sessions    session[]
+  memberships Membership[]
+  auditLogs   AuditLog[]
 
   @@map("user")
 }
@@ -56,6 +116,12 @@ model session {
   userAgent String?
   userId    String
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Better Auth admin plugin field
+  impersonatedBy String?
+  // Active workspace (feature 01): written server-side only after the
+  // membership is verified; every scoped read re-validates the membership.
+  activeOrganizationId String?
 
   @@map("session")
 }
@@ -88,4 +154,56 @@ model verification {
   updatedAt  DateTime? @updatedAt
 
   @@map("verification")
+}
+
+// ─── Feature 01: auth & multi-tenant ──────────────────────────────────────────
+
+model Organization {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  status    OrgStatus @default(ACTIVE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  memberships Membership[]
+  auditLogs   AuditLog[]
+
+  @@map("Organization")
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrganizationRole
+  permissions    Json?
+  status         MembershipStatus @default(ACTIVE)
+  joinedAt       DateTime         @default(now())
+
+  user         user         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("Membership")
+}
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  actorUserId    String?
+  organizationId String?
+  action         AuditAction
+  entityType     String
+  entityId       String
+  metadata       Json
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime    @default(now())
+
+  actor        user?         @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@map("AuditLog")
 }

@@ -71,6 +71,7 @@ The canonical list, decided once in Stage 5c so every feature uses the same name
 | `APP_URL` | Public base URL app | `http://localhost:3000` | not provisioned yet (set in Coolify) |
 | `APP_PORT` | Port host mapping | `3000` | not provisioned yet (set in Coolify) |
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://invoice:invoice@localhost:5432/invoice_me?schema=public` | not provisioned yet (Coolify managed postgres) |
+| `TEST_ADMIN_DATABASE_URL` | Optional admin Postgres URL untuk vitest globalSetup membuat DB test (default: turunan `DATABASE_URL` di `tests/test.env` → db `postgres`) | tidak di-set (pakai default) | not applicable (harness test saja, tidak masuk env.ts) |
 | `BETTER_AUTH_SECRET` | Session signing secret | generated local, `.env.local` only | not provisioned yet (Coolify env) |
 | `BETTER_AUTH_URL` | Base URL untuk auth callbacks | `http://localhost:3000` | not provisioned yet |
 | `INTERNAL_PDF_SECRET` | Shared secret untuk request ke pdf-service | dev random di `.env.local` | not provisioned yet |
@@ -90,3 +91,4 @@ Rules:
 - Production values live on the hosting dashboard, never in the repo.
 - A variable with no production value yet is written `not provisioned yet`, never left blank, so a missing secret is visible instead of silently `undefined`.
 - Env validation saat startup: app fail-fast jika variable wajib hilang (Zod schema env).
+- Test env: harness vitest memuat `tests/test.env`; `DATABASE_URL` di sana selalu menang — test tidak pernah menyentuh database dev. Variabel test tidak masuk zod schema aplikasi.

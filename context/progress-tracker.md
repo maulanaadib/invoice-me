@@ -4,15 +4,16 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 00 committed and pushed to main (commit 6536704). Starting feature 01.
+- Feature 00 committed dan di-push ke main (6536704). Feature 01 (auth-multi-tenant) selesai: Check When Done lulus, di-commit ke main.
 
 ## Current Goal
 
-- Implement feature 01: auth-multi-tenant
+- Implement feature 01: auth-multi-tenant — selesai (login username/email, lockout, force-change, org+membership, permission service, super admin user mgmt).
 
 ## Completed
 
 - Feature 00: project-setup — scaffold Next.js + Prisma + Better Auth + Docker Compose; boilerplate cleanup; `/health`, env validation, pino logger, pdf-service skeleton. Verify checklist semua lolos (lint, typecheck, build, dev postgres reachable + `prisma db push`, production compose 3 service healthy). Committed as `6536704` dan di-push ke `main`. Builder model: MiMo-V2.6-Flash (verified working).
+- Feature 01: auth-multi-tenant — Better Auth (username/email, admin plugin, public registration dimatikan), lockout 5x escalating in-memory, force password change setelah admin create/reset, Organization + Membership, permission service di `modules/permissions`, audit write helper di `modules/audit`, super admin user management (`/admin/users`), workspace switcher via `session.activeOrganizationId`, route guard `src/proxy.ts`, seed super admin idempotent. Verifikasi lulus: lint, typecheck, production build, test (unit + integration dengan test DB).
 
 ## In Progress
 
@@ -20,7 +21,6 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Feature 01: auth-multi-tenant
 - Feature 02: onboarding-profile
 - Feature 03: customers-projects
 - Feature 04: invoice-engine-core
@@ -34,7 +34,8 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Open Questions
 
-- (none yet)
+- Apakah lockout perlu persistent across restart (table) atau in-memory cukup untuk MVP?
+- Apakah email undangan membership perlu dikirim sebelum GA? (feature 01: membership status INVITED saja, tanpa email)
 
 ## Architecture Decisions
 
@@ -44,6 +45,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - Docker Compose (app + postgres + pdf-service) deploy via Coolify, auto-deploy on push main.
 - Tracer Bullet vertical slices, GA tier (test suite wajib per feature).
 - Repository: https://github.com/maulanaadib/invoice-me, branch main, 1 commit per feature.
+- Central permission matrix hanya di `modules/permissions` — role string tidak pernah di-inline di service lain.
+- Semua penulisan AuditLog lewat helper `modules/audit` (sanitasi metadata otomatis, tidak pernah menyimpan password/token).
+- Workspace aktif via session active org (`session.activeOrganizationId`), membership di-re-validasi setiap read (fail closed).
 
 ## Session Notes
 
@@ -51,3 +55,4 @@ Update this file whenever the current phase, active feature, or implementation s
 - Spec bundle di-generate dari master prompt InvoiceFlow + penyesuaian: deploy target Coolify (bukan ZimaOS), repo maulanaadib/invoice-me.
 - Feature 00 fixes saat Verify: (1) `env.ts` — `GLITCHTIP_DSN` string kosong dari compose di-preprocess jadi undefined; (2) `Dockerfile` — copy `libssl.so.3`/`libcrypto.so.3` dari stage `node:22-bookworm` (build env tanpa apt) + mkdir/chown `/data` untuk user nextjs. Catatan: `docker compose build app` memakai `.next/standalone` hasil `npm run build` di host — selalu `npm run build` dulu sebelum build image.
 - Commit/push feature 00 sengaja ditunda — reserved untuk engineer. Deploy Coolify (First Deploy di spec) juga menunggu engineer.
+- Feature 01 done: login (username/email), lockout, force-change, org+membership, permission service, super admin user mgmt.

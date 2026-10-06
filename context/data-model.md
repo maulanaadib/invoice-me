@@ -28,8 +28,24 @@ Better Auth model resmi (`user`, `account`, `session`, `verification`). Tambah f
 | platformRole | PlatformRole | default USER | SUPER_ADMIN atau USER |
 | mustChangePassword | Boolean | default false | force change setelah admin create/reset |
 | status | UserStatus | default ACTIVE | ACTIVE / SUSPENDED |
+| role | String? | | kolom admin-plugin Better Auth: mirror `platformRole` verbatim (SUPER_ADMIN ↔ "SUPER_ADMIN"), dibaca `hasPermission()` |
+| banned / banReason / banExpires | Boolean / String? / DateTime? | default false / null / null | admin plugin; suspend → `banned=true` + hapus semua session |
 | memberships | Membership[] | relation | |
 | createdAt / updatedAt | DateTime | | |
+
+Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom platform di atas + kolom admin plugin.
+
+### Session (Better Auth managed)
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| token | String | unique | nilai cookie session |
+| activeOrganizationId | String? | | workspace aktif (feature 01); ditulis server-side hanya setelah membership ACTIVE diverifikasi; setiap scoped read wajib re-validasi membership (fail closed) |
+| expiresAt / createdAt / updatedAt | DateTime | | masa aktif 7 hari, perpanjangan 1 hari |
+| ipAddress / userAgent | String? | | |
+| userId | String | relation ke user | cascade delete saat user dihapus |
+| impersonatedBy | String? | | kolom admin plugin |
 
 ### Organization
 
@@ -297,7 +313,7 @@ Better Auth model resmi (`user`, `account`, `session`, `verification`). Tambah f
 | id | String | @id, cuid | |
 | actorUserId | String? | relation | nullable untuk system action |
 | organizationId | String? | relation | |
-| action | AuditAction | enum | 22 action (lihat feature 11) |
+| action | AuditAction | enum | 27 action (lihat feature 11; 3 ditambahkan feature 01) |
 | entityType | String | | |
 | entityId | String | | |
 | metadata | Json | | disanitasi (no secret/PII) |
@@ -322,7 +338,7 @@ Better Auth model resmi (`user`, `account`, `session`, `verification`). Tambah f
 - StampMode: `NONE` | `E_METERAI` | `PHYSICAL` | `BLANK_SPACE`
 - PdfJobStatus: `PENDING` | `RUNNING` | `SUCCESS` | `FAILED`
 - PaymentMethod: `BANK_TRANSFER` | `CASH` | `QRIS` | `OTHER`
-- AuditAction: enum 22 action (feature 11 canonical list: LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT, USER_CREATED, USER_SUSPENDED, PASSWORD_RESET, ORGANIZATION_CREATED, MEMBERSHIP_CHANGED, PROFILE_CHANGED, CUSTOMER_CREATED, CUSTOMER_UPDATED, CUSTOMER_DELETED, PROJECT_CREATED, PROJECT_UPDATED, INVOICE_DRAFT_CREATED, INVOICE_UPDATED, INVOICE_ISSUED, PDF_GENERATED, PDF_DOWNLOADED, INVOICE_SENT, INVOICE_CANCELLED, INVOICE_REVISED, PAYMENT_RECORDED, ADMIN_VIEWED_INVOICE)
+- AuditAction: enum 27 action — canonical list tetap final di feature 11; feature 01 menambah `USER_ACTIVATED`, `SESSION_REVOKED`, `PASSWORD_CHANGED` (migrasi `20261005232013_auth_multi_tenant`). Daftar saat ini: LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT, USER_CREATED, USER_SUSPENDED, USER_ACTIVATED, PASSWORD_RESET, PASSWORD_CHANGED, SESSION_REVOKED, ORGANIZATION_CREATED, MEMBERSHIP_CHANGED, PROFILE_CHANGED, CUSTOMER_CREATED, CUSTOMER_UPDATED, CUSTOMER_DELETED, PROJECT_CREATED, PROJECT_UPDATED, INVOICE_DRAFT_CREATED, INVOICE_UPDATED, INVOICE_ISSUED, PDF_GENERATED, PDF_DOWNLOADED, INVOICE_SENT, INVOICE_CANCELLED, INVOICE_REVISED, PAYMENT_RECORDED, ADMIN_VIEWED_INVOICE
 
 ## Indexes
 
@@ -338,5 +354,6 @@ Better Auth model resmi (`user`, `account`, `session`, `verification`). Tambah f
 - `prisma migrate deploy` di Docker entrypoint (production); `prisma migrate dev` untuk dev.
 - **Tidak ada migrasi yang menghapus data invoice issued.** Tidak ada `DROP TABLE` di invoice-related setelah ada data.
 - Setiap feature yang menambah entity wajib membuat migration baru via `prisma migrate dev --name <feature>`.
+- Feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom platform + admin plugin di `user`, `activeOrganizationId` di `session`, 3 nilai AuditAction baru.
 - Seed (`prisma db seed`) terpisah dari migration, idempotent, hanya untuk dev/acceptance test data (master prompt bagian 33: Sigit Berkarya, PT Dharma Polimetal Tbk, PO 5198021181).
 - Breaking migration (rename column, change type) hanya jika feature spec eksplisit dan ada data migration script.

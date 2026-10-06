@@ -5,16 +5,22 @@ import { getWorkspaceOverview } from "@/modules/organizations/service";
 import { getSession } from "@/server/session";
 
 export const metadata: Metadata = {
-  title: "Dashboard — invoice-me",
+  title: "Administrasi — invoice-me",
 };
 
-export default async function DashboardLayout({
+/**
+ * Super admin gate for /admin/* — the proxy already redirects non-super-admins;
+ * this server-side re-check exists because a compromised process must not mean
+ * a bypass (defense in depth).
+ */
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  if (session.user.platformRole !== "SUPER_ADMIN") redirect("/unauthorized");
 
   const overview = await getWorkspaceOverview(session);
 
@@ -24,7 +30,7 @@ export default async function DashboardLayout({
         name: session.user.name,
         username: session.user.username ?? null,
         email: session.user.email,
-        platformRole: session.user.platformRole ?? "USER",
+        platformRole: session.user.platformRole,
       }}
       memberships={overview.memberships}
       activeOrganizationId={overview.activeOrganizationId}
