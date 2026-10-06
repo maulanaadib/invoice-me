@@ -108,6 +108,56 @@ describe("forced password change", () => {
   });
 });
 
+describe("onboarding gate (feature 02)", () => {
+  let newbie: TestUser;
+  let newbieJar: CookieJar;
+  let forcedNewbie: TestUser;
+  let forcedNewbieJar: CookieJar;
+
+  beforeAll(async () => {
+    newbie = await createUser({ username: "proxy.newbie", onboardingComplete: false });
+    newbieJar = await login(newbie);
+    forcedNewbie = await createUser({
+      username: "proxy.newbie.forced",
+      onboardingComplete: false,
+      mustChangePassword: true,
+    });
+    forcedNewbieJar = await login(forcedNewbie);
+  });
+
+  it("bounces an unfinished user from /dashboard to /onboarding", async () => {
+    const res = await proxy(req("/dashboard", newbieJar));
+    expect(res.status).toBe(307);
+    expect(locationOf(res)).toContain("/onboarding");
+  });
+
+  it("lets an unfinished user onto /onboarding", async () => {
+    expect(isNext(await proxy(req("/onboarding", newbieJar)))).toBe(true);
+  });
+
+  it("keeps a finished user off /onboarding (back to the dashboard)", async () => {
+    const res = await proxy(req("/onboarding", regularJar));
+    expect(res.status).toBe(307);
+    expect(locationOf(res)).toContain("/dashboard");
+  });
+
+  it("keeps the super admin off /onboarding", async () => {
+    const res = await proxy(req("/onboarding", adminJar));
+    expect(res.status).toBe(307);
+    expect(locationOf(res)).toContain("/dashboard");
+  });
+
+  it("mustChangePassword still wins first for an unfinished user", async () => {
+    const toDashboard = await proxy(req("/dashboard", forcedNewbieJar));
+    expect(toDashboard.status).toBe(307);
+    expect(locationOf(toDashboard)).toContain("/change-password");
+
+    const toOnboarding = await proxy(req("/onboarding", forcedNewbieJar));
+    expect(toOnboarding.status).toBe(307);
+    expect(locationOf(toOnboarding)).toContain("/change-password");
+  });
+});
+
 describe("super admin", () => {
   it("passes the /admin gate", async () => {
     expect(isNext(await proxy(req("/admin/users", adminJar)))).toBe(true);

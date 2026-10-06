@@ -4,7 +4,12 @@
 // links, per non-negotiables).
 
 import type { LucideIcon } from "lucide-react";
-import { Building2Icon, LayoutDashboardIcon, UsersIcon } from "lucide-react";
+import {
+  Building2Icon,
+  FileTextIcon,
+  LayoutDashboardIcon,
+  UsersIcon,
+} from "lucide-react";
 
 export interface NavLink {
   href: string;
@@ -22,7 +27,10 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   {
     title: "Ruang kerja",
-    links: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon }],
+    links: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
+      { href: "/profiles", label: "Profil Invoice", icon: FileTextIcon },
+    ],
   },
   {
     title: "Administrasi platform",

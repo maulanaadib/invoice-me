@@ -35,8 +35,8 @@ const envSchema = z.object({
   SEED_ADMIN_EMAIL: z.string().email().optional(),
   SEED_ADMIN_PASSWORD: z.string().optional(),
 
-  // Bank account encryption
-  BANK_ACCOUNT_ENCRYPTION_KEY: z.string().optional(),
+  // Bank account encryption at rest (AES-256-GCM key material; min 32 chars)
+  BANK_ACCOUNT_ENCRYPTION_KEY: z.string().min(32),
 
   // Error tracking (optional; empty string from compose = disabled)
   GLITCHTIP_DSN: z.preprocess(

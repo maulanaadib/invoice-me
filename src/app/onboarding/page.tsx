@@ -1,0 +1,72 @@
+// src/app/onboarding/page.tsx
+// The 12-step wizard, outside the dashboard shell (the proxy allows only
+// unfinished users here and bounces finished ones to /dashboard). Everything
+// the steps need is loaded server-side: resume step, memberships, and the
+// already-saved profile/bank/signer snapshots.
+
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { OnboardingWizard } from "@/components/onboarding/wizard";
+import { getOnboardingState } from "@/modules/onboarding/service";
+import { getWorkspaceOverview } from "@/modules/organizations/service";
+import { getProfileByOrg, toProfileView } from "@/modules/profiles/service";
+import { getDefaultBankAccount, toBankAccountView } from "@/modules/bank-accounts/service";
+import { getDefaultSigner, toSignerView } from "@/modules/signers/service";
+import { getSession } from "@/server/session";
+import { env } from "@/server/env";
+
+export const metadata: Metadata = {
+  title: "Onboarding — invoice-me",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function OnboardingPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.user.platformRole === "SUPER_ADMIN" || session.user.onboardingComplete === true) {
+    redirect("/dashboard");
+  }
+
+  const state = await getOnboardingState(session.user.id);
+  const overview = await getWorkspaceOverview(session);
+  const activeOrganizationId = overview.activeOrganizationId;
+  const hasScope = activeOrganizationId !== null;
+
+  // With an active workspace we resume at the furthest saved step. Without
+  // one, no later step can write (server scope guard says "pilih organisasi"),
+  // so the honest resume position is step 1 — after choosing, the wizard
+  // jumps back to the saved step.
+  const initialStep = hasScope ? state.step : 1;
+
+  const memberships = overview.memberships.map((membership) => ({
+    id: membership.organization.id,
+    name: membership.organization.name,
+    slug: membership.organization.slug,
+  }));
+
+  const profile = activeOrganizationId
+    ? await getProfileByOrg(activeOrganizationId).then((row) => (row ? toProfileView(row) : null))
+    : null;
+  const bank = activeOrganizationId
+    ? await getDefaultBankAccount(activeOrganizationId).then((row) => (row ? toBankAccountView(row) : null))
+    : null;
+  const signer = activeOrganizationId
+    ? await getDefaultSigner(activeOrganizationId).then((row) => (row ? toSignerView(row) : null))
+    : null;
+
+  return (
+    <main className="min-h-screen bg-background">
+      <OnboardingWizard
+        initialStep={initialStep}
+        resumeStep={state.step}
+        maxMb={Math.round(env.UPLOAD_MAX_MB)}
+        memberships={memberships}
+        profile={profile}
+        bank={bank}
+        signer={signer}
+        hasScope={hasScope}
+      />
+    </main>
+  );
+}

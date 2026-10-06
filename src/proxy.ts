@@ -61,6 +61,21 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL("/change-password", request.url));
   }
 
+  // Onboarding gate (feature 02): users who never finished the 12-step wizard
+  // can only be on /onboarding; finished users (and super admins, who have no
+  // organization to onboard) are kept out of the wizard.
+  const onboardingDone =
+    isSuperAdmin || session.user.onboardingComplete === true;
+  if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
+    if (onboardingDone) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.next();
+  }
+  if (!onboardingDone) {
+    return NextResponse.redirect(new URL("/onboarding", request.url));
+  }
+
   if (pathname === "/unauthorized") return NextResponse.next();
 
   if (pathname.startsWith("/admin")) {

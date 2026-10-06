@@ -41,6 +41,8 @@ export interface ShellUser {
 
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
+  profiles: "Profil Invoice",
+  onboarding: "Onboarding",
   admin: "Administrator",
   users: "Pengguna",
   organizations: "Organisasi",

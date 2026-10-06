@@ -46,6 +46,10 @@ export const auth = betterAuth({
       platformRole: { type: "string", required: false, returned: true, input: false },
       mustChangePassword: { type: "boolean", required: false, returned: true, input: false },
       status: { type: "string", required: false, returned: true, input: false },
+      // Feature 02: proxy reads these to route the onboarding wizard without
+      // a second query; input: false — clients can never flip them.
+      onboardingComplete: { type: "boolean", required: false, returned: true, input: false },
+      onboardingStep: { type: "number", required: false, returned: true, input: false },
     },
   },
 

@@ -12,9 +12,13 @@ import { hashPassword } from "better-auth/crypto";
 import { adminRoleForPlatform } from "@/lib/security";
 import { db } from "@/server/db";
 
-/** Wipes all feature-01 tables (children first — FK order). */
+/** Wipes all tables (children first — FK order, feature 02 models included). */
 export async function resetDatabase(): Promise<void> {
   await db.auditLog.deleteMany();
+  await db.invoiceSequence.deleteMany();
+  await db.invoiceProfile.deleteMany(); // SetNull clears bank/signer FK links
+  await db.bankAccount.deleteMany();
+  await db.signer.deleteMany();
   await db.membership.deleteMany();
   await db.session.deleteMany();
   await db.verification.deleteMany();
@@ -37,6 +41,13 @@ export interface TestUserOptions {
   platformRole?: PlatformRole;
   status?: UserStatus;
   mustChangePassword?: boolean;
+  /**
+   * Defaults to TRUE so feature-01 tests keep their "straight to dashboard"
+   * expectation; onboarding tests opt in with false (the DB default for
+   * admin-created users is false).
+   */
+  onboardingComplete?: boolean;
+  onboardingStep?: number;
 }
 
 export interface TestUser {
@@ -64,6 +75,8 @@ export async function createUser(options: TestUserOptions = {}): Promise<TestUse
       role: adminRoleForPlatform(platformRole),
       status: options.status ?? "ACTIVE",
       mustChangePassword: options.mustChangePassword ?? false,
+      onboardingComplete: options.onboardingComplete ?? true,
+      onboardingStep: options.onboardingStep ?? 1,
     },
   });
   await db.account.create({

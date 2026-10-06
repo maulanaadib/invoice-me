@@ -99,6 +99,21 @@ export async function resolveActiveOrgScope(
   };
 }
 
+/**
+ * Throwing wrapper for organization-scoped mutations (profile, bank account,
+ * signer): FORBIDDEN when the session has no active, membership-verified org.
+ */
+export async function requireActiveOrgScope(session: AuthSession): Promise<ActiveOrgScope> {
+  const scope = await resolveActiveOrgScope(session);
+  if (!scope) {
+    throw new AppError(
+      "FORBIDDEN",
+      "Tidak ada organisasi aktif. Pilih organisasi terlebih dahulu.",
+    );
+  }
+  return scope;
+}
+
 /** Active memberships for the workspace switcher (INVITED/REMOVED excluded). */
 export async function listMembershipsForUser(userId: string) {
   return db.membership.findMany({

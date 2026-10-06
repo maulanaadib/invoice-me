@@ -16,6 +16,15 @@ export default async function DashboardLayout({
   const session = await getSession();
   if (!session) redirect("/login");
 
+  // Defense in depth: the proxy already routes this, but a compromised
+  // process must not expose the dashboard to an un-onboarded user.
+  if (
+    session.user.platformRole !== "SUPER_ADMIN" &&
+    session.user.onboardingComplete !== true
+  ) {
+    redirect("/onboarding");
+  }
+
   const overview = await getWorkspaceOverview(session);
 
   return (

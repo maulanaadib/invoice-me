@@ -35,7 +35,7 @@ services:
       SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-superadmin}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.test}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
-      BANK_ACCOUNT_ENCRYPTION_KEY: ${BANK_ACCOUNT_ENCRYPTION_KEY:-}
+      BANK_ACCOUNT_ENCRYPTION_KEY: ${BANK_ACCOUNT_ENCRYPTION_KEY:?BANK_ACCOUNT_ENCRYPTION_KEY is required}
     volumes:
       - uploads:/data/uploads
       - invoices:/data/invoices

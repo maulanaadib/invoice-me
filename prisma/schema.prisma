@@ -90,6 +90,11 @@ model user {
   mustChangePassword Boolean     @default(false)
   status            UserStatus   @default(ACTIVE)
 
+  // Feature 02: onboarding wizard state. onboardingStep tracks resume position
+  // (1..12); onboardingComplete flips true only when the wizard finishes.
+  onboardingComplete Boolean     @default(false)
+  onboardingStep      Int         @default(1)
+
   // Better Auth admin plugin fields (kept in sync with platformRole:
   // SUPER_ADMIN -> "admin", USER -> "user"; Better Auth's hasPermission reads
   // this column to authorize admin plugin endpoints).
@@ -168,6 +173,9 @@ model Organization {
 
   memberships Membership[]
   auditLogs   AuditLog[]
+  profiles    InvoiceProfile[]
+  bankAccounts BankAccount[]
+  signers     Signer[]
 
   @@map("Organization")
 }
@@ -206,4 +214,124 @@ model AuditLog {
   @@index([organizationId, createdAt])
   @@index([actorUserId, createdAt])
   @@map("AuditLog")
+}
+
+// ─── Feature 02: onboarding & invoice profile ─────────────────────────────────
+// Field names, enums and constraints follow context/data-model.md (canonical).
+
+enum SequenceResetPolicy {
+  MONTHLY
+  YEARLY
+  NEVER
+}
+
+enum TaxMode {
+  NONE
+  INCLUSIVE
+  EXCLUSIVE
+}
+
+enum StampMode {
+  NONE
+  E_METERAI
+  PHYSICAL
+  BLANK_SPACE
+}
+
+model InvoiceProfile {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  code           String
+  legalName      String?
+  logoPath       String?
+  primaryColor   String    @default("#2563eb")
+  address        String?
+  phone          String?
+  whatsapp       String?
+  fax            String?
+  email          String?
+  website        String?
+  taxId          String?
+
+  defaultBankAccountId String?
+  defaultSignerId      String?
+
+  numberPattern       String              @default("INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}")
+  sequenceResetPolicy SequenceResetPolicy @default(YEARLY)
+  defaultCurrency     String              @default("IDR")
+  defaultTaxMode      TaxMode             @default(NONE)
+  defaultTaxPercent   Decimal?            @db.Decimal(5, 2)
+  defaultStampMode    StampMode           @default(NONE)
+  defaultNotes        String?
+  templateKey         String              @default("corporate-blue")
+  settings            Json?
+  isActive            Boolean             @default(true)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  defaultBankAccount BankAccount?       @relation("ProfileDefaultBank", fields: [defaultBankAccountId], references: [id], onDelete: SetNull)
+  defaultSigner      Signer?            @relation("ProfileDefaultSigner", fields: [defaultSignerId], references: [id], onDelete: SetNull)
+  bankAccounts       BankAccount[]      @relation("ProfileBankAccounts")
+  sequences          InvoiceSequence[]
+
+  @@unique([organizationId, code])
+  @@map("InvoiceProfile")
+}
+
+model BankAccount {
+  id                     String   @id @default(cuid())
+  organizationId         String
+  profileId              String?
+  bankName               String
+  bankCode               String?
+  accountNumberEncrypted String // AES-256-GCM ciphertext: iv:tag:ciphertext (hex)
+  accountNumberLast4     String
+  accountHolder          String
+  branch                  String?
+  currency               String   @default("IDR")
+  isDefault              Boolean  @default(false)
+  isActive               Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  organization        Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  profile             InvoiceProfile? @relation("ProfileBankAccounts", fields: [profileId], references: [id], onDelete: SetNull)
+  defaultForProfiles  InvoiceProfile[] @relation("ProfileDefaultBank")
+
+  @@map("BankAccount")
+}
+
+model Signer {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  name               String
+  title              String?
+  location           String?
+  signatureImagePath String?
+  isDefault          Boolean  @default(false)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organization         Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  defaultForProfiles   InvoiceProfile[] @relation("ProfileDefaultSigner")
+
+  @@map("Signer")
+}
+
+// Sequence counters for {SEQ}, allocated at issue time (feature 06).
+// sequenceKey example: "2026-VII" (year + roman month, depends on reset policy).
+model InvoiceSequence {
+  id               String   @id @default(cuid())
+  invoiceProfileId String
+  sequenceKey      String
+  currentValue     Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  invoiceProfile InvoiceProfile @relation(fields: [invoiceProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([invoiceProfileId, sequenceKey])
+  @@map("InvoiceSequence")
 }
