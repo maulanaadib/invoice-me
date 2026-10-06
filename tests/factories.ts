@@ -12,13 +12,16 @@ import { hashPassword } from "better-auth/crypto";
 import { adminRoleForPlatform } from "@/lib/security";
 import { db } from "@/server/db";
 
-/** Wipes all tables (children first — FK order, feature 02 models included). */
+/** Wipes all tables (children first — FK order, feature 02/03 models included). */
 export async function resetDatabase(): Promise<void> {
   await db.auditLog.deleteMany();
   await db.invoiceSequence.deleteMany();
   await db.invoiceProfile.deleteMany(); // SetNull clears bank/signer FK links
   await db.bankAccount.deleteMany();
   await db.signer.deleteMany();
+  await db.projectReference.deleteMany(); // Customer → Restrict, delete first
+  await db.customerContact.deleteMany();
+  await db.customer.deleteMany();
   await db.membership.deleteMany();
   await db.session.deleteMany();
   await db.verification.deleteMany();

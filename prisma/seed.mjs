@@ -1,13 +1,17 @@
-// prisma/seed.mjs — idempotent seed of the platform super admin (feature 01).
-// Plain Node ESM so `prisma db seed` works without a TS loader.
+// prisma/seed.mjs — idempotent seed of the platform super admin (feature 01)
+// plus the feature-03 demo workspace (organization, customer, PIC, project/PO
+// reference). Plain Node ESM so `prisma db seed` works without a TS loader.
 //
 // Reads SEED_ADMIN_USERNAME / SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD from the
 // environment (falling back to .env.local / .env), then upserts:
 //   - user (SUPER_ADMIN, ACTIVE, mustChangePassword=false, admin-plugin role)
 //   - credential account carrying the Better Auth password hash
 //
-// No organization is seeded: creating orgs is the super admin's job in the UI
-// (spec: feature 01 seeds only the super admin).
+// Feature 03 demo data (so the seeded install has a real customer list):
+//   - organization "workspace-demo" with the seed admin as OWNER membership
+//   - customer "PT Dharma Polimetal Tbk" (+ primary PIC)
+//   - PURCHASE_ORDER project reference 5198021181
+// The customer/project are created only when absent — re-running is a no-op.
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -109,6 +113,87 @@ async function main() {
 
   console.log(
     `[seed] super admin ready: username=${username} email=${email} (id=${user.id})`,
+  );
+
+  // ── Feature 03 demo workspace ────────────────────────────────────────────
+  // A real organization with one customer, one PIC and one PO reference so a
+  // freshly seeded install has something to browse and search ("Dharma").
+  const orgData = { name: "Workspace Demo", slug: "workspace-demo", status: "ACTIVE" };
+  const demoOrg = await prisma.organization.upsert({
+    where: { slug: orgData.slug },
+    update: orgData,
+    create: orgData,
+  });
+
+  const membership = await prisma.membership.findUnique({
+    where: {
+      userId_organizationId: { userId: user.id, organizationId: demoOrg.id },
+    },
+  });
+  if (membership) {
+    await prisma.membership.update({
+      where: { id: membership.id },
+      data: { role: "OWNER", status: "ACTIVE" },
+    });
+  } else {
+    await prisma.membership.create({
+      data: { userId: user.id, organizationId: demoOrg.id, role: "OWNER", status: "ACTIVE" },
+    });
+  }
+
+  const customerData = {
+    organizationId: demoOrg.id,
+    companyName: "PT Dharma Polimetal Tbk",
+    legalName: "PT Dharma Polimetal Tbk",
+    businessType: "Manufaktur",
+    city: "Bekasi",
+    province: "Jawa Barat",
+    country: "Indonesia",
+    isActive: true,
+    deletedAt: null,
+  };
+  const customer = await prisma.customer.upsert({
+    where: { id: "seed_customer_dharma" },
+    update: customerData,
+    create: { id: "seed_customer_dharma", ...customerData },
+  });
+
+  const picCount = await prisma.customerContact.count({ where: { customerId: customer.id } });
+  if (picCount === 0) {
+    await prisma.customerContact.create({
+      data: {
+        customerId: customer.id,
+        name: "Bagas Prasetyo",
+        title: "Procurement Manager",
+        division: "Purchasing",
+        isPrimary: true,
+      },
+    });
+  }
+
+  const projectCount = await prisma.projectReference.count({
+    where: { organizationId: demoOrg.id, referenceNumber: "5198021181" },
+  });
+  if (projectCount === 0) {
+    await prisma.projectReference.create({
+      data: {
+        organizationId: demoOrg.id,
+        customerId: customer.id,
+        referenceType: "PURCHASE_ORDER",
+        referenceNumber: "5198021181",
+        referenceDate: new Date(Date.UTC(2026, 8, 14)),
+        title: "Pengadaan Bracket Frame Assembly",
+        workValue: "487500000",
+        currency: "IDR",
+        startDate: new Date(Date.UTC(2026, 9, 1)),
+        endDate: new Date(Date.UTC(2026, 10, 30)),
+        status: "ACTIVE",
+      },
+    });
+  }
+
+  console.log(
+    `[seed] demo workspace ready: org=${demoOrg.slug} customer=${customer.companyName} (PO 5198021181)`,
   );
 }
 

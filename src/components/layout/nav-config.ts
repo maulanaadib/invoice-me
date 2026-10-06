@@ -7,8 +7,10 @@ import type { LucideIcon } from "lucide-react";
 import {
   Building2Icon,
   FileTextIcon,
+  FolderKanbanIcon,
   LayoutDashboardIcon,
   UsersIcon,
+  UsersRoundIcon,
 } from "lucide-react";
 
 export interface NavLink {
@@ -29,6 +31,8 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Ruang kerja",
     links: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
+      { href: "/customers", label: "Customer", icon: UsersRoundIcon },
+      { href: "/projects", label: "Project / PO", icon: FolderKanbanIcon },
       { href: "/profiles", label: "Profil Invoice", icon: FileTextIcon },
     ],
   },

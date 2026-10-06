@@ -7,11 +7,15 @@ import { createHash } from "node:crypto";
 import { fileTypeFromBuffer } from "file-type";
 import { AppError } from "@/lib/errors";
 
-/** Only formats the storage layer can name a file for. */
+/**
+ * Only formats the storage layer can name a file for. PDF belongs here because
+ * PO-reference uploads (feature 03) accept PDF by content, not by label.
+ */
 export const EXTENSION_BY_MIME: Record<string, string> = {
   "image/png": ".png",
   "image/jpeg": ".jpg",
   "image/webp": ".webp",
+  "application/pdf": ".pdf",
 };
 
 const MIME_LABELS: Record<string, string> = {

@@ -176,6 +176,8 @@ model Organization {
   profiles    InvoiceProfile[]
   bankAccounts BankAccount[]
   signers     Signer[]
+  customers        Customer[]
+  projectReferences ProjectReference[]
 
   @@map("Organization")
 }
@@ -319,6 +321,104 @@ model Signer {
   defaultForProfiles   InvoiceProfile[] @relation("ProfileDefaultSigner")
 
   @@map("Signer")
+}
+
+// ─── Feature 03: customers & projects/PO ───────────────────────────────────
+// Field names, enums and constraints follow context/data-model.md (canonical).
+
+enum ReferenceType {
+  PURCHASE_ORDER
+  SPK
+  CONTRACT
+  QUOTATION
+  OTHER
+  NONE
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+model Customer {
+  id             String    @id @default(cuid())
+  organizationId String
+  companyName    String
+  legalName      String?
+  businessType   String?
+  // NPWP — PII: never written to logs or audit metadata (security-standards).
+  taxId          String?
+  address        String?
+  city           String?
+  province       String?
+  postalCode     String?
+  country        String?
+  phone          String?
+  whatsapp       String?
+  email          String?
+  notes          String?
+  isActive       Boolean   @default(true)
+  // Soft delete: only Customer has this (data-model rule). Rows are kept for
+  // the audit trail; reads/lists filter on deletedAt.
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts          CustomerContact[]
+  projectReferences ProjectReference[]
+
+  @@index([organizationId, companyName])
+  @@map("Customer")
+}
+
+model CustomerContact {
+  id         String  @id @default(cuid())
+  customerId String
+  name       String
+  title      String?
+  division   String?
+  email      String?
+  phone      String?
+  whatsapp   String?
+  isPrimary  Boolean @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, isPrimary])
+  @@map("CustomerContact")
+}
+
+model ProjectReference {
+  id              String        @id @default(cuid())
+  organizationId  String
+  customerId      String
+  referenceType   ReferenceType
+  referenceNumber String
+  referenceDate   DateTime?
+  title           String
+  description     String?
+  workValue       Decimal       @db.Decimal(18, 2)
+  currency        String        @default("IDR")
+  startDate       DateTime?
+  endDate         DateTime?
+  status          ProjectStatus @default(ACTIVE)
+  attachmentPath  String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // Restrict: a project row is business history — never removed with the
+  // customer behind its back (customers are soft-deleted anyway).
+  customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, referenceNumber])
+  @@map("ProjectReference")
 }
 
 // Sequence counters for {SEQ}, allocated at issue time (feature 06).

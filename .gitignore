@@ -51,3 +51,6 @@ next-env.d.ts
 
 # kanban
 .kanban-cards.json
+
+# test storage scratch volume
+.data-test/
