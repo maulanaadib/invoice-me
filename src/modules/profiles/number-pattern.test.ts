@@ -26,6 +26,18 @@ describe("previewNumber", () => {
     expect(previewNumber("A/{YY}/x{MM}y/{SEQ:1}", ctx)).toBe("A/26/x07y/1");
   });
 
+  it("renders {TYPE} from the invoice type and falls back to FULL without one", () => {
+    const pattern = "INV/{CODE}/{TYPE}/{SEQ:3}";
+    expect(previewNumber(pattern, { ...ctx, invoiceType: "DOWN_PAYMENT" })).toBe(
+      "INV/SB/DOWN_PAYMENT/001",
+    );
+    expect(previewNumber(pattern, { ...ctx, invoiceType: "TERM" })).toBe("INV/SB/TERM/001");
+    // Profile-settings previews carry no invoice context — a consistent
+    // placeholder from the InvoiceType enum is rendered instead of a blank.
+    expect(previewNumber(pattern, ctx)).toBe("INV/SB/FULL/001");
+    expect(previewNumber(pattern, { ...ctx, invoiceType: "  " })).toBe("INV/SB/FULL/001");
+  });
+
   it("pads {SEQ:n} to exactly n digits", () => {
     expect(previewNumber("N/{SEQ:1}", { ...ctx, nextSequence: 9 })).toBe("N/9");
     expect(previewNumber("N/{SEQ:3}", { ...ctx, nextSequence: 7 })).toBe("N/007");
@@ -50,6 +62,8 @@ describe("validateNumberPattern", () => {
   it("accepts the default pattern and free-form text around tokens", () => {
     expect(validateNumberPattern("INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}")).toEqual({ ok: true });
     expect(validateNumberPattern("Faktur {YYYY}/{SEQ:1} — lunas")).toEqual({ ok: true });
+    expect(validateNumberPattern("INV/{CODE}/{TYPE}/{SEQ:3}")).toEqual({ ok: true });
+    expect(validateNumberPattern("INV/{TYPE}/{YY}/{SEQ:2}")).toEqual({ ok: true });
   });
 
   it("rejects unknown tokens and lists the valid ones", () => {

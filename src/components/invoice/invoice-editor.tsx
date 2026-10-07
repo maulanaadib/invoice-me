@@ -287,7 +287,12 @@ export function InvoiceEditor({ options, initialDraft, initialPrefill }: Invoice
       projectTitle,
       bank: bank ? { bankName: bank.bankName, accountHolder: bank.accountHolder, maskedNumber: bank.maskedNumber, branch: bank.branch } : null,
       signer: signer ? { name: signer.name, title: signer.title, location: signer.location, signaturePath: signer.signaturePath } : null,
-      previouslyBilled: customerProject?.previouslyBilled ?? previouslyBilled,
+      // Mirror the server rule (computePreviouslyBilled): billed amounts only
+      // exist through a project link — no project selected means "0", even if
+      // a previously selected project left a value in local state.
+      previouslyBilled: values.projectReferenceId
+        ? customerProject?.previouslyBilled ?? previouslyBilled
+        : "0",
       currency: "IDR",
     });
   }, [
@@ -636,20 +641,27 @@ export function InvoiceEditor({ options, initialDraft, initialPrefill }: Invoice
           </div>
         ) : null}
 
-        {values.invoiceType === "SETTLEMENT" && customerProject ? (
+        {/* Settlement breakdown — project is OPTIONAL. Every number comes from
+            the same calculation the server runs: work value = items subtotal
+            (or the manual override), previously billed = project link ("0"
+            without one), sisa + total ditagihkan = the settlement billing base
+            (same rows the A4 renderer prints). */}
+        {values.invoiceType === "SETTLEMENT" ? (
           <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Nilai pekerjaan</span>
-              <span className="font-mono">{formatIdr(customerProject.workValue)}</span>
+              <span className="font-mono">{formatIdr(previewData?.calc.workValue ?? "0")}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Sudah ditagihkan</span>
-              <span className="font-mono">{formatIdr(customerProject.previouslyBilled)}</span>
+              <span className="font-mono">
+                {formatIdr(previewData?.calc.previouslyBilled ?? "0")}
+              </span>
             </div>
             <div className="flex justify-between font-semibold">
               <span>Sisa / pelunasan</span>
               <span className="font-mono">
-                {formatIdr(previewData?.calc.remainingAfter ?? "0")}
+                {formatIdr(previewData?.calc.billingBase ?? "0")}
               </span>
             </div>
             <div className="mt-2 flex justify-between border-t border-border pt-2">

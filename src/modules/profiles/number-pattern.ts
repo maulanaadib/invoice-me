@@ -3,14 +3,15 @@
 // InvoiceProfile.numberPattern and rendering live previews. Pure module (no
 // env/db), so both server actions and client preview components import it.
 //
-// Tokens: {CODE} {YYYY} {YY} {MM} {ROMAN_MONTH} {SEQ:n} — exactly one {SEQ:n}
-// is required; unknown tokens are rejected with a message listing the valid
-// ones (spec: "Pattern invalid ditolak dengan pesan jelas").
+// Tokens: {CODE} {TYPE} {YYYY} {YY} {MM} {DD} {ROMAN_MONTH} {SEQ:n} — exactly
+// one {SEQ:n} is required; unknown tokens are rejected with a message listing
+// the valid ones (spec: "Pattern invalid ditolak dengan pesan jelas").
 
 import { AppError } from "@/lib/errors";
 
 export const NUMBER_PATTERN_TOKENS = [
   "{CODE}",
+  "{TYPE}",
   "{YYYY}",
   "{YY}",
   "{MM}",
@@ -21,6 +22,10 @@ export const NUMBER_PATTERN_TOKENS = [
 
 export type PatternValidation = { ok: true } | { ok: false; message: string };
 
+/** Fallback for {TYPE} when a pattern is rendered without an invoice context
+ * (profile settings preview) — a valid InvoiceType value, never blank. */
+export const DEFAULT_INVOICE_TYPE_TOKEN = "FULL";
+
 export interface NumberPreviewContext {
   /** Short profile code, e.g. "SB". */
   code: string;
@@ -28,10 +33,14 @@ export interface NumberPreviewContext {
   date: Date;
   /** Sequence number to display (typically the next one to be issued). */
   nextSequence: number;
+  /** Invoice type for {TYPE}, e.g. "DOWN_PAYMENT". Optional: previews that
+   * are not tied to one invoice fall back to DEFAULT_INVOICE_TYPE_TOKEN. */
+  invoiceType?: string | null;
 }
 
 const SIMPLE_TOKENS = new Set<string>([
   "{CODE}",
+  "{TYPE}",
   "{YYYY}",
   "{YY}",
   "{MM}",
@@ -146,6 +155,8 @@ export function previewNumber(
     switch (token) {
       case "{CODE}":
         return ctx.code;
+      case "{TYPE}":
+        return ctx.invoiceType?.trim() || DEFAULT_INVOICE_TYPE_TOKEN;
       case "{YYYY}":
         return String(year);
       case "{YY}":

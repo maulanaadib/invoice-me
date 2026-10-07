@@ -1,18 +1,23 @@
 // src/app/(dashboard)/projects/[id]/page.tsx
 // Project detail: reference summary, attachment (upload/view/remove), edit
-// form, and the HONEST billing placeholder — billedToDate does not exist
-// before feature 05 (no Invoice table yet), so the page says exactly that
-// instead of showing a fake 0 (feature 03 spec, Scope Limits).
+// form, the "Buat invoice" entry into the feature-04 prefill
+// (/invoices/new?project=<id>, gated by invoice.draft.create so a VIEWER
+// never sees a button that would bounce them), and the HONEST billing
+// placeholder — billedToDate does not exist before feature 05 (no Invoice
+// table yet), so the page says exactly that instead of showing a fake 0
+// (feature 03 spec, Scope Limits).
 // Cross-org ids answer 404 (IDOR guard in getProjectForScope).
 
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { PlusIcon } from "lucide-react";
 import { AttachmentPanel } from "@/components/projects/attachment-panel";
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { ProjectForm } from "@/components/projects/project-form";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -87,6 +92,7 @@ export default async function ProjectDetailPage({
 
   const mayEdit = can("project.update", scope);
   const mayDelete = can("project.delete", scope);
+  const mayCreateInvoice = can("invoice.draft.create", scope);
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,8 +116,18 @@ export default async function ProjectDetailPage({
             <span className="font-mono">{project.referenceNumber}</span>
           </p>
         </div>
-        {mayDelete ? (
-          <DeleteProjectButton projectId={project.id} title={project.title} />
+        {mayCreateInvoice || mayDelete ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {mayCreateInvoice ? (
+              <Button render={<Link href={`/invoices/new?project=${project.id}`} />}>
+                <PlusIcon aria-hidden="true" />
+                Buat invoice
+              </Button>
+            ) : null}
+            {mayDelete ? (
+              <DeleteProjectButton projectId={project.id} title={project.title} />
+            ) : null}
+          </div>
         ) : null}
       </div>
 

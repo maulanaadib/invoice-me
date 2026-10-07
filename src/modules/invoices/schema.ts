@@ -94,10 +94,15 @@ export const invoiceItemSchema = z.object({
     .regex(MONEY_RE, "Jumlah harus angka.")
     .refine((v) => Number(v) > 0, "Jumlah harus lebih dari 0."),
   unit: z.string().trim().min(1, "Unit wajib diisi.").max(20, "Maksimal 20 karakter."),
+  // Boundary normalization: an empty price field means "not priced yet" and
+  // travels as "" — the new-item template row (and a cleared currency input)
+  // must validate as 0 (spec: price >= 0), never as an error that kills the
+  // first autosave with "Harga harus angka".
   unitPrice: z
     .string()
     .trim()
-    .regex(MONEY_RE, "Harga harus angka, minimal 0."),
+    .transform((value) => (value === "" ? "0" : value))
+    .pipe(z.string().regex(MONEY_RE, "Harga harus angka, minimal 0.")),
   discountAmount: moneyField("Diskon item").optional(),
 });
 export type InvoiceItemValues = z.infer<typeof invoiceItemSchema>;
