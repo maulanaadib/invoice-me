@@ -1,5 +1,12 @@
 # Feature 11: Audit, Backup, Deploy & Final Acceptance
 
+> **PECAH JADI 3 SUB-SPEC** — spec ini terlalu besar untuk satu worker run (30 checklist, 4 domain terpisah). Build dalam urutan:
+> 1. **`11a-audit-maintenance.md`** — audit gap fill 22 action + maintenance jobs (orphan cleanup, overdue recompute)
+> 2. **`11b-backup-restore.md`** — backup/restore script + dokumentasi
+> 3. **`11c-deploy-acceptance.md`** — Coolify README, legal pages, cookie consent, seed acceptance, final E2E + docker verification
+>
+> Spec ini tetap menjadi rujukan kontrak tingkat tinggi. Setelah ketiga sub-feature selesai, feature 11 complete.
+
 ## Goal
 
 Tutup GA: lengkapi audit log ke 22 action, backup/restore script, README deployment Coolify yang benar-benar bisa dipakai, maintenance job, final Docker verification, dan jalankan **seluruh E2E acceptance test** master prompt bagian 32 + 33. Setelah feature ini, project siap pakai di ZimaOS/Coolify tanpa menebak-nebak.
