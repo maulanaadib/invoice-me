@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "omniroute/hcnsec/MiMo-V2.6-Flash",
+  "model": "omniroute/combo-mimo-v2.6-flash-th-kenari-hcnsec",
   "provider": {
     "omniroute": {
       "npm": "@ai-sdk/openai-compatible",
