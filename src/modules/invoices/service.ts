@@ -887,6 +887,8 @@ export interface EditorOptions {
   banks: BankAccountView[];
   signers: SignerView[];
   projects: EditorProjectOption[];
+  /** Customers of the org — the editor's customer dropdown. */
+  customers: Array<{ id: string; companyName: string }>;
 }
 
 /** Current bucket value for a profile/date (non-allocating read; the draft
@@ -912,6 +914,14 @@ export async function getEditorOptions(ctx: InvoiceServiceContext): Promise<Edit
   });
   const banks = await listBankAccounts(ctx.scope.organizationId);
   const signers = await listSigners(ctx.scope.organizationId);
+  // Customer dropdown: active customers only (soft-deleted rows are hidden from
+  // every read path — a draft can never point at a deleted customer).
+  const customers = await db.customer.findMany({
+    where: { organizationId: ctx.scope.organizationId, deletedAt: null },
+    orderBy: { companyName: "asc" },
+    take: 200,
+    select: { id: true, companyName: true },
+  });
   // Project dropdown + settlement context in one round-trip: every project of
   // the org with the sum of its ISSUED-and-later invoices (0 while feature 05
   // adds no issue flow — the wiring is real, the honest answer is 0).
@@ -963,6 +973,10 @@ export async function getEditorOptions(ctx: InvoiceServiceContext): Promise<Edit
     })),
     banks,
     signers,
+    customers: customers.map((customer) => ({
+      id: customer.id,
+      companyName: customer.companyName,
+    })),
     projects: projects.map((project) => ({
       id: project.id,
       title: project.title,

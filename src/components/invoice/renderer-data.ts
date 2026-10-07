@@ -21,6 +21,8 @@ export interface RendererParty {
   name: string | null;
   legalName?: string | null;
   logoPath?: string | null;
+  /** Brand color — only the issuer carries it; customers render neutrally. */
+  primaryColor?: string | null;
   address?: string | null;
   phone?: string | null;
   whatsapp?: string | null;

@@ -25,6 +25,10 @@ function formatDate(date: Date): string {
   });
 }
 
+// This page reads from Prisma at request time — without this, the static
+// prerenderer tries to build a DB client during `next build` and fails.
+export const dynamic = "force-dynamic";
+
 export default async function AdminOrganizationsPage() {
   const organizations = await listOrganizations();
 
