@@ -16,12 +16,10 @@
 // 05 and is deliberately absent (no placeholder button that does nothing).
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SaveIcon, LoaderCircleIcon } from "lucide-react";
 import {
   createInvoiceDraftAction,
-  getInvoiceDraftAction,
   invoiceNumberPreviewAction,
   listInvoiceCustomerContactsAction,
   prefillInvoiceFromProjectAction,
@@ -54,7 +52,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigationBlocker } from "@/components/layout/navigation-blocker";
+import { GuardedLink, useNavigationBlocker } from "@/components/layout/navigation-blocker";
 import { CurrencyInput } from "@/components/projects/currency-input";
 import { ItemTable } from "@/components/invoice/item-table";
 import { InvoiceRenderer } from "@/components/invoice/InvoiceRenderer";
@@ -122,6 +120,9 @@ export interface InvoiceEditorProps {
 
 export function InvoiceEditor({ options, initialDraft, initialPrefill }: InvoiceEditorProps) {
   const router = useRouter();
+  // Shared unsaved-changes guard: while `blocked` is true, every GuardedLink
+  // in the shell (sidebar, user menu) asks for confirmation before navigating.
+  const { setBlocked } = useNavigationBlocker();
   const isEdit = Boolean(initialDraft);
 
   const profiles = options.profiles;
@@ -350,6 +351,14 @@ export function InvoiceEditor({ options, initialDraft, initialPrefill }: Invoice
     window.addEventListener("beforeunload", onBeforeUnload);
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [values]);
+
+  // Block in-app navigation (sidebar, user menu) while the draft is dirty or
+  // a save is in flight; unblock when clean/saved, and always on unmount so
+  // the provider never stays blocked after this editor is gone.
+  React.useEffect(() => {
+    setBlocked(isDirty || saveState.kind === "saving");
+    return () => setBlocked(false);
+  }, [isDirty, saveState.kind, setBlocked]);
 
   // ── Field helpers ────────────────────────────────────────────────────────
   function update(patch: Partial<EditorFormValues>) {
@@ -1024,7 +1033,10 @@ export function InvoiceEditor({ options, initialDraft, initialPrefill }: Invoice
       </section>
 
       <div className="flex items-center justify-between gap-3">
-        <Button variant="ghost" render={<Link href="/invoices">Kembali ke daftar draft</Link>} />
+        <Button
+          variant="ghost"
+          render={<GuardedLink href="/invoices">Kembali ke daftar draft</GuardedLink>}
+        />
         <Button type="submit" disabled={saveState.kind === "saving"}>
           {saveState.kind === "saving" ? (
             <LoaderCircleIcon aria-hidden="true" className="animate-spin" />

@@ -10,12 +10,7 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { can } from "@/modules/permissions/service";
 import { resolveActiveOrgScope } from "@/modules/organizations/service";
-import { getEditorOptions } from "@/modules/invoices/service";
-import {
-  getInvoiceDraftAction,
-  getEditorOptionsAction,
-  prefillInvoiceFromProjectAction,
-} from "@/modules/invoices/actions";
+import { getEditorOptionsAction, prefillInvoiceFromProjectAction } from "@/modules/invoices/actions";
 import { getSession } from "@/server/session";
 import { InvoiceEditor } from "@/components/invoice/invoice-editor";
 import { logger } from "@/server/logger";
