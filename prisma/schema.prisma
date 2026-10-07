@@ -107,6 +107,7 @@ model user {
   sessions    session[]
   memberships Membership[]
   auditLogs   AuditLog[]
+  invoicesCreated Invoice[] @relation("InvoiceCreatedBy")
 
   @@map("user")
 }
@@ -178,6 +179,7 @@ model Organization {
   signers     Signer[]
   customers        Customer[]
   projectReferences ProjectReference[]
+  invoices         Invoice[]
 
   @@map("Organization")
 }
@@ -231,6 +233,8 @@ enum TaxMode {
   NONE
   INCLUSIVE
   EXCLUSIVE
+  // Feature 04: manual tax amount input (canonical enum in context/data-model.md).
+  MANUAL
 }
 
 enum StampMode {
@@ -277,6 +281,7 @@ model InvoiceProfile {
   defaultSigner      Signer?            @relation("ProfileDefaultSigner", fields: [defaultSignerId], references: [id], onDelete: SetNull)
   bankAccounts       BankAccount[]      @relation("ProfileBankAccounts")
   sequences          InvoiceSequence[]
+  invoices           Invoice[]
 
   @@unique([organizationId, code])
   @@map("InvoiceProfile")
@@ -301,6 +306,7 @@ model BankAccount {
   organization        Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   profile             InvoiceProfile? @relation("ProfileBankAccounts", fields: [profileId], references: [id], onDelete: SetNull)
   defaultForProfiles  InvoiceProfile[] @relation("ProfileDefaultBank")
+  invoices            Invoice[]
 
   @@map("BankAccount")
 }
@@ -319,6 +325,7 @@ model Signer {
 
   organization         Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   defaultForProfiles   InvoiceProfile[] @relation("ProfileDefaultSigner")
+  invoices             Invoice[]
 
   @@map("Signer")
 }
@@ -369,6 +376,7 @@ model Customer {
   organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   contacts          CustomerContact[]
   projectReferences ProjectReference[]
+  invoices          Invoice[]
 
   @@index([organizationId, companyName])
   @@map("Customer")
@@ -388,6 +396,7 @@ model CustomerContact {
   updatedAt  DateTime @updatedAt
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
 
   @@index([customerId, isPrimary])
   @@map("CustomerContact")
@@ -416,6 +425,7 @@ model ProjectReference {
   // Restrict: a project row is business history — never removed with the
   // customer behind its back (customers are soft-deleted anyway).
   customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  invoices     Invoice[]
 
   @@index([organizationId, referenceNumber])
   @@map("ProjectReference")
@@ -434,4 +444,128 @@ model InvoiceSequence {
 
   @@unique([invoiceProfileId, sequenceKey])
   @@map("InvoiceSequence")
+}
+
+// ─── Feature 04: invoice engine core ──────────────────────────────────────
+// Field names, enums and constraints follow context/data-model.md (canonical).
+// Lifecycle-only columns (issuedAt, snapshots, revision links, cancellation)
+// arrive with feature 05 — this migration carries the draft/editor fields.
+
+enum InvoiceType {
+  DOWN_PAYMENT
+  SETTLEMENT
+  FULL
+  TERM
+  CUSTOM
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  REVISED
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  organizationId String
+  profileId      String
+  customerId     String
+  customerContactId String?
+  projectReferenceId String?
+  invoiceType    InvoiceType
+  status         InvoiceStatus @default(DRAFT)
+  // Final number — allocated at issue time (feature 05); null while DRAFT.
+  number         String?
+  // Temporary number rendered from the pattern while the invoice is a draft.
+  numberPreview  String?
+  invoiceDate    DateTime
+  dueDate        DateTime?
+  referenceType  ReferenceType?
+  referenceNumber String?
+  referenceDate  DateTime?
+  paymentTerms   String?
+  currency       String        @default("IDR")
+
+  // Money: Decimal(18,2) end to end (architecture invariants 1 & 2) — the
+  // server recalculates every derived amount on save; client totals are
+  // display-only.
+  workValue        Decimal  @db.Decimal(18, 2)
+  workValueOverride Boolean @default(false)
+  workValueReason  String?  @db.Text
+  itemsSubtotal    Decimal  @db.Decimal(18, 2)
+  previouslyBilled Decimal  @default(0) @db.Decimal(18, 2)
+  billingPercent   Decimal? @db.Decimal(5, 2)
+  billingMode      BillingMode @default(PERCENT)
+  billingAmount    Decimal? @db.Decimal(18, 2)
+  billingBase      Decimal  @db.Decimal(18, 2)
+  // DOWN_PAYMENT / TERM labels ("DOWN PAYMENT 50%", "TERMIN 2 — 40%").
+  termName         String?
+  termNumber       Int?
+  customLabel      String?
+  customReason     String?  @db.Text
+  discountAmount   Decimal  @default(0) @db.Decimal(18, 2)
+  additionalAmount Decimal  @default(0) @db.Decimal(18, 2)
+  taxMode          TaxMode   @default(NONE)
+  taxPercent       Decimal?  @db.Decimal(5, 2)
+  taxAmount        Decimal   @default(0) @db.Decimal(18, 2)
+  roundingAmount   Decimal   @default(0) @db.Decimal(18, 2)
+  grandTotal       Decimal   @db.Decimal(18, 2)
+  amountPaid       Decimal   @default(0) @db.Decimal(18, 2)
+  notes            String?   @db.Text
+  footerText       String?   @db.Text
+  stampMode        StampMode @default(NONE)
+  signerId         String?
+  bankAccountId    String?
+
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  organization      Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  profile           InvoiceProfile   @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  customer          Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerContact   CustomerContact? @relation(fields: [customerContactId], references: [id], onDelete: SetNull)
+  projectReference  ProjectReference? @relation(fields: [projectReferenceId], references: [id], onDelete: SetNull)
+  signer            Signer?          @relation(fields: [signerId], references: [id], onDelete: SetNull)
+  bankAccount       BankAccount?     @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  createdBy         user             @relation("InvoiceCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  items             InvoiceItem[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, status])
+  @@index([organizationId, invoiceDate])
+  @@index([organizationId, customerId])
+  @@index([organizationId, projectReferenceId])
+  @@map("Invoice")
+}
+
+enum BillingMode {
+  PERCENT
+  MANUAL
+}
+
+model InvoiceItem {
+  id             String  @id @default(cuid())
+  invoiceId      String
+  position       Int
+  description    String
+  details        String? @db.Text
+  quantity       Decimal @db.Decimal(18, 2)
+  unit           String
+  unitPrice      Decimal @db.Decimal(18, 2)
+  discountAmount Decimal @default(0) @db.Decimal(18, 2)
+  lineAmount     Decimal @db.Decimal(18, 2)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, position])
+  @@map("InvoiceItem")
 }

@@ -12,7 +12,7 @@ import { getStorageService } from "@/modules/storage";
 import { previewNumber, validateNumberPattern } from "@/modules/profiles/number-pattern";
 import { logger } from "@/server/logger";
 import { db } from "@/server/db";
-import type { InvoiceProfile, OrganizationRole, Prisma } from "@prisma/client";
+import type { InvoiceProfile, OrganizationRole, Prisma, TaxMode } from "@prisma/client";
 import { z } from "zod";
 
 export { previewNumber, validateNumberPattern };
@@ -106,7 +106,7 @@ export const profileUpdateSchema = z.object({
   primaryColor: primaryColorSchema,
   numberPattern: numberPatternField,
   sequenceResetPolicy: z.enum(["MONTHLY", "YEARLY", "NEVER"]),
-  defaultTaxMode: z.enum(["NONE", "INCLUSIVE", "EXCLUSIVE"]),
+  defaultTaxMode: z.enum(["NONE", "INCLUSIVE", "EXCLUSIVE", "MANUAL"]),
   // Percent arrives as form text: validate as text (Indonesian messages),
   // then hand the service a number. Empty → undefined (untouched); NONE mode
   // clears the stored value in updateProfile.
@@ -157,7 +157,7 @@ export interface ProfileView {
   taxId: string | null;
   numberPattern: string;
   sequenceResetPolicy: "MONTHLY" | "YEARLY" | "NEVER";
-  defaultTaxMode: "NONE" | "INCLUSIVE" | "EXCLUSIVE";
+  defaultTaxMode: TaxMode;
   defaultTaxPercent: number | null;
   defaultStampMode: "NONE" | "E_METERAI" | "PHYSICAL" | "BLANK_SPACE";
   defaultNotes: string | null;

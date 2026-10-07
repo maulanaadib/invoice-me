@@ -15,6 +15,8 @@ import { db } from "@/server/db";
 /** Wipes all tables (children first — FK order, feature 02/03 models included). */
 export async function resetDatabase(): Promise<void> {
   await db.auditLog.deleteMany();
+  await db.invoiceItem.deleteMany(); // Feature 04 — cascade-safe order
+  await db.invoice.deleteMany();
   await db.invoiceSequence.deleteMany();
   await db.invoiceProfile.deleteMany(); // SetNull clears bank/signer FK links
   await db.bankAccount.deleteMany();

@@ -3,6 +3,13 @@
 // Values travel as strings end to end — grouping/parsing is pure string work,
 // so a float never touches a rupiah value (code-standards: no float money).
 
+import Decimal from "decimal.js";
+
+/** Money rounding contract: 2 decimals, half-up, always plain notation. */
+export function roundMoney(value: Decimal.Value): string {
+  return new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toFixed(2);
+}
+
 /** "450000000" | "450000.5" → "450.000.000" | "450.000,5" (id-ID display). */
 export function groupDigits(value: string): string {
   const [integer = "0", decimals] = value.split(".");

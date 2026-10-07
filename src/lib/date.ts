@@ -16,3 +16,14 @@ export function toCalendarInput(value: string | null | undefined): string {
   if (!value) return "";
   return value.slice(0, 10);
 }
+
+/** "YYYY-MM-DD" calendar day in the business timezone (Asia/Jakarta) — the
+ * date the user sees as "today" regardless of where the server runs. */
+export function todayInJakarta(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}

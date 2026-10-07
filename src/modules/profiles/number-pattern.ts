@@ -14,6 +14,7 @@ export const NUMBER_PATTERN_TOKENS = [
   "{YYYY}",
   "{YY}",
   "{MM}",
+  "{DD}",
   "{ROMAN_MONTH}",
   "{SEQ:n}",
 ] as const;
@@ -34,6 +35,7 @@ const SIMPLE_TOKENS = new Set<string>([
   "{YYYY}",
   "{YY}",
   "{MM}",
+  "{DD}",
   "{ROMAN_MONTH}",
 ]);
 
@@ -150,6 +152,8 @@ export function previewNumber(
         return String(year % 100).padStart(2, "0");
       case "{MM}":
         return String(month).padStart(2, "0");
+      case "{DD}":
+        return String(ctx.date.getDate()).padStart(2, "0");
       case "{ROMAN_MONTH}":
         return roman(month);
       default: {

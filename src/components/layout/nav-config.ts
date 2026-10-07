@@ -9,6 +9,7 @@ import {
   FileTextIcon,
   FolderKanbanIcon,
   LayoutDashboardIcon,
+  ReceiptTextIcon,
   UsersIcon,
   UsersRoundIcon,
 } from "lucide-react";
@@ -31,6 +32,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Ruang kerja",
     links: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
+      { href: "/invoices", label: "Invoice", icon: ReceiptTextIcon },
       { href: "/customers", label: "Customer", icon: UsersRoundIcon },
       { href: "/projects", label: "Project / PO", icon: FolderKanbanIcon },
       { href: "/profiles", label: "Profil Invoice", icon: FileTextIcon },

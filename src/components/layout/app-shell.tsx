@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   ChevronRightIcon,
   KeyRoundIcon,
@@ -11,6 +10,7 @@ import {
   UserRoundIcon,
 } from "lucide-react";
 import { NAV_GROUPS } from "@/components/layout/nav-config";
+import { GuardedLink, NavigationBlockerProvider, useNavigationBlocker } from "@/components/layout/navigation-blocker";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { WorkspaceSwitcher, type WorkspaceOption } from "@/components/layout/workspace-switcher";
 import { toast } from "@/components/ui/toast";
@@ -41,6 +41,7 @@ export interface ShellUser {
 
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
+  invoices: "Invoice",
   profiles: "Profil Invoice",
   onboarding: "Onboarding",
   admin: "Administrator",
@@ -74,7 +75,7 @@ function NavList({
               pathname === link.href || pathname.startsWith(`${link.href}/`);
             const Icon = link.icon;
             return (
-              <Link
+              <GuardedLink
                 key={link.href}
                 href={link.href}
                 onClick={onNavigate}
@@ -87,7 +88,7 @@ function NavList({
               >
                 <Icon aria-hidden="true" />
                 {link.label}
-              </Link>
+              </GuardedLink>
             );
           })}
         </div>
@@ -120,7 +121,7 @@ function Breadcrumb() {
 }
 
 function UserMenu({ user }: { user: ShellUser }) {
-  const router = useRouter();
+  const { guardedPush } = useNavigationBlocker();
   const [pending, startTransition] = React.useTransition();
   const displayName = user.name || user.username || user.email;
 
@@ -170,7 +171,7 @@ function UserMenu({ user }: { user: ShellUser }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => router.push("/change-password")}
+          onClick={() => guardedPush("/change-password")}
           disabled={pending}
         >
           <KeyRoundIcon aria-hidden="true" />
@@ -198,14 +199,20 @@ export function AppShell({
 }) {
   const isSuperAdmin = user.platformRole === "SUPER_ADMIN";
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const pathname = usePathname();
+  const isInvoiceEditor =
+    pathname === "/invoices/new" || /^\/invoices\/[^/]+\/edit$/.test(pathname);
 
+  // The invoice editor reports unsaved changes through the blocker context —
+  // the provider wraps the whole shell so sidebar/topbar navigation is guarded.
   return (
+    <NavigationBlockerProvider>
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card lg:flex">
         <div className="flex h-14 items-center border-b border-border px-4">
-          <Link href="/dashboard" className="text-base font-semibold tracking-tight">
+          <GuardedLink href="/dashboard" className="text-base font-semibold tracking-tight">
             invoice-me
-          </Link>
+          </GuardedLink>
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto py-3">
           <NavList isSuperAdmin={isSuperAdmin} />
@@ -241,8 +248,18 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-6 lg:px-6">{children}</main>
+        <main
+          className={cn(
+            "mx-auto w-full flex-1 px-3 py-6 lg:px-6",
+            // The split-screen invoice editor owns the widest canvas (form +
+            // sticky A4 preview); every other page keeps the reading width.
+            isInvoiceEditor ? "max-w-[1680px]" : "max-w-6xl",
+          )}
+        >
+          {children}
+        </main>
       </div>
     </div>
+    </NavigationBlockerProvider>
   );
 }

@@ -8,6 +8,7 @@ export const TAX_MODE_LABELS: Record<ProfileView["defaultTaxMode"], string> = {
   NONE: "Tanpa pajak",
   INCLUSIVE: "PPN termasuk di harga (inclusive)",
   EXCLUSIVE: "PPN ditambahkan (exclusive)",
+  MANUAL: "Pajak manual (nominal)",
 };
 
 export const STAMP_MODE_LABELS: Record<ProfileView["defaultStampMode"], string> = {
