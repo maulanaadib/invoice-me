@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Feature 00 committed dan di-push ke main (6536704). Feature 01 (auth-multi-tenant) selesai: Check When Done lulus, di-commit ke main. Feature 02 (onboarding-profile) selesai: Check When Done lulus, E2E 3/3, unit+integration 97/97. Feature 03 (customers-projects) selesai: Check When Done lulus, integration 110/110, lint 0 error, typecheck, production build lulus.
+- Feature 00 committed dan di-push ke main (6536704). Feature 01 (auth-multi-tenant) selesai: Check When Done lulus, di-commit ke main. Feature 02 (onboarding-profile) selesai: Check When Done lulus, E2E 3/3, unit+integration 97/97. Feature 03 (customers-projects) selesai: Check When Done lulus, integration 110/110, lint 0 error, typecheck, production build lulus. Feature 04 (invoice-engine-core) selesai: Check When Done lulus, unit+integration 186/186, lint 0 error, typecheck, production build, /health 200. Commit 209c193 + 8739210 di main lokal.
 
 ## Current Goal
 
-- Implement feature 03: customers-projects — selesai (customer + PIC CRUD, project/PO CRUD semua referenceType, upload lampiran PO MIME-sniffed, server-side pagination/search, org isolation, audit + PII aman). Next: feature 04.
+- Implement feature 04: invoice-engine-core — selesai (numbering engine anti-race, kalkulasi decimal 4 jenis penagihan, terbilang Bahasa Indonesia, editor split-screen + live preview A4, autosave draft, navigation blocker, TaxMode MANUAL). Fix orchestrator: 3 bug React 19/typecheck di invoice-editor + admin/organizations force-dynamic. Next: feature 05 (invoice-issue-lifecycle).
 
 ## Completed
 
