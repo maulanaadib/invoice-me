@@ -71,6 +71,10 @@ enum AuditAction {
   INVOICE_REVISED
   PAYMENT_RECORDED
   ADMIN_VIEWED_INVOICE
+  // Feature 09 (ratified): every super-admin mutation is recorded.
+  USER_ROLE_CHANGED
+  ORGANIZATION_STATUS_CHANGED
+  PDF_JOB_RETRIED
 }
 
 // ─── Better Auth core models ──────────────────────────────────────────────────
@@ -186,6 +190,7 @@ model Organization {
   projectReferences ProjectReference[]
   invoices         Invoice[]
   payments         Payment[]
+  uploadRecords    UploadRecord[]
 
   @@map("Organization")
 }
@@ -668,6 +673,27 @@ model InvoicePdf {
   @@unique([invoiceId, version])
   @@index([invoiceId])
   @@map("InvoicePdf")
+}
+
+// ─── Feature 09: super admin panel ───────────────────────────────────────────
+// One row per file under uploads/organizations/{orgId}/{kind}/ — written when
+// StorageService uploads or deletes a file, plus an idempotent reconcile for
+// files that predate this feature. Storage usage per org = Σ InvoicePdf.sizeBytes
+// + Σ UploadRecord.sizeBytes (spec: sum from DB records, not a scan-per-read).
+
+model UploadRecord {
+  id             String   @id @default(cuid())
+  organizationId String
+  path           String   @unique
+  sizeBytes      BigInt
+  mimeType       String
+  kind           String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("UploadRecord")
 }
 
 // ─── Feature 07: payments ───────────────────────────────────────────────

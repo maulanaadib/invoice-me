@@ -45,6 +45,7 @@ export default async function AdminLayout({
       memberships={overview.memberships}
       activeOrganizationId={overview.activeOrganizationId}
       navVisibility={navVisibility}
+      adminNav
     >
       {children}
     </AppShell>

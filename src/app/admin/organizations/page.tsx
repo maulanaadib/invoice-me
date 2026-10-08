@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CreateOrganizationDialog } from "@/components/forms/create-organization-dialog";
 import { OrgMembersDialog } from "@/components/forms/org-members-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -88,10 +89,18 @@ export default async function AdminOrganizationsPage() {
                     {formatDate(organization.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <OrgMembersDialog
-                      organizationId={organization.id}
-                      organizationName={organization.name}
-                    />
+                    <span className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/organizations/${organization.id}`}
+                        className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        Detail
+                      </Link>
+                      <OrgMembersDialog
+                        organizationId={organization.id}
+                        organizationName={organization.name}
+                      />
+                    </span>
                   </TableCell>
                 </TableRow>
               ))

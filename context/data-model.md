@@ -317,7 +317,7 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 | id | String | @id, cuid | |
 | actorUserId | String? | relation | nullable untuk system action |
 | organizationId | String? | relation | |
-| action | AuditAction | enum | 27 action (lihat feature 11; 3 ditambahkan feature 01) |
+| action | AuditAction | enum | 30 action (lihat feature 11; 3 ditambahkan feature 01, 3 feature 09) |
 | entityType | String | | |
 | entityId | String | | |
 | metadata | Json | | disanitasi (no secret/PII) |
@@ -325,6 +325,21 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 | userAgent | String? | | |
 | createdAt | DateTime | | |
 | **indexes** | | `@@index([organizationId, createdAt])`, `@@index([actorUserId, createdAt])` | |
+
+### UploadRecord (feature 09)
+
+| Field | Type | Constraints | Notes |
+| --- | --- | --- | --- |
+| id | String | @id, cuid | |
+| organizationId | String | relation | org isolation; cascade delete |
+| path | String | unique | root-relative `uploads/organizations/{orgId}/{kind}/{filename}` |
+| sizeBytes | BigInt | | dijumlah untuk storage usage |
+| mimeType | String | | dari sniff saat upload (ekstensi hasil upload saat reconcile) |
+| kind | String | | `logos` / `signatures` / `references` / `payment-proofs` |
+| createdAt | DateTime | default now | |
+| **index** | | `@@index([organizationId])` | daftar per org |
+
+Dicatat oleh `RecordingStorageService` (decorator di `getStorageService`) pada setiap upload/delete, plus `reconcileUploadRecords()` (idempoten, insert-only, hanya org yang masih ada) sebelum total dihitung.
 
 ## Enums
 
@@ -342,7 +357,7 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 - StampMode: `NONE` | `E_METERAI` | `PHYSICAL` | `BLANK_SPACE`
 - PdfJobStatus: `PENDING` | `RUNNING` | `SUCCESS` | `FAILED`
 - PaymentMethod: `BANK_TRANSFER` | `CASH` | `QRIS` | `OTHER`
-- AuditAction: enum 27 action — canonical list tetap final di feature 11; feature 01 menambah `USER_ACTIVATED`, `SESSION_REVOKED`, `PASSWORD_CHANGED` (migrasi `20261005232013_auth_multi_tenant`). Daftar saat ini: LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT, USER_CREATED, USER_SUSPENDED, USER_ACTIVATED, PASSWORD_RESET, PASSWORD_CHANGED, SESSION_REVOKED, ORGANIZATION_CREATED, MEMBERSHIP_CHANGED, PROFILE_CHANGED, CUSTOMER_CREATED, CUSTOMER_UPDATED, CUSTOMER_DELETED, PROJECT_CREATED, PROJECT_UPDATED, INVOICE_DRAFT_CREATED, INVOICE_UPDATED, INVOICE_ISSUED, PDF_GENERATED, PDF_DOWNLOADED, INVOICE_SENT, INVOICE_CANCELLED, INVOICE_REVISED, PAYMENT_RECORDED, ADMIN_VIEWED_INVOICE
+- AuditAction: enum 30 action — canonical list tetap final di feature 11; feature 01 menambah `USER_ACTIVATED`, `SESSION_REVOKED`, `PASSWORD_CHANGED` (migrasi `20261005232013_auth_multi_tenant`); feature 09 menambah `USER_ROLE_CHANGED`, `ORGANIZATION_STATUS_CHANGED`, `PDF_JOB_RETRIED` (migrasi `20261008142337_feature09_super_admin_panel`). Daftar saat ini: LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT, USER_CREATED, USER_SUSPENDED, USER_ACTIVATED, PASSWORD_RESET, PASSWORD_CHANGED, SESSION_REVOKED, ORGANIZATION_CREATED, MEMBERSHIP_CHANGED, PROFILE_CHANGED, CUSTOMER_CREATED, CUSTOMER_UPDATED, CUSTOMER_DELETED, PROJECT_CREATED, PROJECT_UPDATED, INVOICE_DRAFT_CREATED, INVOICE_UPDATED, INVOICE_ISSUED, PDF_GENERATED, PDF_DOWNLOADED, INVOICE_SENT, INVOICE_CANCELLED, INVOICE_REVISED, PAYMENT_RECORDED, ADMIN_VIEWED_INVOICE, USER_ROLE_CHANGED, ORGANIZATION_STATUS_CHANGED, PDF_JOB_RETRIED
 
 ## Indexes
 
@@ -361,5 +376,6 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 - Setiap feature yang menambah entity wajib membuat migration baru via `prisma migrate dev --name <feature>`.
 - Feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom platform + admin plugin di `user`, `activeOrganizationId` di `session`, 3 nilai AuditAction baru.
 - Feature 07: `20261008102333_payments` (additive) — tabel `Payment` + enum `PaymentMethod` + index; tidak ada perubahan pada tabel invoice selain pemakaian kolom `amountPaid`/`remainingAfter`/`status` yang sudah ada.
+- Feature 09: `20261008142337_feature09_super_admin_panel` (additive) — tabel `UploadRecord` + 3 nilai enum `AuditAction` baru; tidak ada perubahan pada tabel lain.
 - Seed (`prisma db seed`) terpisah dari migration, idempotent, hanya untuk dev/acceptance test data (master prompt bagian 33: Sigit Berkarya, PT Dharma Polimetal Tbk, PO 5198021181).
 - Breaking migration (rename column, change type) hanya jika feature spec eksplisit dan ada data migration script.

@@ -142,6 +142,21 @@ export function findUserByIdentifier(identifier: string): Promise<user | null> {
 }
 
 /**
+ * Feature 09 (ratified suspend rule): sign-in is blocked when the user has at
+ * least one ACTIVE membership and EVERY one of them lives in a suspended
+ * organization. Zero memberships (fresh user / super admin) is NOT blocked —
+ * they still need the onboarding wizard, and reads are never frozen.
+ */
+export async function blockedBySuspendedOrganization(userId: string): Promise<boolean> {
+  const rows = await db.membership.findMany({
+    where: { userId, status: "ACTIVE" },
+    select: { organization: { select: { status: true } } },
+  });
+  if (rows.length === 0) return false;
+  return rows.every((row) => row.organization.status === "SUSPENDED");
+}
+
+/**
  * First login starts the session in the user's earliest active organization so
  * the dashboard and switcher have an active workspace without extra clicks.
  */
@@ -152,9 +167,12 @@ async function ensureActiveOrganization(token: string, userId: string): Promise<
       select: { id: true, activeOrganizationId: true },
     });
     if (!session || session.activeOrganizationId) return;
+    // Prefer an ACTIVE organization over a suspended one (feature 09): the
+    // sign-in gate lets this user through because at least one membership is
+    // not suspended, so land the fresh session there first.
     const first = await db.membership.findFirst({
       where: { userId, status: "ACTIVE" },
-      orderBy: { joinedAt: "asc" },
+      orderBy: [{ organization: { status: "asc" } }, { joinedAt: "asc" }],
       select: { organizationId: true },
     });
     if (first) {
@@ -228,6 +246,27 @@ async function interceptSignIn(request: Request): Promise<Response> {
       });
       return Response.json(
         { code: "FORBIDDEN", message: "Akun Anda telah ditangguhkan. Hubungi administrator Anda." },
+        { status: 403, headers: { "content-type": "application/json" } },
+      );
+    }
+    // Feature 09 (ratified): a suspended organization blocks sign-in for users
+    // whose every ACTIVE membership lives in suspended organizations. Users
+    // with a membership in an ACTIVE organization still sign in (their data is
+    // retained and readable — suspend blocks login and new mutations only).
+    if (user && (await blockedBySuspendedOrganization(user.id))) {
+      await log({
+        actorUserId: user.id,
+        action: "LOGIN_FAILED",
+        entityType: "user",
+        entityId: user.id,
+        metadata: { identifier, reason: "organization_suspended" },
+        request,
+      });
+      return Response.json(
+        {
+          code: "FORBIDDEN",
+          message: "Organisasi Anda ditangguhkan oleh super admin. Hubungi administrator Anda.",
+        },
         { status: 403, headers: { "content-type": "application/json" } },
       );
     }

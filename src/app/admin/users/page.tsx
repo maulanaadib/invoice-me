@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { PlatformRole, UserStatus } from "@prisma/client";
 import { CreateUserDialog } from "@/components/forms/create-user-dialog";
-import {
-  UsersTable,
-  USERS_PAGE_SIZE,
-  type AdminUserRow,
-} from "@/components/tables/users-table";
+import { UsersTable, type AdminUserRow } from "@/components/tables/users-table";
+import { USERS_PAGE_SIZE } from "@/modules/admin/constants";
 import { listUsers } from "@/modules/auth/service";
 import { getSession } from "@/server/session";
 

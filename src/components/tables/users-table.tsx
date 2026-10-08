@@ -31,8 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const USERS_PAGE_SIZE = 10;
-
 /** Row shape for the admin user table (dates serialized across RSC). */
 export interface AdminUserRow {
   id: string;

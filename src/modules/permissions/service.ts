@@ -4,7 +4,7 @@
 // OWNER/ADMIN/STAFF/VIEWER literals.
 
 import { AppError } from "@/lib/errors";
-import type { OrganizationRole } from "@prisma/client";
+import type { OrgStatus, OrganizationRole } from "@prisma/client";
 
 /**
  * Every organization-scoped action in the product. Feature specs add actions
@@ -96,15 +96,53 @@ export interface PermissionContext {
   organizationId?: string | null;
   /** Organization role from the caller's active membership. */
   role?: OrganizationRole | null;
+  /**
+   * Feature 09: status of the active organization, loaded together with the
+   * membership by `resolveActiveOrgScope` (the single scope source). A SUSPENDED
+   * organization blocks NEW MUTATIONS only — reads and downloads stay open and
+   * the data is retained (ratified decision, spec scope limits: no data freeze).
+   * `null`/absent = not loaded → the suspension rule does not apply (permission
+   * itself still fails closed without a role).
+   */
+  organizationStatus?: OrgStatus | null;
+}
+
+/**
+ * Actions that only READ data — the only ones still allowed in a suspended
+ * organization (ratified: "suspend blocks login and new mutations only;
+ * reads/downloads remain allowed"). Everything not listed here is a mutation.
+ */
+export const READ_ACTIONS: readonly PermissionAction[] = [
+  "org.view",
+  "org.audit.view",
+  "invoice.view",
+  "invoice.download",
+  "invoice.preview",
+  "invoice.export",
+  "invoice.draft.read",
+  "customer.view",
+  "project.view",
+  "payment.view",
+  "report.view",
+];
+
+export const ORG_SUSPENDED_MESSAGE =
+  "Organisasi ini ditangguhkan oleh super admin. Aksi baru tidak diizinkan.";
+
+/** True when the context belongs to a suspended organization. */
+export function isOrgSuspended(ctx: PermissionContext): boolean {
+  return ctx.organizationStatus === "SUSPENDED";
 }
 
 /**
  * The one authorization decision: may `role` in this organization context
  * perform `action`? No session/org context → no permission (fail closed).
+ * A suspended organization grants read actions only (feature 09).
  */
 export function can(action: PermissionAction, ctx: PermissionContext): boolean {
   const role = ctx.role;
   if (!role) return false;
+  if (isOrgSuspended(ctx) && !READ_ACTIONS.includes(action)) return false;
   if (role === "ADMIN" && ADMIN_EXCLUDED.includes(action)) return false;
   return MATRIX[role].some((pattern) => matches(pattern, action));
 }
@@ -133,7 +171,9 @@ export function requireOrgScope(ctx: PermissionContext): asserts ctx is OrgScope
 /** Throwing variant of can() for mutation entry points. */
 export function assertCan(action: PermissionAction, ctx: PermissionContext): void {
   requireOrgScope(ctx);
-  if (!can(action, ctx)) {
-    throw new AppError("FORBIDDEN", "Anda tidak memiliki izin untuk melakukan aksi ini.");
+  if (can(action, ctx)) return;
+  if (isOrgSuspended(ctx) && !READ_ACTIONS.includes(action)) {
+    throw new AppError("FORBIDDEN", ORG_SUSPENDED_MESSAGE);
   }
+  throw new AppError("FORBIDDEN", "Anda tidak memiliki izin untuk melakukan aksi ini.");
 }

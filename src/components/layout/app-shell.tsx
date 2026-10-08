@@ -11,7 +11,9 @@ import {
 } from "lucide-react";
 import { CommandPalette } from "@/components/layout/command-palette";
 import {
+  ADMIN_NAV_LINKS,
   NAV_GROUPS,
+  isAdminLinkActive,
   visibleLinks,
   type NavVisibility,
 } from "@/components/layout/nav-config";
@@ -53,6 +55,11 @@ const SEGMENT_LABELS: Record<string, string> = {
   users: "Pengguna",
   organizations: "Organisasi",
   "change-password": "Ubah Kata Sandi",
+  "pdf-jobs": "Job PDF",
+  "audit-logs": "Log Audit",
+  storage: "Penyimpanan",
+  system: "Kesehatan Sistem",
+  settings: "Pengaturan",
 };
 
 function breadcrumbLabel(segment: string): string {
@@ -100,6 +107,41 @@ function NavList({
           })}
         </div>
       ))}
+    </nav>
+  );
+}
+
+/**
+ * Feature 09: the super-admin panel's own sidebar (spec: "sidebar terpisah
+ * dari dashboard user"). Rendered instead of the workspace nav on /admin/*.
+ */
+function AdminNavList({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+  return (
+    <nav aria-label="Navigasi administrator" className="flex flex-col gap-1 px-3 py-2">
+      <p className="px-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        Panel admin
+      </p>
+      {ADMIN_NAV_LINKS.map((link) => {
+        const active = isAdminLinkActive(link.href, pathname);
+        const Icon = link.icon;
+        return (
+          <GuardedLink
+            key={link.href}
+            href={link.href}
+            onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              buttonVariants({ variant: active ? "secondary" : "ghost", size: "sm" }),
+              "w-full justify-start gap-2 font-normal",
+              active && "font-medium",
+            )}
+          >
+            <Icon aria-hidden="true" />
+            {link.label}
+          </GuardedLink>
+        );
+      })}
     </nav>
   );
 }
@@ -198,6 +240,7 @@ export function AppShell({
   memberships,
   activeOrganizationId,
   navVisibility,
+  adminNav = false,
   children,
 }: {
   user: ShellUser;
@@ -205,11 +248,14 @@ export function AppShell({
   activeOrganizationId: string | null;
   /** Permission flags for the gated sidebar entries (resolved server-side). */
   navVisibility: NavVisibility;
+  /** Feature 09: render the panel's own sidebar instead of the workspace nav. */
+  adminNav?: boolean;
   children: React.ReactNode;
 }) {
   const isSuperAdmin = user.platformRole === "SUPER_ADMIN";
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const pathname = usePathname();
+  const brandHref = adminNav ? "/admin" : "/dashboard";
   const isInvoiceEditor =
     pathname === "/invoices/new" || /^\/invoices\/[^/]+\/edit$/.test(pathname);
 
@@ -220,12 +266,16 @@ export function AppShell({
     <div className="flex min-h-screen bg-background">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card lg:flex">
         <div className="flex h-14 items-center border-b border-border px-4">
-          <GuardedLink href="/dashboard" className="text-base font-semibold tracking-tight">
+          <GuardedLink href={brandHref} className="text-base font-semibold tracking-tight">
             invoice-me
           </GuardedLink>
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto py-3">
-          <NavList isSuperAdmin={isSuperAdmin} visibility={navVisibility} />
+          {adminNav ? (
+            <AdminNavList />
+          ) : (
+            <NavList isSuperAdmin={isSuperAdmin} visibility={navVisibility} />
+          )}
         </div>
       </aside>
 
@@ -242,11 +292,15 @@ export function AppShell({
               <SheetHeader className="border-b border-border">
                 <SheetTitle>invoice-me</SheetTitle>
               </SheetHeader>
-              <NavList
-                isSuperAdmin={isSuperAdmin}
-                visibility={navVisibility}
-                onNavigate={() => setMobileOpen(false)}
-              />
+              {adminNav ? (
+                <AdminNavList onNavigate={() => setMobileOpen(false)} />
+              ) : (
+                <NavList
+                  isSuperAdmin={isSuperAdmin}
+                  visibility={navVisibility}
+                  onNavigate={() => setMobileOpen(false)}
+                />
+              )}
             </SheetContent>
           </Sheet>
 

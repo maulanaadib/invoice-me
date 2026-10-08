@@ -157,6 +157,66 @@ describe("fail-closed guards", () => {
   });
 });
 
+describe("suspended organization (feature 09, ratified rule)", () => {
+  const suspended = (role: OrganizationRole) => ({
+    organizationId: ORG,
+    role,
+    organizationStatus: "SUSPENDED" as const,
+  });
+
+  it("blocks every mutation while leaving reads and downloads open", () => {
+    expect(can("invoice.issue", suspended("OWNER"))).toBe(false);
+    expect(can("invoice.draft.create", suspended("OWNER"))).toBe(false);
+    expect(can("customer.create", suspended("STAFF"))).toBe(false);
+    expect(can("payment.record", suspended("ADMIN"))).toBe(false);
+    expect(can("org.settings.update", suspended("ADMIN"))).toBe(false);
+    expect(can("org.member.invite", suspended("OWNER"))).toBe(false);
+    expect(can("delete_org", suspended("OWNER"))).toBe(false);
+    // Reads/downloads stay allowed — data is never frozen.
+    expect(can("invoice.view", suspended("VIEWER"))).toBe(true);
+    expect(can("invoice.download", suspended("VIEWER"))).toBe(true);
+    expect(can("payment.view", suspended("STAFF"))).toBe(true);
+    expect(can("report.view", suspended("ADMIN"))).toBe(true);
+    expect(can("invoice.preview", suspended("STAFF"))).toBe(true);
+    expect(can("org.view", suspended("OWNER"))).toBe(true);
+  });
+
+  it("ACTIVE status (and absent status) changes nothing", () => {
+    expect(
+      can("invoice.issue", { organizationId: ORG, role: "OWNER", organizationStatus: "ACTIVE" }),
+    ).toBe(true);
+    expect(can("invoice.issue", { organizationId: ORG, role: "OWNER" })).toBe(true);
+  });
+
+  it("assertCan throws FORBIDDEN with the suspension message on mutations", () => {
+    let caught: unknown = null;
+    try {
+      assertCan("invoice.draft.create", suspended("OWNER"));
+    } catch (error) {
+      caught = error;
+    }
+    expect(isAppError(caught)).toBe(true);
+    expect((caught as AppError).code).toBe("FORBIDDEN");
+    expect((caught as AppError).message).toBe(
+      "Organisasi ini ditangguhkan oleh super admin. Aksi baru tidak diizinkan.",
+    );
+    // A read still passes through untouched.
+    expect(() => assertCan("invoice.view", suspended("VIEWER"))).not.toThrow();
+  });
+
+  it("keeps the ordinary matrix message when the suspension is not the cause", () => {
+    let caught: unknown = null;
+    try {
+      assertCan("invoice.issue", { organizationId: ORG, role: "VIEWER" });
+    } catch (error) {
+      caught = error;
+    }
+    expect((caught as AppError).message).toBe(
+      "Anda tidak memiliki izin untuk melakukan aksi ini.",
+    );
+  });
+});
+
 describe("spec acceptance example", () => {
   it("can('invoice.issue', ctx): OWNER true, VIEWER false", () => {
     const owner: Parameters<typeof can>[1] = { organizationId: ORG, role: "OWNER" };

@@ -11,7 +11,7 @@ import { assertCan, requireOrgScope } from "@/modules/permissions/service";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import type { AuthSession } from "@/server/session";
-import type { OrganizationRole, Prisma } from "@prisma/client";
+import type { OrgStatus, OrganizationRole, Prisma } from "@prisma/client";
 import { z } from "zod";
 
 // ─── Input schemas ───────────────────────────────────────────────────────
@@ -73,6 +73,8 @@ export interface ActiveOrgScope {
   organizationId: string;
   role: OrganizationRole;
   userId: string;
+  /** Feature 09: flows into PermissionContext so a suspended org blocks mutations. */
+  organizationStatus: OrgStatus;
 }
 
 /**
@@ -80,6 +82,7 @@ export interface ActiveOrgScope {
  * membership every time (ACTIVE only). Session fields can be written by any
  * authenticated request, so scope is never trusted without this check —
  * the invariant that keeps cross-tenant queries impossible.
+ * The organization status travels with the scope (feature 09 suspend rule).
  */
 export async function resolveActiveOrgScope(
   session: AuthSession,
@@ -90,12 +93,14 @@ export async function resolveActiveOrgScope(
     where: {
       userId_organizationId: { userId: session.user.id, organizationId: activeOrganizationId },
     },
+    include: { organization: { select: { status: true } } },
   });
   if (!membership || membership.status !== "ACTIVE") return null;
   return {
     organizationId: activeOrganizationId,
     role: membership.role,
     userId: session.user.id,
+    organizationStatus: membership.organization.status,
   };
 }
 
@@ -268,10 +273,14 @@ async function authorizeMemberManagement(actor: MembershipActor, organizationId:
   if (actor.platformRole === "SUPER_ADMIN") return;
   const actorMembership = await db.membership.findUnique({
     where: { userId_organizationId: { userId: actor.userId, organizationId } },
+    // Status travels with the context so a suspended organization also blocks
+    // membership mutations (feature 09 — the central gate decides, here).
+    include: { organization: { select: { status: true } } },
   });
   const ctx = {
     organizationId,
     role: actorMembership && actorMembership.status === "ACTIVE" ? actorMembership.role : null,
+    organizationStatus: actorMembership?.organization.status ?? null,
   };
   requireOrgScope(ctx);
   assertCan("org.member.update", ctx);

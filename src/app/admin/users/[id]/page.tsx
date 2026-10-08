@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
+import { adminPageContext, formatDateTime } from "@/app/admin/admin-ui";
 import { isAppError } from "@/lib/errors";
 import { SessionList, type SessionRowData } from "@/components/tables/session-list";
 import { UserDetailActions } from "@/components/forms/user-detail-actions";
+import { SetPlatformRoleForm } from "@/components/forms/set-platform-role-form";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -14,43 +16,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getAdminUserDetail } from "@/modules/auth/service";
-import { getSession } from "@/server/session";
+import { getAdminUserDetail, type AdminUserDetail } from "@/modules/admin/service";
 
 export const metadata: Metadata = {
   title: "Detail Pengguna — invoice-me",
 };
-
-function formatDateTime(date: Date): string {
-  return date.toLocaleString("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Jakarta",
-  });
-}
 
 export default async function AdminUserDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.user.platformRole !== "SUPER_ADMIN") redirect("/unauthorized");
-
+  const ctx = await adminPageContext();
   const { id } = await params;
 
-  let detail: Awaited<ReturnType<typeof getAdminUserDetail>>;
+  let page: AdminUserDetail;
   try {
-    detail = await getAdminUserDetail(id);
+    page = await getAdminUserDetail(ctx, id);
   } catch (error) {
     if (isAppError(error) && error.code === "NOT_FOUND") notFound();
     throw error;
   }
 
+  const { detail, invoicesByOrg } = page;
   const { user, memberships, sessions, invoiceCount } = detail;
   const sessionRows: SessionRowData[] = sessions.map((row) => ({
     id: row.id,
@@ -114,13 +102,41 @@ export default async function AdminUserDetailPage({
                 <dd className="font-medium">{formatDateTime(user.updatedAt)}</dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-muted-foreground">Invoice dibuat</dt>
-                <dd className="font-medium">{invoiceCount}</dd>
+                <dt className="text-muted-foreground">Invoice dibuat (total)</dt>
+                <dd className="font-medium tabular-nums">{invoiceCount}</dd>
               </div>
             </dl>
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Platform role</CardTitle>
+            <CardDescription>
+              Menentukan akses ke panel super admin. Perubahan tercatat di log
+              audit sebagai <code className="text-xs">USER_ROLE_CHANGED</code>.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <Badge variant={user.platformRole === "SUPER_ADMIN" ? "default" : "outline"}>
+                {user.platformRole === "SUPER_ADMIN" ? "SUPER_ADMIN" : "USER"}
+              </Badge>
+            </div>
+            <div className="mt-4">
+              <SetPlatformRoleForm
+                userId={user.id}
+                currentRole={
+                  user.platformRole === "SUPER_ADMIN" ? "SUPER_ADMIN" : "USER"
+                }
+                isSelf={user.id === ctx.actorUserId}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Keanggotaan organisasi</CardTitle>
@@ -150,6 +166,43 @@ export default async function AdminUserDetailPage({
                       >
                         {membership.status}
                       </Badge>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Invoice dibuat per organisasi</CardTitle>
+            <CardDescription>
+              Pecahan dari total “Invoice dibuat” di atas — dihitung dengan cara
+              yang sama (invoice yang dibuat user ini), dikelompokkan per
+              organisasi, jumlahnya selalu sama dengan total.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {invoicesByOrg.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Belum membuat invoice apa pun.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {invoicesByOrg.map((entry) => (
+                  <li
+                    key={entry.organizationId}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2"
+                  >
+                    <Link
+                      href={`/admin/organizations/${entry.organizationId}`}
+                      className="min-w-0 truncate text-sm font-medium underline-offset-4 hover:underline"
+                    >
+                      {entry.organizationName}
+                    </Link>
+                    <span className="shrink-0 text-sm font-medium tabular-nums">
+                      {entry.count} invoice
                     </span>
                   </li>
                 ))}

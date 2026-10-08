@@ -8,12 +8,17 @@
 
 import type { LucideIcon } from "lucide-react";
 import {
+  ActivityIcon,
   Building2Icon,
   CreditCardIcon,
+  FileCogIcon,
   FileTextIcon,
   FolderKanbanIcon,
+  HardDriveIcon,
   LayoutDashboardIcon,
   ReceiptTextIcon,
+  ScrollTextIcon,
+  SettingsIcon,
   UsersIcon,
   UsersRoundIcon,
 } from "lucide-react";
@@ -68,4 +73,28 @@ export function visibleLinks(
   visibility: NavVisibility,
 ): NavLink[] {
   return links.filter((link) => !link.requires || visibility[link.requires]);
+}
+
+/**
+ * Feature 09 — the super-admin panel has its OWN sidebar (spec: "sidebar
+ * terpisah dari dashboard user"), rendered by AppShell when the admin layout
+ * asks for it. Every entry is a real /admin route built in this feature; the
+ * route-level guard (proxy + layout) already restricts them to SUPER_ADMIN.
+ */
+export const ADMIN_NAV_LINKS: Array<{ href: string; label: string; icon: LucideIcon }> = [
+  { href: "/admin", label: "Ringkasan", icon: LayoutDashboardIcon },
+  { href: "/admin/users", label: "Pengguna", icon: UsersIcon },
+  { href: "/admin/organizations", label: "Organisasi", icon: Building2Icon },
+  { href: "/admin/invoices", label: "Invoice", icon: ReceiptTextIcon },
+  { href: "/admin/pdf-jobs", label: "Job PDF", icon: FileCogIcon },
+  { href: "/admin/audit-logs", label: "Log Audit", icon: ScrollTextIcon },
+  { href: "/admin/storage", label: "Penyimpanan", icon: HardDriveIcon },
+  { href: "/admin/system", label: "Kesehatan Sistem", icon: ActivityIcon },
+  { href: "/admin/settings", label: "Pengaturan", icon: SettingsIcon },
+];
+
+/** Active state for an admin link — `/admin` itself is exact, not a prefix. */
+export function isAdminLinkActive(href: string, pathname: string): boolean {
+  if (href === "/admin") return pathname === "/admin";
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
