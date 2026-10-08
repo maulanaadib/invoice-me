@@ -58,6 +58,16 @@ export interface PaymentRecordDialogProps {
   canOverrideOverpayment: boolean;
   /** Server-side size ceiling, mirrored here for instant feedback. */
   maxUploadMb: number;
+  /**
+   * Controlled mode (feature 08 row actions): the owner of this flag opens and
+   * closes the dialog. Omit both to keep the built-in trigger button — the
+   * invoice-detail and /payments usages are unchanged.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Hide the built-in "Catat pembayaran" trigger (controlled callers render
+   * their own entry point). */
+  hideTrigger?: boolean;
 }
 
 function Field({
@@ -92,9 +102,21 @@ export function PaymentRecordDialog({
   fixedInvoiceId,
   canOverrideOverpayment,
   maxUploadMb,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
 }: PaymentRecordDialogProps) {
   const router = useRouter();
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  // Controlled when `open` is supplied; otherwise self-managed (as before).
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      if (controlledOpen === undefined) setInternalOpen(next);
+      onOpenChange?.(next);
+    },
+    [controlledOpen, onOpenChange],
+  );
   const [invoiceId, setInvoiceId] = React.useState(
     fixedInvoiceId ?? invoices[0]?.id ?? "",
   );
@@ -228,10 +250,12 @@ export function PaymentRecordDialog({
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)} data-testid="record-payment">
-        <PlusIcon aria-hidden="true" />
-        Catat pembayaran
-      </Button>
+      {hideTrigger ? null : (
+        <Button type="button" onClick={() => setOpen(true)} data-testid="record-payment">
+          <PlusIcon aria-hidden="true" />
+          Catat pembayaran
+        </Button>
+      )}
 
       <Dialog
         open={open}

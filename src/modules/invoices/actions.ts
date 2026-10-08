@@ -37,6 +37,10 @@ import {
 } from "@/modules/invoices/service";
 import { issueInvoice, type IssueOutcome } from "@/modules/invoices/issue-service";
 import {
+  quickSearchInvoices,
+  type InvoiceQuickMatch,
+} from "@/modules/invoices/query-service";
+import {
   cancelInvoice,
   createRevision,
   markSent,
@@ -190,7 +194,6 @@ export async function prefillInvoiceFromProjectAction(values: { projectId: strin
 }
 
 // ─── Issue & lifecycle (feature 05) ───────────────────────────────────────
-
 /** DRAFT → ISSUED: recalculate, allocate the final number, freeze snapshots,
  * audit and enqueue the PDF job — all inside one transaction. */
 export async function issueInvoiceAction(values: {
@@ -241,6 +244,24 @@ export async function reviseInvoiceAction(values: {
     const ctx = await serviceContext();
     if (!values.invoiceId) return apiFailure("VALIDATION_ERROR", "Invoice tidak valid.");
     return apiOk(await createRevision(values.invoiceId, ctx));
+  } catch (error) {
+    return toActionError("invoices.actions", error);
+  }
+}
+
+// ─── Command search (feature 08: Cmd+K) ───────────────────────────────────
+
+/**
+ * Quick invoice lookup for the command palette: matches number / preview /
+ * customer, org-scoped, capped. Empty query answers an empty list (the
+ * palette's route list is static — this only adds matches as you type).
+ */
+export async function searchInvoicesAction(values: {
+  q: string;
+}): Promise<ActionResult<InvoiceQuickMatch[]>> {
+  try {
+    const ctx = await serviceContext();
+    return apiOk(await quickSearchInvoices(ctx, { q: values.q }));
   } catch (error) {
     return toActionError("invoices.actions", error);
   }

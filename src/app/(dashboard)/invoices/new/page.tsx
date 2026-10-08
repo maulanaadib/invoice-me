@@ -11,6 +11,10 @@ import { Suspense } from "react";
 import { can } from "@/modules/permissions/service";
 import { resolveActiveOrgScope } from "@/modules/organizations/service";
 import { getEditorOptionsAction, prefillInvoiceFromProjectAction } from "@/modules/invoices/actions";
+import {
+  INVOICE_TYPES,
+  type InvoiceTypeValue,
+} from "@/modules/invoices/schema";
 import { getSession } from "@/server/session";
 import { InvoiceEditor } from "@/components/invoice/invoice-editor";
 import { logger } from "@/server/logger";
@@ -24,7 +28,7 @@ export const dynamic = "force-dynamic";
 export default async function NewInvoicePage({
   searchParams,
 }: {
-  searchParams: Promise<{ project?: string }>;
+  searchParams: Promise<{ project?: string; type?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -42,7 +46,14 @@ export default async function NewInvoicePage({
     notFound();
   }
 
-  const { project } = await searchParams;
+  const { project, type } = await searchParams;
+  // Whitelisted invoice type (?type=SETTLEMENT from the list's "Buat
+  // settlement" action) — anything unknown is ignored, the editor's default
+  // FULL still applies.
+  const rawType = type ?? "";
+  const initialInvoiceType = (INVOICE_TYPES as readonly string[]).includes(rawType)
+    ? (rawType as InvoiceTypeValue)
+    : undefined;
   const prefill = project
     ? await prefillInvoiceFromProjectAction({ projectId: project })
     : undefined;
@@ -60,6 +71,7 @@ export default async function NewInvoicePage({
     <Suspense fallback={null}>
       <InvoiceEditor
         options={optionsResult.data}
+        initialInvoiceType={initialInvoiceType}
         initialPrefill={
           prefill?.ok && project ? { projectId: project, data: prefill.data } : undefined
         }

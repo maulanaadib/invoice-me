@@ -116,9 +116,16 @@ export interface InvoiceEditorProps {
   initialDraft?: InvoiceDraftView;
   /** Server-side preflight result for /invoices/new?project=<id>. */
   initialPrefill?: { projectId: string; data: PrefillResult };
+  /** New-invoice start type (?type=SETTLEMENT from the invoice list). */
+  initialInvoiceType?: InvoiceTypeValue;
 }
 
-export function InvoiceEditor({ options, initialDraft, initialPrefill }: InvoiceEditorProps) {
+export function InvoiceEditor({
+  options,
+  initialDraft,
+  initialPrefill,
+  initialInvoiceType,
+}: InvoiceEditorProps) {
   const router = useRouter();
   // Shared unsaved-changes guard: while `blocked` is true, every GuardedLink
   // in the shell (sidebar, user menu) asks for confirmation before navigating.
@@ -131,6 +138,9 @@ export function InvoiceEditor({ options, initialDraft, initialPrefill }: Invoice
   const [values, setValues] = React.useState<EditorFormValues>(() => {
     if (initialDraft) return editorValuesFromDraft(initialDraft);
     const fresh = emptyEditorValues();
+    // ?type=SETTLEMENT — the list's "Buat settlement" entry opens the editor
+    // already on the right document type (still fully editable).
+    if (initialInvoiceType) fresh.invoiceType = initialInvoiceType;
     if (firstProfile) {
       fresh.profileId = firstProfile.id;
       fresh.taxMode = firstProfile.defaultTaxMode;

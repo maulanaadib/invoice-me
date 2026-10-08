@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
-import { getWorkspaceOverview } from "@/modules/organizations/service";
+import type { NavVisibility } from "@/components/layout/nav-config";
+import { can } from "@/modules/permissions/service";
+import { getWorkspaceOverview, resolveActiveOrgScope } from "@/modules/organizations/service";
 import { getSession } from "@/server/session";
 
 export const metadata: Metadata = {
@@ -26,6 +28,15 @@ export default async function DashboardLayout({
   }
 
   const overview = await getWorkspaceOverview(session);
+  const scope = await resolveActiveOrgScope(session);
+
+  // Permission-aware menu (feature 08): flags come from the central matrix;
+  // no active workspace → gated entries stay hidden (fail closed).
+  const navVisibility: NavVisibility = {
+    payments: scope ? can("payment.view", scope) : false,
+    customers: scope ? can("customer.view", scope) : false,
+    projects: scope ? can("project.view", scope) : false,
+  };
 
   return (
     <AppShell
@@ -37,6 +48,7 @@ export default async function DashboardLayout({
       }}
       memberships={overview.memberships}
       activeOrganizationId={overview.activeOrganizationId}
+      navVisibility={navVisibility}
     >
       {children}
     </AppShell>

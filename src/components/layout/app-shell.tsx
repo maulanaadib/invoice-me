@@ -9,7 +9,12 @@ import {
   MenuIcon,
   UserRoundIcon,
 } from "lucide-react";
-import { NAV_GROUPS } from "@/components/layout/nav-config";
+import { CommandPalette } from "@/components/layout/command-palette";
+import {
+  NAV_GROUPS,
+  visibleLinks,
+  type NavVisibility,
+} from "@/components/layout/nav-config";
 import { GuardedLink, NavigationBlockerProvider, useNavigationBlocker } from "@/components/layout/navigation-blocker";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { WorkspaceSwitcher, type WorkspaceOption } from "@/components/layout/workspace-switcher";
@@ -57,9 +62,11 @@ function breadcrumbLabel(segment: string): string {
 
 function NavList({
   isSuperAdmin,
+  visibility,
   onNavigate,
 }: {
   isSuperAdmin: boolean;
+  visibility: NavVisibility;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -70,7 +77,7 @@ function NavList({
           <p className="px-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
             {group.title}
           </p>
-          {group.links.map((link) => {
+          {visibleLinks(group.links, visibility).map((link) => {
             const active =
               pathname === link.href || pathname.startsWith(`${link.href}/`);
             const Icon = link.icon;
@@ -190,11 +197,14 @@ export function AppShell({
   user,
   memberships,
   activeOrganizationId,
+  navVisibility,
   children,
 }: {
   user: ShellUser;
   memberships: WorkspaceOption[];
   activeOrganizationId: string | null;
+  /** Permission flags for the gated sidebar entries (resolved server-side). */
+  navVisibility: NavVisibility;
   children: React.ReactNode;
 }) {
   const isSuperAdmin = user.platformRole === "SUPER_ADMIN";
@@ -215,7 +225,7 @@ export function AppShell({
           </GuardedLink>
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto py-3">
-          <NavList isSuperAdmin={isSuperAdmin} />
+          <NavList isSuperAdmin={isSuperAdmin} visibility={navVisibility} />
         </div>
       </aside>
 
@@ -232,13 +242,18 @@ export function AppShell({
               <SheetHeader className="border-b border-border">
                 <SheetTitle>invoice-me</SheetTitle>
               </SheetHeader>
-              <NavList isSuperAdmin={isSuperAdmin} onNavigate={() => setMobileOpen(false)} />
+              <NavList
+                isSuperAdmin={isSuperAdmin}
+                visibility={navVisibility}
+                onNavigate={() => setMobileOpen(false)}
+              />
             </SheetContent>
           </Sheet>
 
           <Breadcrumb />
 
           <div className="ml-auto flex items-center gap-2">
+            <CommandPalette navVisibility={navVisibility} isSuperAdmin={isSuperAdmin} />
             <WorkspaceSwitcher
               memberships={memberships}
               activeOrganizationId={activeOrganizationId}

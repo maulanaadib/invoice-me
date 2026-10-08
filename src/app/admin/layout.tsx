@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
-import { getWorkspaceOverview } from "@/modules/organizations/service";
+import type { NavVisibility } from "@/components/layout/nav-config";
+import { can } from "@/modules/permissions/service";
+import { getWorkspaceOverview, resolveActiveOrgScope } from "@/modules/organizations/service";
 import { getSession } from "@/server/session";
 
 export const metadata: Metadata = {
@@ -23,6 +25,14 @@ export default async function AdminLayout({
   if (session.user.platformRole !== "SUPER_ADMIN") redirect("/unauthorized");
 
   const overview = await getWorkspaceOverview(session);
+  // Same permission-aware sidebar flags as the dashboard shell (fail closed
+  // when this super admin has no active workspace membership).
+  const scope = await resolveActiveOrgScope(session);
+  const navVisibility: NavVisibility = {
+    payments: scope ? can("payment.view", scope) : false,
+    customers: scope ? can("customer.view", scope) : false,
+    projects: scope ? can("project.view", scope) : false,
+  };
 
   return (
     <AppShell
@@ -34,6 +44,7 @@ export default async function AdminLayout({
       }}
       memberships={overview.memberships}
       activeOrganizationId={overview.activeOrganizationId}
+      navVisibility={navVisibility}
     >
       {children}
     </AppShell>

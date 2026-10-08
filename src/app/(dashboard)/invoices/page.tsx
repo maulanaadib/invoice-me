@@ -1,19 +1,16 @@
 // src/app/(dashboard)/invoices/page.tsx
-// Minimal draft invoice list (feature 04) — navigation only: a server-component
-// call to listInvoiceDraftsAction, rows that open the editor at
-// /invoices/[id]/edit, and the "Invoice Baru" entry. Filters, search and row
-// actions belong to feature 08; issued invoices never appear here (the action
-// lists status=DRAFT only, org-scoped and permission-checked server-side).
+// The operational invoice list (feature 08): server-side pagination, search,
+// filters (status / jenis / customer / profil / rentang tanggal) and column
+// sort — all URL-driven so back/forward and sharing reproduce the view. The
+// server resolves the org scope and the query service answers with rows plus
+// per-row action flags; VIEWER sees a read-only menu, STAFF/OWNER/ADMIN get
+// the actions their role and each invoice's status would actually accept.
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PlusIcon } from "lucide-react";
-import { formatIdr } from "@/lib/money";
-import { listInvoiceDraftsAction } from "@/modules/invoices/actions";
-import { can } from "@/modules/permissions/service";
-import { resolveActiveOrgScope } from "@/modules/organizations/service";
-import { getSession } from "@/server/session";
+import { InvoicesTable } from "@/components/tables/invoices-table";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,14 +18,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { env } from "@/server/env";
+import { can } from "@/modules/permissions/service";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  INVOICES_PAGE_SIZE,
+  INVOICE_SORT_FIELDS,
+  listInvoiceFilterOptions,
+  listInvoices,
+} from "@/modules/invoices/query-service";
+import { resolveActiveOrgScope } from "@/modules/organizations/service";
+import { getSession } from "@/server/session";
 
 export const metadata: Metadata = {
   title: "Invoice — invoice-me",
@@ -36,17 +35,36 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-/** "2026-10-07" → "07/10/2026" — calendar string only, no Date/timezone. */
-function formatTanggal(value: string): string {
-  const [year, month, day] = value.split("-");
-  return year && month && day ? `${day}/${month}/${year}` : value;
+function first(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-export default async function InvoicesPage() {
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
 
   const scope = await resolveActiveOrgScope(session);
+  const params = await searchParams;
+
+  const page = Math.max(1, Number(first(params.page)) || 1);
+  const q = first(params.q).slice(0, 100);
+  const customer = first(params.customer).slice(0, 64);
+  const profile = first(params.profile).slice(0, 64);
+  const status = first(params.status).slice(0, 32);
+  const type = first(params.type).slice(0, 32);
+  const from = first(params.from).slice(0, 10);
+  const to = first(params.to).slice(0, 10);
+  // Sort is whitelisted here AND re-validated in the query service.
+  const sortRaw = first(params.sort);
+  const sort = (INVOICE_SORT_FIELDS as readonly string[]).includes(sortRaw)
+    ? sortRaw
+    : "invoiceDate";
+  const dir = first(params.dir) === "asc" ? "asc" : "desc";
+
   if (!scope) {
     return (
       <div className="flex flex-col gap-6">
@@ -55,7 +73,7 @@ export default async function InvoicesPage() {
           <CardHeader>
             <CardTitle>Belum ada workspace aktif</CardTitle>
             <CardDescription>
-              Pilih atau buat organisasi terlebih dahulu untuk melihat draft invoice.
+              Pilih atau buat organisasi terlebih dahulu untuk melihat daftar invoice.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -63,8 +81,14 @@ export default async function InvoicesPage() {
     );
   }
 
+  const [result, options] = await Promise.all([
+    listInvoices(
+      { scope },
+      { page, pageSize: INVOICES_PAGE_SIZE, search: q, customer, profile, status, type, from, to, sort, dir },
+    ),
+    listInvoiceFilterOptions({ scope }),
+  ]);
   const mayCreate = can("invoice.draft.create", scope);
-  const result = await listInvoiceDraftsAction();
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,8 +96,8 @@ export default async function InvoicesPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">Invoice</h1>
           <p className="text-sm text-muted-foreground">
-            Daftar draft invoice. Klik satu baris untuk membuka editornya — nomor yang
-            tampil masih pratinjau sampai invoice diterbitkan.
+            Seluruh invoice organisasi ini — draft sampai yang sudah dilunasi — dalam satu
+            halaman.
           </p>
         </div>
         {mayCreate ? (
@@ -84,58 +108,17 @@ export default async function InvoicesPage() {
         ) : null}
       </div>
 
-      {!result.ok ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Gagal memuat draft invoice</CardTitle>
-            <CardDescription>{result.error.message}</CardDescription>
-          </CardHeader>
-        </Card>
-      ) : result.data.rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
-          Belum ada draft invoice. Buat yang pertama lewat tombol “Invoice Baru”.
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nomor</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Tanggal</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {result.data.rows.map((row) => (
-                // The link's ::after overlays the whole row (containing block:
-                // this relative <tr>), so clicking anywhere opens the editor —
-                // pure CSS navigation, no client component needed.
-                <TableRow key={row.id} className="group relative">
-                  <TableCell>
-                    <Link
-                      href={`/invoices/${row.id}/edit`}
-                      className="font-mono font-medium after:absolute after:inset-0 after:content-[''] group-hover:underline"
-                    >
-                      {row.number ?? row.numberPreview ?? "—"}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{row.customerName}</TableCell>
-                  <TableCell>{formatTanggal(row.invoiceDate)}</TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatIdr(row.grandTotal)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {result.data.total > result.data.rows.length ? (
-            <p className="px-2 pt-3 text-sm text-muted-foreground">
-              Menampilkan {result.data.rows.length} dari {result.data.total} draft terbaru.
-            </p>
-          ) : null}
-        </div>
-      )}
+      <InvoicesTable
+        rows={result.rows}
+        total={result.total}
+        page={result.page}
+        pageSize={result.pageSize}
+        filters={{ q, customer, profile, status, type, from, to, sort, dir }}
+        options={options}
+        mayCreate={mayCreate}
+        canOverrideOverpayment={can("payment.override", scope)}
+        uploadMaxMb={Math.round(env.UPLOAD_MAX_MB)}
+      />
     </div>
   );
 }
