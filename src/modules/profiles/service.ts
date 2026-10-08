@@ -140,6 +140,16 @@ export interface ProfileServiceContext {
 
 // ─── Views (serializable — server action → client components) ─────────────
 
+// Document settings live in the pure leaf module (see its header: importing
+// the service from client-reachable code would pull sharp/Prisma into the
+// browser bundle); re-exported here so server callers can keep one import.
+export {
+  parseProfileSettings,
+  type InvoiceProfileSettings,
+} from "@/modules/profiles/settings";
+
+import { parseProfileSettings, type InvoiceProfileSettings } from "@/modules/profiles/settings";
+
 export interface ProfileView {
   id: string;
   organizationId: string;
@@ -164,6 +174,7 @@ export interface ProfileView {
   templateKey: string;
   defaultBankAccountId: string | null;
   defaultSignerId: string | null;
+  settings: InvoiceProfileSettings;
 }
 
 export function toProfileView(profile: InvoiceProfile): ProfileView {
@@ -192,6 +203,7 @@ export function toProfileView(profile: InvoiceProfile): ProfileView {
     templateKey: profile.templateKey,
     defaultBankAccountId: profile.defaultBankAccountId,
     defaultSignerId: profile.defaultSignerId,
+    settings: parseProfileSettings(profile.settings),
   };
 }
 

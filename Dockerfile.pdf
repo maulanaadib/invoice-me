@@ -1,24 +1,37 @@
-FROM node:22-bookworm-slim AS runner
+# pdf-service — HTML → PDF renderer (feature 06).
+#
+# Base image: the official Playwright image matching the EXACT playwright
+# version in pdf-service/package.json (1.63.0). It ships Chromium
+# (/ms-playwright/chromium-1243) together with every system library Chromium
+# needs — `apt-get` is unusable in this build environment (no outbound DNS in
+# the build sandbox), so installing the browser dependencies any other way is
+# not an option. The npm registry is equally unavailable, so node_modules is
+# copied from the host (see .dockerignore).
+#
+# The pdf-service port is intentionally NOT published in docker-compose.yml:
+# it is only reachable on the internal network (architecture invariant 10).
+FROM mcr.microsoft.com/playwright:v1.63.0-noble
+
 WORKDIR /app
 
-RUN addgroup --system --gid 1001 nodejs \
- && adduser --system --uid 1001 pdfservice
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PORT=3001
 
-# Copy pre-installed node_modules from build context.
-# Full Playwright Chromium setup is added in feature 06.
+# Keep the image's built-in `node` user (uid/gid 1001) — the Playwright base
+# image already defines it, so creating our own would collide on the IDs.
+# docker-entrypoint.sh chowns the mounted STORAGE_ROOT volume (root:root on
+# first mount) and then drops privileges to uid 1001 via setpriv, which ships
+# with the base image.
+
 COPY pdf-service/node_modules ./node_modules
 COPY pdf-service/src ./src
 COPY pdf-service/package.json ./
 
-# docker-entrypoint.sh hands the mounted STORAGE_ROOT volume (root-owned on
-# first mount) to the pdfservice user, then drops privileges with setpriv, which
-# is already in the base image — no apt install (build containers have no DNS).
 COPY pdf-service/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 USER root
 
 EXPOSE 3001
-ENV PORT=3001
 
 CMD ["docker-entrypoint.sh"]

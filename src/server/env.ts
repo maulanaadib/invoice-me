@@ -22,6 +22,13 @@ const envSchema = z.object({
     .string()
     .url()
     .default("http://host.docker.internal:3000"),
+  // App → pdf-service (PdfJob worker POSTs /render here).
+  PDF_SERVICE_URL: z.string().url().default("http://localhost:3001"),
+  // The PdfJob poller runs inside the app process (single instance MVP).
+  // "false" disables it — used by tests, which drive the worker explicitly.
+  PDF_WORKER_ENABLED: z
+    .preprocess((v) => (v === "" ? undefined : v), z.enum(["true", "false"]))
+    .default("true"),
 
   // Storage
   STORAGE_ROOT: z.string().min(1).default("./.data"),

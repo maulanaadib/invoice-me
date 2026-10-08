@@ -64,6 +64,7 @@ function draftView(overrides: Partial<InvoiceDraftView> = {}): InvoiceDraftView 
       taxId: null,
       numberPattern: "INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}",
       numberPreview: "INV/SB/VII/2026/001",
+      settings: { hideZeroRows: true, hideStampLabel: false },
     },
     customer: null,
     customerContactId: null,

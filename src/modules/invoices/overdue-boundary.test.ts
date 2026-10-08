@@ -14,6 +14,7 @@
 // UTC H-7. Every case below states both to remove the ambiguity.
 
 import { describe, expect, it } from "vitest";
+import type { InvoiceStatus } from "@prisma/client";
 import { isOverdue, isPastDue, recomputeOverdue } from "@/modules/invoices/lifecycle-service";
 
 // Stored calendar days are UTC midnight of the business day.
@@ -65,7 +66,9 @@ describe("isPastDue (strict calendar comparison)", () => {
   it("an absent due date is never overdue", () => {
     const now = jkt("2026-07-15", 15);
     expect(isPastDue(null, now)).toBe(false);
-    expect(isPastDue(undefined as Date | undefined, now)).toBe(false);
+    // The dueDate column is null when absent, but a plain `undefined` from
+    // an unmapped row must also read as "no due date".
+    expect(isPastDue(undefined as unknown as Date | null, now)).toBe(false);
   });
 
   it("defaults to the real current time when `now` is omitted", () => {
@@ -82,7 +85,7 @@ describe("isOverdue (status gate + due date)", () => {
   const future = utcDay("2026-07-16");
 
   // The three statuses that can still become overdue.
-  it.each([
+  it.each<{ status: InvoiceStatus }>([
     { status: "ISSUED" },
     { status: "SENT" },
     { status: "PARTIALLY_PAID" },
@@ -93,7 +96,7 @@ describe("isOverdue (status gate + due date)", () => {
 
   // Settled, cancelled, superseded and unpublished invoices never display as
   // overdue, regardless of the date.
-  it.each(["DRAFT", "PAID", "OVERDUE", "CANCELLED", "REVISED"])(
+  it.each<InvoiceStatus>(["DRAFT", "PAID", "OVERDUE", "CANCELLED", "REVISED"])(
     "%s is never overdue, even with a past due date",
     (status) => {
       expect(isOverdue({ status, dueDate: past }, now)).toBe(false);

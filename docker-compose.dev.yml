@@ -1,6 +1,12 @@
 # Development compose — runs postgres only.
 # App runs locally via: npm run dev
 # STORAGE_ROOT maps to .data/ for local file storage.
+#
+# The postgres service ALSO joins the `internal` network — the same
+# project-namespaced network docker-compose.yml defines — so a locally run
+# app AND the containers from the production compose (app/pdf-service) can
+# both reach this database. Both files declare an identical `internal`
+# driver, so whichever stack starts first creates it for the other.
 
 services:
   postgres:
@@ -13,6 +19,15 @@ services:
       - "5432:5432"
     volumes:
       - ./.data/postgres:/var/lib/postgresql/data
+    networks:
+      # `internal` lets the production-compose app/pdf-service containers
+      # reach this database; the normal `default` bridge is what makes the
+      # host port mapping work — this Docker environment does not install
+      # publish rules for containers sitting on an internal-only network
+      # (verified: -p on an internal-only net never listens; internal +
+      # a normal net publishes fine).
+      - default
+      - internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U invoice -d invoice_me"]
       interval: 10s
@@ -20,3 +35,10 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true

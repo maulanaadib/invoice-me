@@ -70,6 +70,18 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
       ? `PPN ${groupDigits(calc.taxPercent.replace(/\.00$/, ""))}%`
       : "Pajak";
   const contactPerson = data.contactName ?? data.customer?.name ?? "—";
+  const contactRole = data.contactDivision ?? data.contactTitle ?? null;
+  // Document settings (InvoiceProfile.settings): zero-value summary rows are
+  // hidden by default; `hideZeroRows: false` opts into showing them.
+  const hideZero = data.settings?.hideZeroRows !== false;
+  const showValue = (value: string) => !hideZero || value !== "0.00";
+  // Signature block header: "Yogyakarta, 1 Juli 2026" (location when set).
+  const signatureDateLine = [data.signer?.location ?? null, formatDate(data.invoiceDate)]
+    .filter(Boolean)
+    .join(", ");
+  const issuerContact = [data.issuer.phone, data.issuer.whatsapp, data.issuer.fax]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <article
@@ -90,9 +102,8 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
           ) : null}
           <p className="text-lg leading-tight font-bold">{data.issuer.legalName || data.issuer.name || "—"}</p>
           {data.issuer.address ? <p className="max-w-64 text-[11px] leading-snug text-muted-foreground">{data.issuer.address}</p> : null}
-          <p className="text-[11px] text-muted-foreground">
-            {[data.issuer.phone, data.issuer.email].filter(Boolean).join(" · ")}
-          </p>
+          {issuerContact ? <p className="text-[11px] text-muted-foreground">{issuerContact}</p> : null}
+          {data.issuer.email ? <p className="text-[11px] text-muted-foreground">{data.issuer.email}</p> : null}
           {data.issuer.taxId ? <p className="text-[11px] text-muted-foreground">NPWP: {data.issuer.taxId}</p> : null}
         </div>
         <div className="flex flex-col items-end gap-1 text-right">
@@ -125,29 +136,47 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
               Kepada
             </p>
             <p className="text-sm font-bold">{data.customer?.name ?? "—"}</p>
+            <p className="text-[11px] text-muted-foreground">
+              Atas perhatian:{" "}
+              <span className="font-medium text-foreground">
+                {[contactPerson, contactRole].filter(Boolean).join(" — ")}
+              </span>
+            </p>
             {data.customer?.address ? (
               <p className="text-[11px] leading-snug text-muted-foreground">{data.customer.address}</p>
             ) : null}
+            {data.customer && (data.customer.phone || data.customer.email) ? (
+              <p className="text-[11px] text-muted-foreground">
+                {[data.customer.phone, data.customer.email].filter(Boolean).join(" · ")}
+              </p>
+            ) : null}
             {data.customer?.taxId ? <p className="text-[11px] text-muted-foreground">NPWP: {data.customer.taxId}</p> : null}
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Atas perhatian: <span className="font-medium text-foreground">{contactPerson}</span>
-            </p>
           </div>
           <dl className="flex flex-col gap-0.5 text-[11px]">
             <div className="flex justify-end gap-3">
               <dt className="text-muted-foreground">Tanggal invoice</dt>
               <dd className="min-w-32 text-right font-medium">{formatDate(data.invoiceDate)}</dd>
             </div>
-            <div className="flex justify-end gap-3">
-              <dt className="text-muted-foreground">Jatuh tempo</dt>
-              <dd className="min-w-32 text-right font-medium">{formatDate(data.dueDate)}</dd>
-            </div>
+            {data.dueDate ? (
+              <div className="flex justify-end gap-3">
+                <dt className="text-muted-foreground">Jatuh tempo</dt>
+                <dd className="min-w-32 text-right font-medium">{formatDate(data.dueDate)}</dd>
+              </div>
+            ) : null}
             {data.referenceNumber ? (
               <div className="flex justify-end gap-3">
                 <dt className="text-muted-foreground">
                   {data.referenceType === "PURCHASE_ORDER" ? "No. PO" : "Referensi"}
                 </dt>
                 <dd className="min-w-32 text-right font-medium">{data.referenceNumber}</dd>
+              </div>
+            ) : null}
+            {data.referenceDate ? (
+              <div className="flex justify-end gap-3">
+                <dt className="text-muted-foreground">
+                  {data.referenceType === "PURCHASE_ORDER" ? "Tanggal PO" : "Tanggal referensi"}
+                </dt>
+                <dd className="min-w-32 text-right font-medium">{formatDate(data.referenceDate)}</dd>
               </div>
             ) : null}
             {data.projectTitle ? (
@@ -170,11 +199,11 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
           <thead>
             <tr style={{ backgroundColor: accent, color: "white" }}>
               <th className="w-8 px-2 py-2 text-left font-semibold">No</th>
-              <th className="px-2 py-2 text-left font-semibold">Uraian Pekerjaan</th>
+              <th className="px-2 py-2 text-left font-semibold">Deskripsi</th>
               <th className="w-14 px-2 py-2 text-right font-semibold">Qty</th>
               <th className="w-14 px-2 py-2 text-left font-semibold">Unit</th>
-              <th className="w-28 px-2 py-2 text-right font-semibold">Harga (Rp)</th>
-              <th className="w-28 px-2 py-2 text-right font-semibold">Jumlah (Rp)</th>
+              <th className="w-28 px-2 py-2 text-right font-semibold">Harga Satuan</th>
+              <th className="w-28 px-2 py-2 text-right font-semibold">Jumlah</th>
             </tr>
           </thead>
           <tbody>
@@ -189,8 +218,8 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
                 <tr key={item.position} className="border-b align-top" style={{ borderColor: "var(--border)" }}>
                   <td className="px-2 py-2 text-center tabular-nums">{item.position}</td>
                   <td className="px-2 py-2">
-                    <p className="font-medium">{item.description}</p>
-                    {item.details ? <p className="mt-0.5 text-[10px] text-muted-foreground">{item.details}</p> : null}
+                    <p className="font-medium break-words">{item.description}</p>
+                    {item.details ? <p className="mt-0.5 text-[10px] break-words text-muted-foreground">{item.details}</p> : null}
                   </td>
                   <td className="px-2 py-2 text-right font-mono tabular-nums">{groupDigits(item.quantity)}</td>
                   <td className="px-2 py-2">{item.unit}</td>
@@ -203,7 +232,7 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
         </table>
 
         {/* ── Summary ── */}
-        <section className="flex justify-end">
+        <section className="flex justify-end avoid-break">
           <dl className="w-80 text-[11px]">
             {(isPartial || isSettlement) && (
               <>
@@ -225,17 +254,24 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
                 )}
                 <Divider />
                 <Row label="Total ditagihkan sekarang" value={fmtMoney(calc.billingBase)} bold accent={accent} />
+                {showValue(calc.remainingAfter) ? (
+                  <Row label="Sisa tagihan" value={fmtMoney(calc.remainingAfter)} />
+                ) : null}
               </>
             )}
             {!isPartial && !isSettlement && <Row label="Subtotal item" value={fmtMoney(calc.itemsSubtotal)} />}
-            {calc.discountAmount !== "0.00" && <Row label="Diskon" value={`− ${fmtMoney(calc.discountAmount)}`} />}
-            {calc.additionalAmount !== "0.00" && <Row label="Biaya tambahan" value={fmtMoney(calc.additionalAmount)} />}
-            {calc.taxMode === "EXCLUSIVE" && <Row label={taxLabel} value={fmtMoney(calc.taxAmount)} />}
-            {calc.taxMode === "INCLUSIVE" && (
+            {showValue(calc.discountAmount) && <Row label="Diskon" value={`− ${fmtMoney(calc.discountAmount)}`} />}
+            {showValue(calc.additionalAmount) && <Row label="Biaya tambahan" value={fmtMoney(calc.additionalAmount)} />}
+            {calc.taxMode === "EXCLUSIVE" && showValue(calc.taxAmount) && (
+              <Row label={taxLabel} value={fmtMoney(calc.taxAmount)} />
+            )}
+            {calc.taxMode === "INCLUSIVE" && showValue(calc.taxIncludedInTotal) && (
               <Row label={`${taxLabel} termasuk dalam total`} value={fmtMoney(data.taxIncludedInTotal)} />
             )}
-            {calc.taxMode === "MANUAL" && <Row label="Pajak (manual)" value={fmtMoney(calc.taxAmount)} />}
-            {calc.roundingAmount !== "0.00" && <Row label="Pembulatan" value={fmtMoney(calc.roundingAmount)} />}
+            {calc.taxMode === "MANUAL" && showValue(calc.taxAmount) && (
+              <Row label="Pajak (manual)" value={fmtMoney(calc.taxAmount)} />
+            )}
+            {showValue(calc.roundingAmount) && <Row label="Pembulatan" value={fmtMoney(calc.roundingAmount)} />}
             <Divider />
             <div className="mt-1 flex items-center justify-between gap-3 rounded-md px-3 py-2 text-white" style={{ backgroundColor: accent }}>
               <dt className="text-xs font-bold">TOTAL{data.currency === "IDR" ? " (IDR)" : ""}</dt>
@@ -247,8 +283,8 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
           </dl>
         </section>
 
-        {/* ── Footer: notes + bank left, stamp + signer right ── */}
-        <section className="grid grid-cols-2 items-start gap-6 pt-2">
+        {/* ── Footer: notes + bank left, meterai + signature right ── */}
+        <section className="grid grid-cols-2 items-start gap-6 pt-2 avoid-break">
           <div className="flex flex-col gap-3">
             {data.bank ? (
               <div className="rounded-lg border p-3 text-[11px]" style={{ borderColor: "var(--border)" }}>
@@ -267,29 +303,24 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
               </div>
             ) : null}
           </div>
-          <div className="flex flex-col items-end gap-1 text-[11px]">
-            <p className="text-muted-foreground">Hormat kami,</p>
-            {data.stampMode === "E_METERAI" || data.stampMode === "PHYSICAL" ? (
-              <div
-                className="flex h-16 w-24 items-center justify-center rounded border border-dashed text-center text-[9px] leading-tight text-muted-foreground"
-                style={{ borderColor: "var(--border)" }}
-              >
-                {data.stampMode === "E_METERAI" ? "E-METERAI\n(placeholder)" : "METERAI\nFISIK"}
-              </div>
-            ) : (
-              <div className="h-16 w-28" />
-            )}
-            {data.signer?.signaturePath ? (
-              // eslint-disable-next-line @next/next/no-img-element -- auth-gated storage route (feature 02 precedent)
-              <img
-                src={`/api/storage/${data.signer.signaturePath}`}
-                alt={`Tanda tangan ${data.signer.name}`}
-                className="-mt-2 max-h-14 w-auto object-contain"
-              />
-            ) : null}
-            <p className="font-bold">{data.signer?.name ?? "（  ）"}</p>
-            {data.signer?.title ? <p className="text-muted-foreground">{data.signer.title}</p> : null}
-            {data.signer?.location ? <p className="text-muted-foreground">{data.signer.location}</p> : null}
+          <div className="flex items-end justify-end gap-4">
+            <StampSlot mode={data.stampMode} hideLabel={data.settings?.hideStampLabel === true} />
+            <div className="flex flex-col items-end gap-1 text-[11px]">
+              <p className="text-muted-foreground">{signatureDateLine}</p>
+              <p className="text-muted-foreground">Hormat kami,</p>
+              {data.signer?.signaturePath ? (
+                // eslint-disable-next-line @next/next/no-img-element -- auth-gated storage route (feature 02 precedent)
+                <img
+                  src={`/api/storage/${data.signer.signaturePath}`}
+                  alt={`Tanda tangan ${data.signer.name}`}
+                  className="max-h-14 w-auto object-contain"
+                />
+              ) : (
+                <div className="h-14" aria-hidden="true" />
+              )}
+              <p className="font-bold">{data.signer?.name ?? "（  ）"}</p>
+              {data.signer?.title ? <p className="text-muted-foreground">{data.signer.title}</p> : null}
+            </div>
           </div>
         </section>
 
@@ -301,6 +332,39 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
       </div>
     </article>
   );
+}
+
+/**
+ * The meterai slot LEFT of the signature block (feature 06 spec):
+ *   • E_METERAI — compact dashed slot, caption "Slot E-Meterai"; a layout
+ *     placeholder only — NEVER a fake stamp image.
+ *   • PHYSICAL  — soft guide box inside the signature area that prints with
+ *     the document so the physical stamp lands in the right spot.
+ *   • BLANK_SPACE — a neat reserved space, nothing drawn.
+ *   • NONE — no slot at all; the signature block stays clean.
+ * The caption is optional (`hideStampLabel` from InvoiceProfile.settings).
+ */
+function StampSlot({ mode, hideLabel }: { mode: string; hideLabel: boolean }) {
+  const box =
+    "flex h-16 w-28 flex-col items-center justify-center rounded text-center text-[9px] leading-tight text-muted-foreground";
+  if (mode === "E_METERAI") {
+    return (
+      <div className={`${box} border border-dashed`} style={{ borderColor: "var(--border)" }} aria-label="Slot e-meterai">
+        {hideLabel ? null : <span>Slot E-Meterai</span>}
+      </div>
+    );
+  }
+  if (mode === "PHYSICAL") {
+    return (
+      <div className={`${box} border`} style={{ borderColor: "var(--border)" }} aria-label="Area meterai fisik">
+        {hideLabel ? null : <span>Meterai</span>}
+      </div>
+    );
+  }
+  if (mode === "BLANK_SPACE") {
+    return <div className="h-16 w-28" aria-hidden="true" />;
+  }
+  return null;
 }
 
 function Row({ label, value, bold, accent }: { label: string; value: string; bold?: boolean; accent?: string }) {

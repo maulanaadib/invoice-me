@@ -11,6 +11,7 @@
 // the status arrays and the reason validator are only covered as side effects.
 
 import { AppError } from "@/lib/errors";
+import type { InvoiceStatus } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import {
   BILLED_STATUSES,
@@ -79,11 +80,21 @@ describe("status boundaries", () => {
 
   it("only DRAFT/CANCELLED/REVISED never count as billed", () => {
     const billed = new Set(BILLED_STATUSES);
-    const all = ["DRAFT", "ISSUED", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED", "REVISED"];
+    const all: InvoiceStatus[] = [
+      "DRAFT",
+      "ISSUED",
+      "SENT",
+      "PARTIALLY_PAID",
+      "PAID",
+      "OVERDUE",
+      "CANCELLED",
+      "REVISED",
+    ];
     for (const status of all) {
       expect(countsTowardPreviouslyBilled(status), status).toBe(billed.has(status));
     }
-    expect(["DRAFT", "CANCELLED", "REVISED"].filter((s) => !billed.has(s))).toEqual([
+    const neverBilled: InvoiceStatus[] = ["DRAFT", "CANCELLED", "REVISED"];
+    expect(neverBilled.filter((s) => !billed.has(s))).toEqual([
       "DRAFT",
       "CANCELLED",
       "REVISED",
@@ -100,7 +111,8 @@ describe("status boundaries", () => {
   it("no status is missing from every gate (DRAFT/CANCELLED/REVISED are the only intentionally excluded ones)", () => {
     const gated = new Set([...CANCELABLE_STATUSES, ...REVISABLE_STATUSES, ...OVERDUE_ELIGIBLE_STATUSES]);
     expect([...gated].sort()).toEqual(["ISSUED", "PARTIALLY_PAID", "SENT"]);
-    expect(["DRAFT", "CANCELLED", "REVISED"].every((s) => !gated.has(s))).toBe(true);
+    const neverGated: InvoiceStatus[] = ["DRAFT", "CANCELLED", "REVISED"];
+    expect(neverGated.every((s) => !gated.has(s))).toBe(true);
   });
 });
 

@@ -34,7 +34,7 @@ import {
   type SignerSnapshot,
   type TemplateSnapshot,
 } from "@/modules/invoices/snapshots";
-import { getPdfJob, type PdfJobView } from "@/modules/pdf/service";
+import { getOfficialPdf, getPdfJob, type OfficialPdfView, type PdfJobView } from "@/modules/pdf/service";
 import { toBankAccountView } from "@/modules/bank-accounts/service";
 import type { InvoiceCalcResult } from "@/modules/invoices/calculation";
 import type {
@@ -166,6 +166,8 @@ export interface InvoiceDetailView {
   replacedBy: InvoiceDetailLink | null;
 
   pdfJob: PdfJobView | null;
+  /** Stored official PDF (feature 06) — null until the worker writes one. */
+  pdf: OfficialPdfView | null;
   permissions: InvoiceDetailPermissions;
   createdAt: string;
   updatedAt: string;
@@ -385,6 +387,7 @@ export async function getInvoiceDetail(
       };
 
   const pdfJob = await getPdfJob(invoice.id, ctx);
+  const pdf = isDraft ? null : await getOfficialPdf(invoice.id, ctx);
 
   return {
     id: invoice.id,
@@ -434,6 +437,7 @@ export async function getInvoiceDetail(
     revisedFrom: toLink(invoice.revisedFrom),
     replacedBy: toLink(invoice.replacedBy),
     pdfJob,
+    pdf,
     permissions: {
       edit: can("invoice.draft.update", ctx.scope) && isDraft,
       issue: can("invoice.issue", ctx.scope) && isDraft,

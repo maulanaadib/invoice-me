@@ -76,7 +76,7 @@ function draftValues(overrides: Partial<InvoiceDraftFormOutput> = {}): InvoiceDr
       { description: "Ongkos pasang", quantity: "1", unit: "Lot", unitPrice: "250000", discountAmount: "0" },
     ],
     ...overrides,
-  };
+  } as InvoiceDraftFormOutput;
 }
 
 beforeAll(async () => {
@@ -175,12 +175,12 @@ describe("snapshot contents", () => {
     );
     const { draft } = await issueDraft(draftValues({ projectReferenceId: project.id }));
 
-    const issued = await db.invoice.findUnique({ where: { id: draft.id } })!;
-    const profile = await db.invoiceProfile.findUnique({ where: { id: profileId } })!;
-    const customer = await db.customer.findUnique({ where: { id: customerId } })!;
-    const contact = await db.customerContact.findUnique({ where: { id: contactId } })!;
-    const bank = await db.bankAccount.findUnique({ where: { id: bankId } })!;
-    const signer = await db.signer.findUnique({ where: { id: signerId } })!;
+    const issued = (await db.invoice.findUnique({ where: { id: draft.id } }))!;
+    const profile = (await db.invoiceProfile.findUnique({ where: { id: profileId } }))!;
+    const customer = (await db.customer.findUnique({ where: { id: customerId } }))!;
+    const contact = (await db.customerContact.findUnique({ where: { id: contactId } }))!;
+    const bank = (await db.bankAccount.findUnique({ where: { id: bankId } }))!;
+    const signer = (await db.signer.findUnique({ where: { id: signerId } }))!;
 
     const issuerSnap = JSON.parse(JSON.stringify(issued.issuerSnapshot));
     const customerSnap = JSON.parse(JSON.stringify(issued.customerSnapshot));
@@ -259,11 +259,11 @@ describe("snapshot contents", () => {
         title: "Proyek Calc Snap", workValue: "4750000", currency: "IDR" }, ctx(),
     );
     const { draft } = await issueDraft(draftValues({ projectReferenceId: project.id }));
-    const issued = await db.invoice.findUnique({ where: { id: draft.id } })!;
+    const issued = (await db.invoice.findUnique({ where: { id: draft.id } }))!;
     const items = await db.invoiceItem.findMany({ where: { invoiceId: draft.id } });
 
     const calcSnap = JSON.parse(JSON.stringify(issued.calculationSnapshot));
-    const row = await db.invoice.findUnique({ where: { id: draft.id } })!;
+    const row = (await db.invoice.findUnique({ where: { id: draft.id } }))!;
 
     // The snapshot is the frozen document numbers; they must equal the
     // persisted row and the engine output for the same rows.
@@ -317,8 +317,8 @@ describe("snapshot contents", () => {
         title: "Proyek Template Snap", workValue: "4750000", currency: "IDR" }, ctx(),
     );
     const { draft } = await issueDraft(draftValues({ projectReferenceId: project.id, stampMode: "NONE" }));
-    const issued = await db.invoice.findUnique({ where: { id: draft.id } })!;
-    const profile = await db.invoiceProfile.findUnique({ where: { id: profileId } })!;
+    const issued = (await db.invoice.findUnique({ where: { id: draft.id } }))!;
+    const profile = (await db.invoiceProfile.findUnique({ where: { id: profileId } }))!;
 
     const templateSnap = JSON.parse(JSON.stringify(issued.templateSnapshot));
     expect(templateSnap.templateKey).toBe(profile.templateKey);
@@ -352,7 +352,7 @@ describe("draft-to-issue reassignment", () => {
       draftValues({
         projectReferenceId: project.id,
         customerId: sameOrgOtherCustomerId,
-        customerContactId: null,
+        customerContactId: undefined,
         items: [
           { description: "Pemasangan bracket frame", quantity: "5", unit: "Unit", unitPrice: "900000", discountAmount: "0" },
           { description: "Ongkos pasang", quantity: "1", unit: "Lot", unitPrice: "250000", discountAmount: "0" },
@@ -363,7 +363,7 @@ describe("draft-to-issue reassignment", () => {
     );
 
     await issueInvoice(draft.id, ctx());
-    const issued = await db.invoice.findUnique({ where: { id: draft.id } })!;
+    const issued = (await db.invoice.findUnique({ where: { id: draft.id } }))!;
 
     const issuerSnap = JSON.parse(JSON.stringify(issued.issuerSnapshot));
     const customerSnap = JSON.parse(JSON.stringify(issued.customerSnapshot));
@@ -375,7 +375,7 @@ describe("draft-to-issue reassignment", () => {
     expect(customerSnap.taxId).toBe("04.5555.6666.000006");
 
     // The contact chosen at createDraft belonged to customer A; the
-    // reassignment dropped it (customerContactId: null), so the snapshot
+    // reassignment dropped it (customerContactId undefined), so the snapshot
     // contact is null — the issued document must not keep a PIC from the
     // wrong customer.
     expect(issued.contactSnapshot).toBeNull();
@@ -405,7 +405,7 @@ describe("immutability after issue", () => {
 
   async function restoreMasters() {
     await updateProfile(profileId, { name: "Sigit Berkarya", address: null, primaryColor: "#2563eb" }, ctx());
-    await updateCustomer(customerId, { companyName: "PT Snapshot Nusantara", address: null }, ctx());
+    await updateCustomer(customerId, { companyName: "PT Snapshot Nusantara", address: "" }, ctx());
     await saveBankAccount(
       { bankName: "Bank Uji", accountNumber: "1234567890123456", accountHolder: "PT Sigit Berkarya", branch: "KCP Sudirman" },
       ctx(),
@@ -431,7 +431,7 @@ describe("immutability after issue", () => {
       expect(detail.issuer.name).toBe(detailBefore.issuer.name);
       expect(detail.issuer.address).toBe(detailBefore.issuer.address);
       expect(detail.issuer.primaryColor).toBe(detailBefore.issuer.primaryColor);
-      expect(detail.customer?.companyName).toBe(detailBefore.customer?.companyName);
+      expect(detail.customer?.name).toBe(detailBefore.customer?.name);
       expect(detail.customer?.address).toBe(detailBefore.customer?.address);
       expect(detail.bank?.bankName).toBe(detailBefore.bank?.bankName);
       expect(detail.signer?.name).toBe(detailBefore.signer?.name);
@@ -440,8 +440,8 @@ describe("immutability after issue", () => {
       expect(detail.contact?.division).toBe(detailBefore.contact?.division);
 
       // The masters really did change — so the assertion above is meaningful.
-      expect((await db.invoiceProfile.findUnique({ where: { id: profileId } })!).name).toBe("Sigit Berkarya Ubah");
-      expect((await db.customer.findUnique({ where: { id: customerId } })!).companyName).toBe("PT Snapshot Diubah");
+      expect(((await db.invoiceProfile.findUnique({ where: { id: profileId } }))!).name).toBe("Sigit Berkarya Ubah");
+      expect(((await db.customer.findUnique({ where: { id: customerId } }))!).companyName).toBe("PT Snapshot Diubah");
     } finally {
       await restoreMasters();
     }
@@ -462,7 +462,7 @@ describe("immutability after issue", () => {
     expect(detail.amounts.grandTotal).toBe(detailBefore.amounts.grandTotal);
 
     // The frozen numbers equal the persisted row (invariant 4 + 5).
-    const row = await db.invoice.findUnique({ where: { id: draft.id } })!;
+    const row = (await db.invoice.findUnique({ where: { id: draft.id } }))!;
     expect(new Decimal(row.grandTotal).toFixed(2)).toBe(detailBefore.calc.grandTotal);
     expect(new Decimal(row.previouslyBilled).toFixed(2)).toBe(detailBefore.calc.previouslyBilled);
   });
@@ -479,13 +479,13 @@ describe("absent-at-issue snapshots", () => {
     const { draft } = await issueDraft(
       draftValues({
         projectReferenceId: project.id,
-        customerContactId: null,
-        bankAccountId: null,
-        signerId: null,
+        customerContactId: undefined,
+        bankAccountId: undefined,
+        signerId: undefined,
       }),
     );
 
-    const issued = await db.invoice.findUnique({ where: { id: draft.id } })!;
+    const issued = (await db.invoice.findUnique({ where: { id: draft.id } }))!;
     expect(issued.bankSnapshot).toBeNull();
     expect(issued.signerSnapshot).toBeNull();
     expect(issued.contactSnapshot).toBeNull();
@@ -505,9 +505,9 @@ describe("absent-at-issue snapshots", () => {
     const { draft } = await issueDraft(
       draftValues({
         projectReferenceId: project.id,
-        customerContactId: null,
-        bankAccountId: null,
-        signerId: null,
+        customerContactId: undefined,
+        bankAccountId: undefined,
+        signerId: undefined,
       }),
     );
 

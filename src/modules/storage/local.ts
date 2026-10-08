@@ -8,7 +8,7 @@
 //   3. resolveSafe() re-checks that the resolved absolute path stays under
 //      STORAGE_ROOT (catches any future caller that hand-builds a path).
 
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve, sep } from "node:path";
 import { fileTypeFromBuffer } from "file-type";
@@ -16,6 +16,7 @@ import { AppError } from "@/lib/errors";
 import { env } from "@/server/env";
 import { validateUpload } from "@/modules/storage/validate";
 import type {
+  SaveInvoicePdfOptions,
   StorageService,
   StoredContent,
   StoredObject,
@@ -23,6 +24,9 @@ import type {
 } from "@/modules/storage/types";
 
 const SAFE_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
+// Generated PDF names are built server-side (safePdfFilename); re-check the
+// shape anyway so no future caller can smuggle a traversal through `filename`.
+const SAFE_PDF_FILENAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}\.pdf$/;
 
 export class LocalStorageService implements StorageService {
   private readonly root: string;
@@ -86,6 +90,41 @@ export class LocalStorageService implements StorageService {
     }
     const detected = await fileTypeFromBuffer(data);
     return { data, mimeType: detected?.mime ?? "application/octet-stream" };
+  }
+
+  async saveInvoicePdf(data: Buffer, options: SaveInvoicePdfOptions): Promise<StoredObject> {
+    if (!SAFE_SEGMENT.test(options.orgId)) {
+      throw new AppError("VALIDATION_ERROR", "Tujuan penyimpanan file tidak valid.");
+    }
+    if (!Number.isInteger(options.year) || options.year < 2000 || options.year > 9999) {
+      throw new AppError("VALIDATION_ERROR", "Tahun penyimpanan file tidak valid.");
+    }
+    if (!SAFE_PDF_FILENAME.test(options.filename)) {
+      throw new AppError("VALIDATION_ERROR", "Nama file PDF tidak valid.");
+    }
+    // Defense in depth: only a real PDF reaches the persistent volume.
+    if (data.subarray(0, 5).toString("latin1") !== "%PDF-") {
+      throw new AppError("VALIDATION_ERROR", "Isi file bukan PDF yang valid.");
+    }
+
+    const path = [
+      "invoices",
+      "organizations",
+      options.orgId,
+      String(options.year),
+      options.filename,
+    ].join("/");
+    const absolute = this.resolveSafe(path);
+
+    await mkdir(dirname(absolute), { recursive: true });
+    await writeFile(absolute, data);
+
+    return {
+      path,
+      size: data.length,
+      mimeType: "application/pdf",
+      sha256: createHash("sha256").update(data).digest("hex"),
+    };
   }
 
   async delete(path: string): Promise<void> {

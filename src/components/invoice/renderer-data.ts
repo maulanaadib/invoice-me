@@ -13,6 +13,12 @@ import {
   type InvoiceCalcInput,
   type InvoiceCalcResult,
 } from "@/modules/invoices/calculation";
+import {
+  parseProfileSettings,
+  type InvoiceProfileSettings,
+} from "@/modules/profiles/settings";
+import type { IssuedPrintSource } from "@/modules/invoices/print-document";
+import type { CustomerSnapshot } from "@/modules/invoices/snapshots";
 import type { BankAccountView } from "@/modules/bank-accounts/service";
 import type { SignerView } from "@/modules/signers/service";
 import type { InvoiceType } from "@prisma/client";
@@ -75,6 +81,14 @@ export interface InvoiceRendererData {
   bank: Pick<BankAccountView, "bankName" | "accountHolder" | "maskedNumber" | "branch"> | null;
   signer: Pick<SignerView, "name" | "title" | "location" | "signaturePath"> | null;
   stampMode: string;
+
+  /** Bill-To: PIC jabatan/divisi (fitur 06 — absent in the draft view). */
+  contactTitle?: string | null;
+  contactDivision?: string | null;
+
+  /** InvoiceProfile.settings honored by the document (feature 06):
+   * hide-zero summary rows + stamp-slot label toggle. */
+  settings?: InvoiceProfileSettings | null;
 
   notes?: string | null;
   footerText?: string | null;
@@ -152,6 +166,7 @@ export function rendererDataFromDraft(
     stampMode: draft.stampMode,
     notes: draft.notes,
     footerText: draft.footerText,
+    settings: draft.profile.settings,
     primaryColor: draft.profile.primaryColor,
     currency: draft.currency,
   };
@@ -200,7 +215,7 @@ export interface RendererFormValues {
 export interface RendererPreviewInput {
   values: RendererFormValues;
   numberPreview: string | null;
-  profile: { name: string; legalName: string | null; logoPath: string | null; primaryColor: string; address: string | null; phone: string | null; whatsapp: string | null; fax: string | null; email: string | null; website: string | null; taxId: string | null };
+  profile: { name: string; legalName: string | null; logoPath: string | null; primaryColor: string; address: string | null; phone: string | null; whatsapp: string | null; fax: string | null; email: string | null; website: string | null; taxId: string | null; settings?: InvoiceProfileSettings | null };
   customer: RendererParty | null;
   contactName: string | null;
   projectTitle: string | null;
@@ -217,6 +232,7 @@ export interface RendererPreviewInput {
  */
 export function buildRendererPreviewData(input: RendererPreviewInput): InvoiceRendererData {
   const { values } = input;
+  const { settings, ...issuerProfile } = input.profile;
   const savedItems = values.items.filter(
     (item) => item.description.trim() !== "" || item.quantity.trim() !== "" || item.unitPrice.trim() !== "",
   );
@@ -259,7 +275,7 @@ export function buildRendererPreviewData(input: RendererPreviewInput): InvoiceRe
     termName: values.termName || null,
     termNumber: values.termNumber ? Number(values.termNumber) : null,
     customLabel: values.customLabel || null,
-    issuer: { ...input.profile },
+    issuer: { ...issuerProfile },
     customer: input.customer,
     contactName: input.contactName,
     projectTitle: input.projectTitle,
@@ -278,9 +294,107 @@ export function buildRendererPreviewData(input: RendererPreviewInput): InvoiceRe
     bank: input.bank,
     signer: input.signer,
     stampMode: values.stampMode,
+    settings: settings ?? null,
     notes: values.notes || null,
     footerText: values.footerText || null,
     primaryColor: input.profile.primaryColor,
     currency: input.currency,
+  };
+}
+
+// ─── Issued invoice (print route / PDF, feature 06) ─────────────────────────
+
+/** Snapshot customer → RendererParty (address composed like the draft path). */
+function customerPartyFromSnapshot(customer: CustomerSnapshot): RendererParty {
+  return {
+    name: customer.companyName,
+    address: [
+      customer.address,
+      [customer.city, customer.province, customer.postalCode].filter(Boolean).join(", "),
+      customer.country,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    phone: customer.phone,
+    email: customer.email,
+    taxId: customer.taxId,
+  };
+}
+
+/**
+ * The ISSUED document: seven immutable snapshots → renderer data. Nothing
+ * reads the live profile/customer/bank here — that is what makes "edit
+ * profil setelah terbit, PDF resmi lama tidak berubah" structural.
+ */
+export function rendererDataFromIssued(source: IssuedPrintSource): InvoiceRendererData {
+  const { calculation, template } = source;
+  return {
+    number: source.number,
+    numberPreview: source.number,
+    status: "ISSUED",
+    invoiceType: calculation.invoiceType,
+    invoiceDate: source.invoiceDate,
+    dueDate: source.dueDate,
+    referenceType: source.referenceType,
+    referenceNumber: source.referenceNumber,
+    referenceDate: source.referenceDate,
+    paymentTerms: source.paymentTerms,
+    billingMode: calculation.billingMode,
+    billingPercent: calculation.billingPercent,
+    termName: source.termName,
+    termNumber: source.termNumber,
+    customLabel: source.customLabel,
+    issuer: {
+      name: source.issuer.name,
+      legalName: source.issuer.legalName,
+      logoPath: source.issuer.logoPath,
+      primaryColor: source.issuer.primaryColor,
+      address: source.issuer.address,
+      phone: source.issuer.phone,
+      whatsapp: source.issuer.whatsapp,
+      fax: source.issuer.fax,
+      email: source.issuer.email,
+      website: source.issuer.website,
+      taxId: source.issuer.taxId,
+    },
+    customer: source.customer ? customerPartyFromSnapshot(source.customer) : null,
+    contactName: source.contact?.name ?? null,
+    contactTitle: source.contact?.title ?? null,
+    contactDivision: source.contact?.division ?? null,
+    projectTitle: source.projectTitle,
+    items: calculation.items.map((item) => ({
+      position: item.position,
+      description: item.description,
+      details: item.details,
+      quantity: item.quantity,
+      unit: item.unit,
+      unitPrice: item.unitPrice,
+      discountAmount: item.discountAmount,
+      lineAmount: item.lineAmount,
+    })),
+    calc: calculation.calc,
+    taxIncludedInTotal: calculation.calc.taxIncludedInTotal,
+    bank: source.bank
+      ? {
+          bankName: source.bank.bankName,
+          accountHolder: source.bank.accountHolder,
+          maskedNumber: source.bank.maskedNumber,
+          branch: source.bank.branch,
+        }
+      : null,
+    signer: source.signer
+      ? {
+          name: source.signer.name,
+          title: source.signer.title,
+          location: source.signer.location,
+          signaturePath: source.signer.signaturePath,
+        }
+      : null,
+    stampMode: template.stampMode,
+    settings: parseProfileSettings(source.settings),
+    notes: source.notes,
+    footerText: source.footerText,
+    primaryColor: template.primaryColor,
+    currency: source.currency,
   };
 }

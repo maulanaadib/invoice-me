@@ -29,8 +29,10 @@ services:
       APP_URL: ${APP_URL:-http://localhost:3000}
       INTERNAL_PDF_SECRET: ${INTERNAL_PDF_SECRET}
       INTERNAL_APP_URL: http://app:3000
+      # The app's PdfJob worker renders through the internal network only —
+      # the pdf-service service publishes no host port (invariant 10).
+      PDF_SERVICE_URL: http://pdf-service:3001
       STORAGE_ROOT: /data
-      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-2}
       GLITCHTIP_DSN: ${GLITCHTIP_DSN:-}
       SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-superadmin}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.test}

@@ -63,6 +63,14 @@ function formatTimestamp(value: string | null): string {
   });
 }
 
+/** 1536 → "1,5 KB" (id-ID decimal comma). */
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toLocaleString("id-ID", { maximumFractionDigits: 1 })} KB`;
+  return `${(kb / 1024).toLocaleString("id-ID", { maximumFractionDigits: 2 })} MB`;
+}
+
 function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-1 border-b border-border py-3 last:border-b-0 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
@@ -380,15 +388,43 @@ export default async function InvoiceDetailPage({
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       Antrean dibuat {formatTimestamp(invoice.pdfJob.createdAt)}
+                      {invoice.pdfJob.attempt > 1 ? ` · percobaan ke-${invoice.pdfJob.attempt}` : ""}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {invoice.pdfJob.status === "PENDING"
-                      ? "File belum tersedia — proses pembuatan PDF berjalan di layanan terpisah (fitur berikutnya). Tidak ada unduhan sebelum filenya benar-benar ada."
-                      : invoice.pdfJob.status === "SUCCESS"
-                        ? "Unduhan PDF menyusul setelah penyimpanan file resmi diaktifkan."
-                        : "Pembuatan PDF akan diulang otomatis oleh antrian."}
-                  </p>
+                  {invoice.pdf ? (
+                    <>
+                      <div>
+                        <p className="font-mono text-sm font-medium">{invoice.pdf.filename}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatBytes(invoice.pdf.sizeBytes)} · versi {invoice.pdf.version} ·
+                          dibuat {formatTimestamp(invoice.pdf.generatedAt)}
+                        </p>
+                      </div>
+                      <div>
+                        <Button
+                          render={<a href={`/api/invoices/${invoice.id}/pdf`} download />}
+                          data-testid="download-pdf"
+                        >
+                          Unduh PDF
+                        </Button>
+                      </div>
+                    </>
+                  ) : invoice.pdfJob.status === "FAILED" ? (
+                    <p className="text-sm text-destructive">
+                      {invoice.pdfJob.errorMessage ?? "Pembuatan PDF gagal."} Percobaan otomatis
+                      berhenti setelah 3 kali — invoice tetap terbit dan tidak berubah.
+                    </p>
+                  ) : invoice.pdfJob.status === "SUCCESS" ? (
+                    <p className="text-sm text-muted-foreground">
+                      Job selesai tetapi file belum ada di penyimpanan — antrean akan diproses
+                      ulang otomatis.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      File belum tersedia — pembuatan PDF berjalan otomatis di layanan terpisah.
+                      Tombol unduh muncul begitu filenya benar-benar ada.
+                    </p>
+                  )}
                 </>
               )}
             </CardContent>

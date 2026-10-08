@@ -277,7 +277,7 @@ describe("cancel gates", () => {
     );
     expect(failure.message).toBe("Invoice sudah pernah dibatalkan.");
     // Nothing changed through the forbidden path.
-    expect((await db.invoice.findUnique({ where: { id: draft.id } })!).status).toBe("CANCELLED");
+    expect(((await db.invoice.findUnique({ where: { id: draft.id } }))!).status).toBe("CANCELLED");
   });
 
   it("rejects cancelling an already-REVISED original ('sudah digantikan revisi')", async () => {
@@ -294,7 +294,7 @@ describe("cancel gates", () => {
       "LOCKED",
     );
     expect(failure.message).toBe("Invoice sudah digantikan revisi dan tidak dapat dibatalkan.");
-    expect((await db.invoice.findUnique({ where: { id: original.id } })!).status).toBe("REVISED");
+    expect(((await db.invoice.findUnique({ where: { id: original.id } }))!).status).toBe("REVISED");
   });
 });
 
@@ -498,7 +498,7 @@ describe("org isolation on pdf and project billing", () => {
         projectReferenceId: foreignProject.id,
         bankAccountId: foreignBankId,
         signerId: foreignSignerId,
-      },
+      } as InvoiceDraftFormOutput,
       ownerCtx(otherOrg.id),
     );
     await issueInvoice(foreignDraft.id, ownerCtx(otherOrg.id));

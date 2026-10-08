@@ -281,6 +281,7 @@ export function InvoiceEditor({ options, initialDraft, initialPrefill }: Invoice
         email: activeProfile.email,
         website: activeProfile.website,
         taxId: activeProfile.taxId,
+        settings: activeProfile.settings,
       },
       customer: customerParty,
       contactName,

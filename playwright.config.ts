@@ -21,10 +21,23 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: "npm run dev",
+      url: "http://localhost:3000",
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+    // Feature 06: the REAL pdf-service (Playwright Chromium) that the app's
+    // in-process PdfJob worker calls. Dev port 3090 — 3001 belongs to the
+    // compose network only (and may be taken by other processes on a dev
+    // host). Secrets come from .env.local so the signed tokens match.
+    {
+      command: "npx dotenv -e .env.local -- node pdf-service/src/index.js",
+      url: "http://localhost:3090/health",
+      reuseExistingServer: true,
+      timeout: 60_000,
+      env: { ...process.env, PORT: "3090" },
+    },
+  ],
 });

@@ -551,6 +551,14 @@ model Invoice {
   // issue time (feature 05); feature 07 decrements it as payments land.
   remainingAfter Decimal @default(0) @db.Decimal(18, 2)
 
+  // Feature 06: root-relative path of the OFFICIAL generated PDF
+  // (invoices/organizations/{orgId}/{year}/{invoice-number}.pdf). Written once
+  // by the PdfJob worker together with the InvoicePdf row; a null value means
+  // "no file exists yet" — the UI says so instead of faking a download link.
+  // The file itself is immutable (invariant 9): never re-rendered, never
+  // overwritten — a revision produces a new invoice (and a new file).
+  pdfPath String?
+
   createdById String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

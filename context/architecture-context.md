@@ -75,7 +75,9 @@ The canonical list, decided once in Stage 5c so every feature uses the same name
 | `BETTER_AUTH_SECRET` | Session signing secret | generated local, `.env.local` only | not provisioned yet (Coolify env) |
 | `BETTER_AUTH_URL` | Base URL untuk auth callbacks | `http://localhost:3000` | not provisioned yet |
 | `INTERNAL_PDF_SECRET` | Shared secret untuk request ke pdf-service | dev random di `.env.local` | not provisioned yet |
-| `INTERNAL_APP_URL` | URL internal app dari pdf-service (fetch print route) | `http://host.docker.internal:3000` | `http://app:3000` (Docker internal) |
+| `INTERNAL_APP_URL` | URL internal app dari pdf-service (fetch print route) | `http://localhost:3000` (host-to-host dev) | `http://app:3000` (Docker internal) |
+| `PDF_SERVICE_URL` | URL internal app → pdf-service (worker memanggil `POST /render`) | `http://localhost:3090` (dev host; 3001 dipakai compose) | `http://pdf-service:3001` (Docker internal) |
+| `PDF_WORKER_ENABLED` | Saklar worker antrean PdfJob di proses app (interval poll) | `true` | `true` (single instance MVP) |
 | `STORAGE_ROOT` | Root volume persistent | `./.data` (dev) | `/data` |
 | `UPLOAD_MAX_MB` | Max upload size (logo/signature/PO/proof) | `2` | `2` |
 | `DEFAULT_TIMEZONE` | Timezone bisnis default | `Asia/Jakarta` | `Asia/Jakarta` |

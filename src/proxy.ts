@@ -89,6 +89,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  // Excludes: API routes (their own 401s), static assets, health endpoint.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|health|robots.txt).*)"],
+  // Excludes: API routes (their own 401s), static assets, health endpoint,
+  // and the internal print route (feature 06) — it authenticates with a
+  // signed short-lived token in its own handler, and redirecting the
+  // pdf-service fetch to /login would hand it a 200 login page instead of a
+  // renderable document.
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|health|robots.txt|print).*)"],
 };

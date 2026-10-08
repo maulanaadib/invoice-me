@@ -38,6 +38,10 @@ import { getCustomerForScope } from "@/modules/customers/service";
 import { getProjectForScope } from "@/modules/projects/service";
 import { listBankAccounts, type BankAccountView } from "@/modules/bank-accounts/service";
 import { listSigners, type SignerView } from "@/modules/signers/service";
+import {
+  parseProfileSettings,
+  type InvoiceProfileSettings,
+} from "@/modules/profiles/settings";
 import { logger } from "@/server/logger";
 import { db } from "@/server/db";
 import type {
@@ -103,6 +107,8 @@ export interface DraftProfileView {
   taxId: string | null;
   numberPattern: string;
   numberPreview: string | null;
+  /** Document settings (hide-zero rows, stamp label) — feature 06. */
+  settings: InvoiceProfileSettings;
 }
 
 export interface InvoiceDraftView {
@@ -189,6 +195,7 @@ type InvoiceWithRelations = Invoice & {
     website: string | null;
     taxId: string | null;
     numberPattern: string;
+    settings: Prisma.JsonValue;
   };
   customer: {
     id: string;
@@ -270,6 +277,7 @@ export function toDraftView(invoice: InvoiceWithRelations): InvoiceDraftView {
       taxId: invoice.profile.taxId,
       numberPattern: invoice.profile.numberPattern,
       numberPreview: invoice.numberPreview,
+      settings: parseProfileSettings(invoice.profile.settings),
     },
     customer: invoice.customer
       ? {
@@ -873,6 +881,8 @@ export interface EditorProfileOption {
   defaultTaxPercent: string | null;
   defaultStampMode: string;
   defaultNotes: string | null;
+  /** Document settings (hide-zero rows, stamp label) — feature 06 preview. */
+  settings: InvoiceProfileSettings;
 }
 
 export interface EditorProjectOption {
@@ -971,6 +981,7 @@ export async function getEditorOptions(ctx: InvoiceServiceContext): Promise<Edit
       email: profile.email,
       website: profile.website,
       taxId: profile.taxId,
+      settings: parseProfileSettings(profile.settings),
       defaultBankAccountId: profile.defaultBankAccountId,
       defaultSignerId: profile.defaultSignerId,
       defaultTaxMode: profile.defaultTaxMode,
