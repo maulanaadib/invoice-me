@@ -70,7 +70,7 @@ describe("ADMIN", () => {
 describe("STAFF", () => {
   const ctx = ctxFor("STAFF");
 
-  it("grants drafts, customers, projects and read/export invoice actions", () => {
+  it("grants drafts, customers, projects, issue/marksent and read/export invoice actions", () => {
     expect(can("invoice.draft.create", ctx)).toBe(true);
     expect(can("invoice.draft.read", ctx)).toBe(true);
     expect(can("invoice.draft.update", ctx)).toBe(true);
@@ -79,6 +79,9 @@ describe("STAFF", () => {
     expect(can("invoice.download", ctx)).toBe(true);
     expect(can("invoice.preview", ctx)).toBe(true);
     expect(can("invoice.export", ctx)).toBe(true);
+    // Feature 05 spec: STAFF+ issues and marks sent (permission updated there).
+    expect(can("invoice.issue", ctx)).toBe(true);
+    expect(can("invoice.markSent", ctx)).toBe(true);
     expect(can("customer.create", ctx)).toBe(true);
     expect(can("customer.update", ctx)).toBe(true);
     expect(can("customer.delete", ctx)).toBe(true);
@@ -87,8 +90,7 @@ describe("STAFF", () => {
     expect(can("report.view", ctx)).toBe(true);
   });
 
-  it("denies issue/cancel/revise, payments, org admin and destructive actions", () => {
-    expect(can("invoice.issue", ctx)).toBe(false);
+  it("denies cancel/revise, payments, org admin and destructive actions", () => {
     expect(can("invoice.cancel", ctx)).toBe(false);
     expect(can("invoice.revise", ctx)).toBe(false);
     expect(can("payment.record", ctx)).toBe(false);

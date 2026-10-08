@@ -108,6 +108,9 @@ model user {
   memberships Membership[]
   auditLogs   AuditLog[]
   invoicesCreated Invoice[] @relation("InvoiceCreatedBy")
+  // Feature 05: who issued an invoice / generated an official PDF.
+  invoicesIssued Invoice[]    @relation("InvoiceIssuedBy")
+  pdfsGenerated  InvoicePdf[] @relation("InvoicePdfGeneratedBy")
 
   @@map("user")
 }
@@ -446,10 +449,8 @@ model InvoiceSequence {
   @@map("InvoiceSequence")
 }
 
-// ─── Feature 04: invoice engine core ──────────────────────────────────────
+// ─── Feature 04: invoice engine core + feature 05 lifecycle ───────────────
 // Field names, enums and constraints follow context/data-model.md (canonical).
-// Lifecycle-only columns (issuedAt, snapshots, revision links, cancellation)
-// arrive with feature 05 — this migration carries the draft/editor fields.
 
 enum InvoiceType {
   DOWN_PAYMENT
@@ -522,6 +523,34 @@ model Invoice {
   signerId         String?
   bankAccountId    String?
 
+  // ─── Feature 05: issue & lifecycle ───────────────────────────────────────
+  // Issue metadata: written together with `number` + status inside the issue
+  // transaction (issue-service). issuedById references the user who issued.
+  issuedAt          DateTime?
+  issuedById        String?
+  cancelledAt       DateTime?
+  cancellationReason String?  @db.Text
+  // Revision links: new draft.revisedFromId → old invoice; old.replacedById →
+  // new draft (both SetNull — an issued invoice is never deleted, a draft can
+  // be, and then the old invoice simply has no replacement anymore).
+  revisedFromId String?
+  replacedById  String?
+
+  // Immutable JSON snapshots captured AT ISSUE (architecture invariant 4).
+  // Nullable only because a DRAFT has no snapshot yet — every ISSUED row has
+  // all seven, and every issued read renders from them (never live relations).
+  issuerSnapshot      Json?
+  customerSnapshot    Json?
+  contactSnapshot     Json?
+  bankSnapshot        Json?
+  signerSnapshot      Json?
+  calculationSnapshot Json?
+  templateSnapshot    Json?
+
+  // Outstanding amount of this document after issue: equals grandTotal at
+  // issue time (feature 05); feature 07 decrements it as payments land.
+  remainingAfter Decimal @default(0) @db.Decimal(18, 2)
+
   createdById String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -534,7 +563,14 @@ model Invoice {
   signer            Signer?          @relation(fields: [signerId], references: [id], onDelete: SetNull)
   bankAccount       BankAccount?     @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
   createdBy         user             @relation("InvoiceCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  issuedBy          user?            @relation("InvoiceIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+  revisedFrom       Invoice?         @relation("InvoiceRevisionParent", fields: [revisedFromId], references: [id], onDelete: SetNull)
+  revisions         Invoice[]        @relation("InvoiceRevisionParent")
+  replacedBy        Invoice?         @relation("InvoiceRevisionReplacement", fields: [replacedById], references: [id], onDelete: SetNull)
+  replacements      Invoice[]        @relation("InvoiceRevisionReplacement")
   items             InvoiceItem[]
+  pdfJobs           PdfJob[]
+  pdfs              InvoicePdf[]
 
   @@unique([organizationId, number])
   @@index([organizationId, status])
@@ -568,4 +604,56 @@ model InvoiceItem {
 
   @@index([invoiceId, position])
   @@map("InvoiceItem")
+}
+
+// ─── Feature 05: PDF job queue + official PDF record ──────────────────────
+// Feature 05 only ENQUEUES a PENDING job at issue time and shows its honest
+// status; the worker that runs the job and writes InvoicePdf is feature 06.
+
+enum PdfJobStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+model PdfJob {
+  id           String       @id @default(cuid())
+  invoiceId    String
+  status       PdfJobStatus @default(PENDING)
+  attempt      Int          @default(0)
+  errorMessage String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  durationMs   Int?
+  createdAt    DateTime     @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  // Worker poll: WHERE status = PENDING ORDER BY createdAt.
+  @@index([status, createdAt])
+  @@index([invoiceId])
+  @@map("PdfJob")
+}
+
+model InvoicePdf {
+  id               String   @id @default(cuid())
+  invoiceId        String
+  version          Int
+  storagePath      String
+  originalFilename String
+  mimeType         String
+  sizeBytes        BigInt
+  sha256           String
+  templateVersion  String
+  generatedById    String
+  generatedAt      DateTime @default(now())
+  isOfficial       Boolean  @default(false)
+
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  generatedBy user    @relation("InvoicePdfGeneratedBy", fields: [generatedById], references: [id], onDelete: Restrict)
+
+  @@unique([invoiceId, version])
+  @@index([invoiceId])
+  @@map("InvoicePdf")
 }

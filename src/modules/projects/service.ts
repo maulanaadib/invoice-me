@@ -1,20 +1,20 @@
 // src/modules/projects/service.ts
 // ProjectReference (PO / SPK / contract / quotation) domain: org-scoped CRUD,
 // server-side list with pagination/search, PO attachment lifecycle through
-// StorageService, and prefillFromProject — the preparation hook feature 04's
-// invoice editor calls to pre-fill a new draft from a project.
-//
-// billedToDate (sudah ditagihkan per project) is deliberately NOT computed
-// here: the Invoice table arrives in feature 05. The project detail page
-// shows an explicit "not yet available" placeholder instead of a fake 0
-// (feature 03 spec, Scope Limits).
+// StorageService, prefillFromProject — the preparation hook feature 04's
+// invoice editor calls to pre-fill a new draft from a project — and
+// billedToDate (feature 05): how much of this project has been invoiced,
+// straight from the Invoice table (invariant 6: only issued-and-later,
+// non-CANCELLED/non-REVISED invoices count).
 
 import { log } from "@/modules/audit/service";
 import { AppError } from "@/lib/errors";
 import { assertCan, requireOrgScope } from "@/modules/permissions/service";
 import { getStorageService } from "@/modules/storage";
 import { getCustomerForScope } from "@/modules/customers/service";
+import { BILLED_STATUSES, sumBilledForProject } from "@/modules/invoices/billed";
 import { parseCalendarDate } from "@/lib/date";
+import Decimal from "decimal.js";
 import { logger } from "@/server/logger";
 import { db } from "@/server/db";
 import { projectFormSchema } from "@/modules/projects/schema";
@@ -434,4 +434,57 @@ export async function prefillFromProject(
     workValue: project.workValue.toString(),
     items: [],
   };
+}
+
+// ─── billedToDate (feature 05 — replaces feature 03's honest placeholder) ─
+
+export interface ProjectBilling {
+  workValue: string;
+  /** Σ grandTotal of the invoices that count as billed (invariant 6). */
+  billedToDate: string;
+  /** workValue − billedToDate, never negative (decimal string). */
+  remaining: string;
+  invoiceCount: number;
+}
+
+/**
+ * How much of this project is invoiced: sum of ISSUED-and-later invoices
+ * (SENT/PARTIALLY_PAID/PAID/OVERDUE included; DRAFT/CANCELLED/REVISED
+ * excluded — the rule lives in modules/invoices/billed.ts). Org-scoped: a
+ * foreign project id answers 404.
+ */
+export async function getProjectBilling(
+  projectId: string,
+  ctx: ProjectServiceContext,
+): Promise<ProjectBilling> {
+  requireOrgScope(ctx.scope);
+  const project = await getProjectForScope(projectId, ctx);
+  const billedToDate = await sumBilledForProject(db, {
+    organizationId: ctx.scope.organizationId,
+    projectReferenceId: project.id,
+  });
+  const remainingRaw = new Decimal(project.workValue.toString()).minus(billedToDate);
+  const invoiceCount = await db.invoice.count({
+    where: {
+      organizationId: ctx.scope.organizationId,
+      projectReferenceId: project.id,
+      status: {
+        in: [...BILLED_STATUSES],
+      },
+    },
+  });
+  return {
+    workValue: project.workValue.toString(),
+    billedToDate,
+    remaining: (remainingRaw.isNegative() ? new Decimal(0) : remainingRaw).toFixed(2),
+    invoiceCount,
+  };
+}
+
+/** Convenience read for call sites that only need the number. */
+export async function billedToDate(
+  projectId: string,
+  ctx: ProjectServiceContext,
+): Promise<string> {
+  return (await getProjectBilling(projectId, ctx)).billedToDate;
 }

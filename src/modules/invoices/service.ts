@@ -23,6 +23,10 @@ import { AppError } from "@/lib/errors";
 import { parseCalendarDate, toCalendarInput, todayInJakarta } from "@/lib/date";
 import { assertCan, requireOrgScope } from "@/modules/permissions/service";
 import { buildNumberPreview, sequenceKeyFor } from "@/modules/invoices/numbering";
+import {
+  BILLED_STATUSES,
+  sumBilledForProject,
+} from "@/modules/invoices/billed";
 import { calculateInvoice, type InvoiceCalcResult } from "@/modules/invoices/calculation";
 import {
   MAX_INVOICE_ITEMS,
@@ -202,6 +206,7 @@ type InvoiceWithRelations = Invoice & {
   projectReference: { id: string; title: string } | null;
   items: InvoiceItem[];
 };
+export type { InvoiceWithRelations };
 
 const draftInclude = {
   profile: true,
@@ -211,8 +216,13 @@ const draftInclude = {
   items: { orderBy: { position: "asc" as const } },
 } satisfies Prisma.InvoiceInclude;
 
-/** Re-run the calculation engine over persisted rows (Decimal → string). */
-function calcFromRows(invoice: InvoiceWithRelations): InvoiceCalcResult {
+/** Re-run the calculation engine over persisted rows (Decimal → string).
+ * `previouslyBilled` overrides the stored column — the issue flow passes the
+ * freshly summed value (invariant 6) before it is persisted. */
+export function calcFromRows(
+  invoice: InvoiceWithRelations,
+  previouslyBilled: string = invoice.previouslyBilled.toString(),
+): InvoiceCalcResult {
   return calculateInvoice({
     invoiceType: invoice.invoiceType,
     items: invoice.items.map((item) => ({
@@ -226,7 +236,7 @@ function calcFromRows(invoice: InvoiceWithRelations): InvoiceCalcResult {
     billingMode: invoice.billingMode,
     billingPercent: invoice.billingPercent?.toString(),
     billingAmount: invoice.billingAmount?.toString(),
-    previouslyBilled: invoice.previouslyBilled.toString(),
+    previouslyBilled,
     discountAmount: invoice.discountAmount.toString(),
     additionalAmount: invoice.additionalAmount.toString(),
     taxMode: invoice.taxMode,
@@ -392,26 +402,19 @@ async function resolveRelations(
 /**
  * previouslyBilled from the DATABASE (invariant 6): only ISSUED-and-later
  * invoices of the SAME project count; CANCELLED/REVISED never do. No project
- * link → 0 (there is nothing verifiable to bill against).
+ * link → 0 (there is nothing verifiable to bill against). The rule itself
+ * lives in modules/invoices/billed.ts (shared with issue/lifecycle/projects).
  */
 async function computePreviouslyBilled(
   ctx: InvoiceServiceContext,
   projectReferenceId: string | null,
   excludeInvoiceId?: string,
 ): Promise<string> {
-  if (!projectReferenceId) return "0.00";
-  const rows = await db.invoice.findMany({
-    where: {
-      organizationId: ctx.scope.organizationId,
-      projectReferenceId,
-      status: { in: ["ISSUED", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE"] },
-      ...(excludeInvoiceId ? { id: { not: excludeInvoiceId } } : {}),
-    },
-    select: { grandTotal: true },
+  return sumBilledForProject(db, {
+    organizationId: ctx.scope.organizationId,
+    projectReferenceId,
+    excludeInvoiceId,
   });
-  return rows
-    .reduce((sum, row) => sum.plus(row.grandTotal.toString()), new Decimal(0))
-    .toFixed(2);
 }
 
 // ─── Save pipeline (shared by create + update) ────────────────────────────
@@ -775,6 +778,11 @@ function changedFields(
 export async function getDraft(invoiceId: string, ctx: InvoiceServiceContext): Promise<InvoiceDraftView> {
   assertCan("invoice.draft.read", ctx.scope);
   requireOrgScope(ctx.scope);
+  // Feature 05: an ISSUED invoice is immutable (invariant 5). The editor's
+  // load path answers LOCKED, which /invoices/[id]/edit turns into a redirect
+  // to the detail page — an issued document can only be revised, never edited.
+  const row = await getDraftRow(invoiceId, ctx);
+  assertDraftEditable(row);
   return loadDraftFull(invoiceId, ctx);
 }
 
@@ -940,7 +948,7 @@ export async function getEditorOptions(ctx: InvoiceServiceContext): Promise<Edit
       workValue: true,
       customer: { select: { companyName: true } },
       invoices: {
-        where: { status: { in: ["ISSUED", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE"] } },
+        where: { status: { in: [...BILLED_STATUSES] } },
         select: { grandTotal: true },
       },
     },

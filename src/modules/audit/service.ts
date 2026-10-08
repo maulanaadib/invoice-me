@@ -79,25 +79,35 @@ export interface AuditInput {
 }
 
 /**
- * Writes one audit row. Never throws into the caller — a failed audit write is
- * logged server-side instead of breaking the login/action it was attached to.
+ * Writes one audit row. Without a transaction client a failed audit write is
+ * logged server-side instead of breaking the action it was attached to
+ * (feature 01 contract — login/CRUD never fail because of audit).
+ *
+ * `tx` variant (feature 05 issue flow): when the issue/revision transaction
+ * client is passed, a failure THROWS — the transaction rolls back, so the
+ * audit row and the business change it describes are atomic (spec step 7:
+ * "Audit log INVOICE_ISSUED dalam transaksi yang sama"). An audited action
+ * that cannot be recorded must not commit.
  */
-export async function log(input: AuditInput): Promise<void> {
+export async function log(input: AuditInput, tx?: Prisma.TransactionClient): Promise<void> {
   const { ip, userAgent } = extractRequestMeta(input.request);
   const metadata = sanitizeMetadata(input.metadata ?? {}) as Prisma.InputJsonValue;
+  const data: Prisma.AuditLogUncheckedCreateInput = {
+    actorUserId: input.actorUserId ?? null,
+    organizationId: input.organizationId ?? null,
+    action: input.action,
+    entityType: input.entityType,
+    entityId: input.entityId ?? "",
+    metadata,
+    ipAddress: ip,
+    userAgent,
+  };
+  if (tx) {
+    await tx.auditLog.create({ data });
+    return;
+  }
   try {
-    await db.auditLog.create({
-      data: {
-        actorUserId: input.actorUserId ?? null,
-        organizationId: input.organizationId ?? null,
-        action: input.action,
-        entityType: input.entityType,
-        entityId: input.entityId ?? "",
-        metadata,
-        ipAddress: ip,
-        userAgent,
-      },
-    });
+    await db.auditLog.create({ data });
   } catch (error) {
     logger.error(
       { module: "audit", action: input.action, err: error instanceof Error ? error.message : String(error) },

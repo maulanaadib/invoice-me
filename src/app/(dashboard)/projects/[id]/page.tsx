@@ -2,10 +2,10 @@
 // Project detail: reference summary, attachment (upload/view/remove), edit
 // form, the "Buat invoice" entry into the feature-04 prefill
 // (/invoices/new?project=<id>, gated by invoice.draft.create so a VIEWER
-// never sees a button that would bounce them), and the HONEST billing
-// placeholder — billedToDate does not exist before feature 05 (no Invoice
-// table yet), so the page says exactly that instead of showing a fake 0
-// (feature 03 spec, Scope Limits).
+// never sees a button that would bounce them), and the REAL billing block
+// (feature 05): billedToDate/sisa from the Invoice table via
+// getProjectBilling — feature 03's honest placeholder is now replaced by
+// real numbers (invariant 6: DRAFT/CANCELLED/REVISED never count).
 // Cross-org ids answer 404 (IDOR guard in getProjectForScope).
 
 import type { Metadata } from "next";
@@ -32,7 +32,7 @@ import {
   PROJECT_STATUS_LABELS,
   REFERENCE_TYPE_LABELS,
 } from "@/modules/projects/schema";
-import { getProjectForScope, type ProjectDetail } from "@/modules/projects/service";
+import { getProjectForScope, getProjectBilling, type ProjectDetail } from "@/modules/projects/service";
 import { can } from "@/modules/permissions/service";
 import { resolveActiveOrgScope } from "@/modules/organizations/service";
 import { getSession } from "@/server/session";
@@ -93,6 +93,11 @@ export default async function ProjectDetailPage({
   const mayEdit = can("project.update", scope);
   const mayDelete = can("project.delete", scope);
   const mayCreateInvoice = can("invoice.draft.create", scope);
+
+  // Feature 05: real billing numbers (the feature-03 placeholder is replaced
+  // by the Invoice-table sum — invariant 6: DRAFT/CANCELLED/REVISED never
+  // count as billed).
+  const billing = await getProjectBilling(id, { scope });
 
   return (
     <div className="flex flex-col gap-6">
@@ -174,15 +179,20 @@ export default async function ProjectDetailPage({
             <CardContent className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
                 <span className="text-sm text-muted-foreground">Sudah ditagihkan</span>
-                <span className="text-sm font-medium">
-                  Belum tersedia — hitungan billing per project baru ada di feature 05, setelah
-                  tabel invoice ada. Angka ini sengaja tidak ditampilkan (bukan 0).
+                <span className="font-mono text-sm font-medium">
+                  {formatIdr(billing.billedToDate)}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-sm text-muted-foreground">Sisa penagihan</span>
+                <span className="font-mono text-sm font-medium">
+                  {formatIdr(billing.remaining)}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-muted-foreground">Invoice terbit</span>
                 <span className="text-sm font-medium">
-                  Mengikuti kolom “Sudah ditagihkan” — belum dihitung sampai feature 05.
+                  {billing.invoiceCount} invoice terhitung (draft/batal/revisi tidak dihitung)
                 </span>
               </div>
             </CardContent>

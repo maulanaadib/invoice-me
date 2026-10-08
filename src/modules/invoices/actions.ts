@@ -10,7 +10,6 @@
 
 import {
   actionRequest,
-  formDataString,
   toActionError,
   zodFailure,
 } from "@/lib/action";
@@ -36,6 +35,15 @@ import {
   type InvoiceDraftView,
   type InvoiceListItem,
 } from "@/modules/invoices/service";
+import { issueInvoice, type IssueOutcome } from "@/modules/invoices/issue-service";
+import {
+  cancelInvoice,
+  createRevision,
+  markSent,
+  type CancelOutcome,
+  type MarkSentOutcome,
+  type RevisionOutcome,
+} from "@/modules/invoices/lifecycle-service";
 
 async function serviceContext() {
   const session = await requireSession();
@@ -176,6 +184,63 @@ export async function prefillInvoiceFromProjectAction(values: { projectId: strin
     const ctx = await serviceContext();
     if (!values.projectId) return apiFailure("VALIDATION_ERROR", "Project tidak valid.");
     return apiOk(await prefillEditorFromProject(values.projectId, ctx));
+  } catch (error) {
+    return toActionError("invoices.actions", error);
+  }
+}
+
+// ─── Issue & lifecycle (feature 05) ───────────────────────────────────────
+
+/** DRAFT → ISSUED: recalculate, allocate the final number, freeze snapshots,
+ * audit and enqueue the PDF job — all inside one transaction. */
+export async function issueInvoiceAction(values: {
+  invoiceId: string;
+}): Promise<ActionResult<IssueOutcome>> {
+  try {
+    const ctx = await serviceContext();
+    if (!values.invoiceId) return apiFailure("VALIDATION_ERROR", "Invoice tidak valid.");
+    return apiOk(await issueInvoice(values.invoiceId, ctx));
+  } catch (error) {
+    return toActionError("invoices.actions", error);
+  }
+}
+
+/** ISSUED → SENT (STAFF+), audited. */
+export async function markSentInvoiceAction(values: {
+  invoiceId: string;
+}): Promise<ActionResult<MarkSentOutcome>> {
+  try {
+    const ctx = await serviceContext();
+    if (!values.invoiceId) return apiFailure("VALIDATION_ERROR", "Invoice tidak valid.");
+    return apiOk(await markSent(values.invoiceId, ctx));
+  } catch (error) {
+    return toActionError("invoices.actions", error);
+  }
+}
+
+/** Cancel with a MANDATORY reason (OWNER/ADMIN), audited, excluded from
+ * previouslyBilled from then on. */
+export async function cancelInvoiceAction(values: {
+  invoiceId: string;
+  reason: string;
+}): Promise<ActionResult<CancelOutcome>> {
+  try {
+    const ctx = await serviceContext();
+    if (!values.invoiceId) return apiFailure("VALIDATION_ERROR", "Invoice tidak valid.");
+    return apiOk(await cancelInvoice(values.invoiceId, values.reason, ctx));
+  } catch (error) {
+    return toActionError("invoices.actions", error);
+  }
+}
+
+/** Old invoice → REVISED + a new draft copied from it (OWNER/ADMIN). */
+export async function reviseInvoiceAction(values: {
+  invoiceId: string;
+}): Promise<ActionResult<RevisionOutcome>> {
+  try {
+    const ctx = await serviceContext();
+    if (!values.invoiceId) return apiFailure("VALIDATION_ERROR", "Invoice tidak valid.");
+    return apiOk(await createRevision(values.invoiceId, ctx));
   } catch (error) {
     return toActionError("invoices.actions", error);
   }

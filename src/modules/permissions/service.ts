@@ -26,6 +26,8 @@ export type PermissionAction =
   | "invoice.preview"
   | "invoice.export"
   | "invoice.issue"
+  // Feature 05: STAFF+ records the delivery step (ISSUED → SENT).
+  | "invoice.markSent"
   | "invoice.cancel"
   | "invoice.revise"
   | "invoice.draft.create"
@@ -63,6 +65,10 @@ const MATRIX: Record<OrganizationRole, readonly string[]> = {
     "invoice.export",
     "invoice.view",
     "invoice.download",
+    // Feature 05 spec: STAFF+ may issue and mark an invoice sent; cancel and
+    // revise stay OWNER/ADMIN only.
+    "invoice.issue",
+    "invoice.markSent",
     "report.view",
   ],
   VIEWER: ["invoice.view", "invoice.download"],

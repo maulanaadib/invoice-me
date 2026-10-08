@@ -41,8 +41,10 @@ export default async function EditInvoicePage({
   if (!draftResult.ok) {
     if (draftResult.error.code === "NOT_FOUND") notFound();
     if (draftResult.error.code === "LOCKED") {
-      // An issued invoice is immutable — feature 05 owns the revision path.
-      redirect(`/invoices`);
+      // An issued invoice is immutable (feature 05) — the revision path lives
+      // on the detail page, so send the reader there instead of an editor
+      // that could never save.
+      redirect(`/invoices/${id}`);
     }
     logger.warn(
       { module: "invoices", err: draftResult.error.message },

@@ -17,6 +17,7 @@
 // which may legitimately repeat across concurrent drafts: the uniqueness
 // invariant lives on the ISSUED number.
 
+import { randomUUID } from "node:crypto";
 import { db } from "@/server/db";
 import { previewNumber, validateNumberPattern } from "@/modules/profiles/number-pattern";
 import { renderNumberPreview, sequenceKeyFor } from "@/modules/invoices/numbering-core";
@@ -66,9 +67,13 @@ export async function nextSequence(
   invoiceDate: Date,
 ): Promise<number> {
   const key = sequenceKeyFor(profile.sequenceResetPolicy, invoiceDate);
+  // The primary key must be supplied by hand: @default(cuid()) is a
+  // CLIENT-side default, so a raw INSERT would otherwise hit NOT NULL (23502).
+  // randomUUID() keeps the same contract the data model asks for — a
+  // non-sequential, unguessable id (node:crypto, never a counter).
   await tx.$executeRaw`
-    INSERT INTO "InvoiceSequence" ("invoiceProfileId", "sequenceKey", "currentValue", "updatedAt")
-    VALUES (${profile.id}, ${key}, 0, now())
+    INSERT INTO "InvoiceSequence" ("id", "invoiceProfileId", "sequenceKey", "currentValue", "updatedAt")
+    VALUES (${randomUUID()}, ${profile.id}, ${key}, 0, now())
     ON CONFLICT ("invoiceProfileId", "sequenceKey") DO NOTHING
   `;
   // Lock the bucket row: a concurrent allocator blocks here until we commit.
