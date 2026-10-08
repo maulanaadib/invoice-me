@@ -40,6 +40,8 @@ describe("OWNER", () => {
     expect(can("customer.delete", ctx)).toBe(true);
     expect(can("project.delete", ctx)).toBe(true);
     expect(can("payment.record", ctx)).toBe(true);
+    expect(can("payment.delete", ctx)).toBe(true);
+    expect(can("payment.override", ctx)).toBe(true);
     expect(can("report.view", ctx)).toBe(true);
     expect(can("org.settings.update", ctx)).toBe(true);
     expect(can("org.member.invite", ctx)).toBe(true);
@@ -58,6 +60,9 @@ describe("ADMIN", () => {
     expect(can("customer.delete", ctx)).toBe(true);
     expect(can("project.delete", ctx)).toBe(true);
     expect(can("payment.record", ctx)).toBe(true);
+    // Reversal and the overpayment override are OWNER/ADMIN (feature 07).
+    expect(can("payment.delete", ctx)).toBe(true);
+    expect(can("payment.override", ctx)).toBe(true);
     expect(can("report.view", ctx)).toBe(true);
     expect(can("org.settings.update", ctx)).toBe(true);
     expect(can("org.member.invite", ctx)).toBe(true);
@@ -70,7 +75,7 @@ describe("ADMIN", () => {
 describe("STAFF", () => {
   const ctx = ctxFor("STAFF");
 
-  it("grants drafts, customers, projects, issue/marksent and read/export invoice actions", () => {
+  it("grants drafts, customers, projects, issue/marksent, payments and read/export invoice actions", () => {
     expect(can("invoice.draft.create", ctx)).toBe(true);
     expect(can("invoice.draft.read", ctx)).toBe(true);
     expect(can("invoice.draft.update", ctx)).toBe(true);
@@ -87,13 +92,17 @@ describe("STAFF", () => {
     expect(can("customer.delete", ctx)).toBe(true);
     expect(can("project.create", ctx)).toBe(true);
     expect(can("project.update", ctx)).toBe(true);
+    // Feature 07 spec: STAFF+ records payments and reads the history.
+    expect(can("payment.view", ctx)).toBe(true);
+    expect(can("payment.record", ctx)).toBe(true);
     expect(can("report.view", ctx)).toBe(true);
   });
 
-  it("denies cancel/revise, payments, org admin and destructive actions", () => {
+  it("denies cancel/revise, payment reversal/override, org admin and destructive actions", () => {
     expect(can("invoice.cancel", ctx)).toBe(false);
     expect(can("invoice.revise", ctx)).toBe(false);
-    expect(can("payment.record", ctx)).toBe(false);
+    expect(can("payment.delete", ctx)).toBe(false);
+    expect(can("payment.override", ctx)).toBe(false);
     expect(can("org.settings.update", ctx)).toBe(false);
     expect(can("org.member.invite", ctx)).toBe(false);
     expect(can("delete_org", ctx)).toBe(false);
@@ -103,9 +112,11 @@ describe("STAFF", () => {
 describe("VIEWER", () => {
   const ctx = ctxFor("VIEWER");
 
-  it("only grants invoice view + download (≥10 assertions)", () => {
+  it("only grants invoice view + download and payment read (≥10 assertions)", () => {
     expect(can("invoice.view", ctx)).toBe(true);
     expect(can("invoice.download", ctx)).toBe(true);
+    // Feature 07 spec: VIEWER is read-only on payments — history yes, no writes.
+    expect(can("payment.view", ctx)).toBe(true);
     expect(can("invoice.issue", ctx)).toBe(false);
     expect(can("invoice.preview", ctx)).toBe(false);
     expect(can("invoice.export", ctx)).toBe(false);
@@ -114,8 +125,9 @@ describe("VIEWER", () => {
     expect(can("customer.create", ctx)).toBe(false);
     expect(can("customer.delete", ctx)).toBe(false);
     expect(can("project.create", ctx)).toBe(false);
-    expect(can("payment.view", ctx)).toBe(false);
     expect(can("payment.record", ctx)).toBe(false);
+    expect(can("payment.delete", ctx)).toBe(false);
+    expect(can("payment.override", ctx)).toBe(false);
     expect(can("report.view", ctx)).toBe(false);
     expect(can("org.settings.update", ctx)).toBe(false);
     expect(can("org.member.invite", ctx)).toBe(false);

@@ -44,9 +44,12 @@ export type PermissionAction =
   | "project.create"
   | "project.update"
   | "project.delete"
-  // payment
+  // payment (feature 07): STAFF+ records, VIEWER reads, reversal and the
+  // overpayment override are OWNER/ADMIN only.
   | "payment.view"
   | "payment.record"
+  | "payment.delete"
+  | "payment.override"
   // reporting
   | "report.view";
 
@@ -69,9 +72,13 @@ const MATRIX: Record<OrganizationRole, readonly string[]> = {
     // revise stay OWNER/ADMIN only.
     "invoice.issue",
     "invoice.markSent",
+    // Feature 07 spec: STAFF+ may record a payment (read included); the
+    // reversal (payment.delete) and the overpayment override stay OWNER/ADMIN.
+    "payment.view",
+    "payment.record",
     "report.view",
   ],
-  VIEWER: ["invoice.view", "invoice.download"],
+  VIEWER: ["invoice.view", "invoice.download", "payment.view"],
 };
 
 /** OWNER-only actions: ADMIN is `* except` these (feature 01 spec). */

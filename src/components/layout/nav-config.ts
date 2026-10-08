@@ -6,6 +6,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Building2Icon,
+  CreditCardIcon,
   FileTextIcon,
   FolderKanbanIcon,
   LayoutDashboardIcon,
@@ -33,6 +34,7 @@ export const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon },
       { href: "/invoices", label: "Invoice", icon: ReceiptTextIcon },
+      { href: "/payments", label: "Pembayaran", icon: CreditCardIcon },
       { href: "/customers", label: "Customer", icon: UsersRoundIcon },
       { href: "/projects", label: "Project / PO", icon: FolderKanbanIcon },
       { href: "/profiles", label: "Profil Invoice", icon: FileTextIcon },

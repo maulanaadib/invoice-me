@@ -111,6 +111,8 @@ model user {
   // Feature 05: who issued an invoice / generated an official PDF.
   invoicesIssued Invoice[]    @relation("InvoiceIssuedBy")
   pdfsGenerated  InvoicePdf[] @relation("InvoicePdfGeneratedBy")
+  // Feature 07: who recorded a payment (recorded by).
+  paymentsRecorded Payment[]  @relation("PaymentRecordedBy")
 
   @@map("user")
 }
@@ -183,6 +185,7 @@ model Organization {
   customers        Customer[]
   projectReferences ProjectReference[]
   invoices         Invoice[]
+  payments         Payment[]
 
   @@map("Organization")
 }
@@ -579,6 +582,7 @@ model Invoice {
   items             InvoiceItem[]
   pdfJobs           PdfJob[]
   pdfs              InvoicePdf[]
+  payments          Payment[]
 
   @@unique([organizationId, number])
   @@index([organizationId, status])
@@ -664,4 +668,45 @@ model InvoicePdf {
   @@unique([invoiceId, version])
   @@index([invoiceId])
   @@map("InvoicePdf")
+}
+
+// ─── Feature 07: payments ───────────────────────────────────────────────
+// Field names, enums and constraints follow context/data-model.md (canonical).
+// Payments never touch the seven snapshots: they only move the LIVE payment
+// columns of the invoice (amountPaid, remainingAfter, status).
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  QRIS
+  OTHER
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  organizationId  String
+  invoiceId       String
+  // Calendar day the money was received (UTC midnight — same convention as
+  // invoiceDate; displayed in Asia/Jakarta).
+  paymentDate     DateTime
+  amount          Decimal       @db.Decimal(18, 2)
+  method          PaymentMethod
+  referenceNumber String?
+  // Storage path of the uploaded proof (uploads/organizations/{org}/
+  // payment-proofs/{uuid}.{ext}) — MIME-sniffed, random filename, max 2 MB.
+  proofPath       String?
+  notes           String?
+  // OWNER/ADMIN overpayment override: the mandatory reason lives on the row so
+  // the riwayat can show WHY a payment above the remaining amount exists.
+  overpaymentReason String?
+  createdById     String
+  createdAt       DateTime      @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoice      Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  createdBy    user         @relation("PaymentRecordedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, paymentDate])
+  @@index([invoiceId, paymentDate])
+  @@map("Payment")
 }

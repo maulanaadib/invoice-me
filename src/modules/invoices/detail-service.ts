@@ -367,7 +367,10 @@ export async function getInvoiceDetail(
         taxAmount: calcSnap.taxAmount,
         roundingAmount: calcSnap.roundingAmount,
         grandTotal: calcSnap.grandTotal,
-        remainingAfter: calcSnap.remainingAfter,
+        // remainingAfter is the LIVE outstanding amount (feature 07: payments
+        // decrement it on the row) — the calculation SNAPSHOT itself stays
+        // frozen, only this payment dimension moves.
+        remainingAfter: invoice.remainingAfter.toString(),
         amountPaid: invoice.amountPaid.toString(),
       }
     : {

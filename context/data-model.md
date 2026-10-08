@@ -266,14 +266,18 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 | Field | Type | Constraints | Notes |
 | --- | --- | --- | --- |
 | id | String | @id, cuid | |
-| paymentDate | DateTime | | |
-| amount | Decimal | @db.Decimal(18,2) | |
+| organizationId | String | relation | org isolation — semua read/mutation di-scope |
+| invoiceId | String | relation | riwayat per invoice; invoice ISSUED+ saja |
+| paymentDate | DateTime | | kalender day (UTC midnight), tampil Asia/Jakarta |
+| amount | Decimal | @db.Decimal(18,2) | nominal; > 0 |
 | method | PaymentMethod | | BANK_TRANSFER / CASH / QRIS / OTHER |
-| referenceNumber | String? | | |
-| proofPath | String? | | bukti pembayaran |
-| notes | String? | | |
+| referenceNumber | String? | | nomor referensi mutasi/struk (opsional, maks 100) |
+| proofPath | String? | | bukti pembayaran — `uploads/organizations/{orgId}/payment-proofs/{uuid}.{ext}` |
+| notes | String? | | catatan (maks 500) |
+| overpaymentReason | String? | | wajib terisi saat OWNER/ADMIN override pembayaran melebihi sisa |
 | createdById | String | relation | recorded by |
 | createdAt | DateTime | | |
+| **indexes** | | `@@index([organizationId, paymentDate])`, `@@index([invoiceId, paymentDate])` | list `/payments` + riwayat per invoice |
 
 ### InvoicePdf
 
@@ -345,6 +349,7 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 - Semua composite index menyertakan `organizationId` (lihat per-entity di atas).
 - `AuditLog`: `[organizationId, createdAt]` dan `[actorUserId, createdAt]` untuk panel admin.
 - `Invoice`: `[organizationId, status]`, `[organizationId, invoiceDate]`, `[organizationId, customerId]`, `[organizationId, projectReferenceId]`.
+- `Payment`: `[organizationId, paymentDate]`, `[invoiceId, paymentDate]`.
 - `ProjectReference`: `[organizationId, referenceNumber]`.
 - Unique constraint: `[organizationId, number]` di Invoice, `[organizationId, code]` di InvoiceProfile, `[invoiceProfileId, sequenceKey]` di InvoiceSequence, `[invoiceId, version]` di InvoicePdf, `[userId, organizationId]` di Membership.
 
@@ -355,5 +360,6 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 - **Tidak ada migrasi yang menghapus data invoice issued.** Tidak ada `DROP TABLE` di invoice-related setelah ada data.
 - Setiap feature yang menambah entity wajib membuat migration baru via `prisma migrate dev --name <feature>`.
 - Feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom platform + admin plugin di `user`, `activeOrganizationId` di `session`, 3 nilai AuditAction baru.
+- Feature 07: `20261008102333_payments` (additive) — tabel `Payment` + enum `PaymentMethod` + index; tidak ada perubahan pada tabel invoice selain pemakaian kolom `amountPaid`/`remainingAfter`/`status` yang sudah ada.
 - Seed (`prisma db seed`) terpisah dari migration, idempotent, hanya untuk dev/acceptance test data (master prompt bagian 33: Sigit Berkarya, PT Dharma Polimetal Tbk, PO 5198021181).
 - Breaking migration (rename column, change type) hanya jika feature spec eksplisit dan ada data migration script.

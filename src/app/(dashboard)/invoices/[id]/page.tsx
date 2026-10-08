@@ -34,7 +34,10 @@ import {
 } from "@/components/ui/table";
 import { isAppError } from "@/lib/errors";
 import { formatIdr } from "@/lib/money";
+import { env } from "@/server/env";
 import { getInvoiceDetail, type InvoiceDetailView } from "@/modules/invoices/detail-service";
+import { getInvoicePaymentPanel, type InvoicePaymentPanel } from "@/modules/payments/service";
+import { PaymentHistory } from "@/components/payments/payment-history";
 import { INVOICE_TYPE_LABELS, INVOICE_TAX_MODE_LABELS } from "@/modules/invoices/schema";
 import { resolveActiveOrgScope } from "@/modules/organizations/service";
 import { getSession } from "@/server/session";
@@ -105,6 +108,16 @@ export default async function InvoiceDetailPage({
   let invoice: InvoiceDetailView;
   try {
     invoice = await getInvoiceDetail(id, { scope });
+  } catch (error) {
+    if (isAppError(error) && error.code === "NOT_FOUND") notFound();
+    throw error;
+  }
+
+  // Payment history (feature 07): same IDOR contract — a foreign invoice id
+  // answers 404 here as well.
+  let paymentPanel: InvoicePaymentPanel;
+  try {
+    paymentPanel = await getInvoicePaymentPanel(id, { scope });
   } catch (error) {
     if (isAppError(error) && error.code === "NOT_FOUND") notFound();
     throw error;
@@ -357,6 +370,12 @@ export default async function InvoiceDetailPage({
                   {invoice.notes}
                 </p>
               ) : null}
+              {!invoice.isDraft ? (
+                <p className="mt-4 text-xs text-muted-foreground">
+                  Sudah dibayar dan sisa tagihan mengikuti riwayat pembayaran di bawah —
+                  snapshot dokumen tetap terkunci sejak diterbitkan.
+                </p>
+              ) : null}
             </CardContent>
           </Card>
 
@@ -478,6 +497,8 @@ export default async function InvoiceDetailPage({
           </Card>
         </div>
       </div>
+
+      <PaymentHistory panel={paymentPanel} maxUploadMb={Math.round(env.UPLOAD_MAX_MB)} />
     </div>
   );
 }
