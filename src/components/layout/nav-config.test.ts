@@ -16,8 +16,20 @@ import {
   type NavVisibility,
 } from "@/components/layout/nav-config";
 
-const ALL_VISIBLE: NavVisibility = { payments: true, customers: true, projects: true };
-const NONE_VISIBLE: NavVisibility = { payments: false, customers: false, projects: false };
+const ALL_VISIBLE: NavVisibility = {
+  payments: true,
+  customers: true,
+  projects: true,
+  bankAccounts: true,
+  signers: true,
+};
+const NONE_VISIBLE: NavVisibility = {
+  payments: false,
+  customers: false,
+  projects: false,
+  bankAccounts: false,
+  signers: false,
+};
 
 /**
  * Every route URL declared by the App Router tree. Route groups
@@ -107,17 +119,28 @@ describe("visibleLinks", () => {
     expect(hrefs).not.toContain("/payments");
     expect(hrefs).not.toContain("/customers");
     expect(hrefs).not.toContain("/projects");
+    // Feature 10: bank/signer links follow their view permissions too.
+    expect(hrefs).not.toContain("/bank-accounts");
+    expect(hrefs).not.toContain("/signers");
   });
 
   it("reveals each gated entry only when its flag turns on", () => {
     expect(visibleLinks(NAV_GROUPS[0]!.links, ALL_VISIBLE).map((link) => link.href)).toEqual(
-      expect.arrayContaining(["/payments", "/customers", "/projects"]),
+      expect.arrayContaining(["/payments", "/customers", "/projects", "/bank-accounts", "/signers"]),
     );
-    const onlyPayments = { payments: true, customers: false, projects: false };
+    const onlyPayments: NavVisibility = {
+      payments: true,
+      customers: false,
+      projects: false,
+      bankAccounts: false,
+      signers: false,
+    };
     const hrefs = visibleLinks(NAV_GROUPS[0]!.links, onlyPayments).map((link) => link.href);
     expect(hrefs).toContain("/payments");
     expect(hrefs).not.toContain("/customers");
     expect(hrefs).not.toContain("/projects");
+    expect(hrefs).not.toContain("/bank-accounts");
+    expect(hrefs).not.toContain("/signers");
   });
 });
 

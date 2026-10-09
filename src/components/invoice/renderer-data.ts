@@ -21,6 +21,7 @@ import type { IssuedPrintSource } from "@/modules/invoices/print-document";
 import type { CustomerSnapshot } from "@/modules/invoices/snapshots";
 import type { BankAccountView } from "@/modules/bank-accounts/service";
 import type { SignerView } from "@/modules/signers/service";
+import { resolveNotesTokens } from "@/lib/tokens";
 import type { InvoiceType } from "@prisma/client";
 
 export interface RendererParty {
@@ -48,6 +49,19 @@ export interface RendererItem {
   discountAmount?: string;
   lineAmount: string;
 }
+
+/**
+ * Bank block of the document. `accountNumber` (the REAL number) is only ever
+ * filled from the issue-time snapshot (spec 10: "nomor lengkap hanya di
+ * invoice (snapshot)") — draft previews carry the masked form only, so
+ * plaintext never reaches the client outside an issued document render.
+ */
+export type RendererBank = Pick<
+  BankAccountView,
+  "bankName" | "accountHolder" | "maskedNumber" | "branch"
+> & {
+  accountNumber?: string | null;
+};
 
 export interface InvoiceRendererData {
   /** DRAFT = draft preview badge; feature 06 passes the issued number. */
@@ -78,7 +92,7 @@ export interface InvoiceRendererData {
   /** INCLUSIVE portion of the paid total that is tax (for the breakdown). */
   taxIncludedInTotal: string;
 
-  bank: Pick<BankAccountView, "bankName" | "accountHolder" | "maskedNumber" | "branch"> | null;
+  bank: RendererBank | null;
   signer: Pick<SignerView, "name" | "title" | "location" | "signaturePath"> | null;
   stampMode: string;
 
@@ -91,6 +105,11 @@ export interface InvoiceRendererData {
   settings?: InvoiceProfileSettings | null;
 
   notes?: string | null;
+  /**
+   * Unknown placeholders left literal in `notes` (feature 10) — the editor
+   * preview shows a warning; the print/PDF render ignores this field.
+   */
+  notesUnknownTokens?: string[];
   footerText?: string | null;
   primaryColor: string;
   currency: string;
@@ -102,6 +121,16 @@ export function rendererDataFromDraft(
   draft: InvoiceDraftView,
   extras: { bank: BankAccountView | null; signer: SignerView | null },
 ): InvoiceRendererData {
+  // Feature 10: notes tokens resolve where the document renders — the saved
+  // draft view and the print route run the same rule.
+  const resolvedNotes = resolveNotesTokens(draft.notes, {
+    invoiceNumber: draft.number ?? draft.numberPreview,
+    referenceNumber: draft.referenceNumber,
+    customerName: draft.customer?.companyName,
+    workValue: draft.calc.workValue,
+    billingPercent: draft.billingPercent,
+    grandTotal: draft.calc.grandTotal,
+  });
   return {
     number: draft.number,
     numberPreview: draft.numberPreview,
@@ -164,7 +193,8 @@ export function rendererDataFromDraft(
     bank: extras.bank,
     signer: extras.signer,
     stampMode: draft.stampMode,
-    notes: draft.notes,
+    notes: resolvedNotes.text,
+    notesUnknownTokens: resolvedNotes.unknownTokens,
     footerText: draft.footerText,
     settings: draft.profile.settings,
     primaryColor: draft.profile.primaryColor,
@@ -219,7 +249,7 @@ export interface RendererPreviewInput {
   customer: RendererParty | null;
   contactName: string | null;
   projectTitle: string | null;
-  bank: Pick<BankAccountView, "bankName" | "accountHolder" | "maskedNumber" | "branch"> | null;
+  bank: RendererBank | null;
   signer: Pick<SignerView, "name" | "title" | "location" | "signaturePath"> | null;
   previouslyBilled: string;
   currency: string;
@@ -259,6 +289,17 @@ export function buildRendererPreviewData(input: RendererPreviewInput): InvoiceRe
   };
   const calc = calculateInvoice(calcInput);
 
+  // Feature 10: the live preview resolves notes with the SAME rule the server
+  // applies — unknown tokens stay literal and are reported for the warning.
+  const resolvedNotes = resolveNotesTokens(values.notes || null, {
+    invoiceNumber: input.numberPreview,
+    referenceNumber: values.referenceNumber || null,
+    customerName: input.customer?.name ?? null,
+    workValue: calc.workValue,
+    billingPercent: values.billingPercent,
+    grandTotal: calc.grandTotal,
+  });
+
   return {
     number: null,
     numberPreview: input.numberPreview,
@@ -295,7 +336,8 @@ export function buildRendererPreviewData(input: RendererPreviewInput): InvoiceRe
     signer: input.signer,
     stampMode: values.stampMode,
     settings: settings ?? null,
-    notes: values.notes || null,
+    notes: resolvedNotes.text,
+    notesUnknownTokens: resolvedNotes.unknownTokens,
     footerText: values.footerText || null,
     primaryColor: input.profile.primaryColor,
     currency: input.currency,
@@ -328,6 +370,16 @@ function customerPartyFromSnapshot(customer: CustomerSnapshot): RendererParty {
  */
 export function rendererDataFromIssued(source: IssuedPrintSource): InvoiceRendererData {
   const { calculation, template } = source;
+  // Feature 10: the ISSUED document resolves tokens from frozen values, so the
+  // PDF text and the preview of the same invoice can never disagree.
+  const resolvedNotes = resolveNotesTokens(source.notes, {
+    invoiceNumber: source.number,
+    referenceNumber: source.referenceNumber,
+    customerName: source.customer?.companyName,
+    workValue: calculation.workValue,
+    billingPercent: calculation.billingPercent,
+    grandTotal: calculation.grandTotal,
+  });
   return {
     number: source.number,
     numberPreview: source.number,
@@ -379,6 +431,9 @@ export function rendererDataFromIssued(source: IssuedPrintSource): InvoiceRender
           bankName: source.bank.bankName,
           accountHolder: source.bank.accountHolder,
           maskedNumber: source.bank.maskedNumber,
+          // Full number from the snapshot; rows issued before feature 10 lack
+          // the field and fall back to the mask below.
+          accountNumber: source.bank.accountNumber ?? null,
           branch: source.bank.branch,
         }
       : null,
@@ -392,7 +447,8 @@ export function rendererDataFromIssued(source: IssuedPrintSource): InvoiceRender
       : null,
     stampMode: template.stampMode,
     settings: parseProfileSettings(source.settings),
-    notes: source.notes,
+    notes: resolvedNotes.text,
+    notesUnknownTokens: resolvedNotes.unknownTokens,
     footerText: source.footerText,
     primaryColor: template.primaryColor,
     currency: source.currency,

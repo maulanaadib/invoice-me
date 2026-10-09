@@ -1080,6 +1080,19 @@ export function InvoiceEditor({
         </h2>
         <span className="text-xs text-muted-foreground">A4 portrait · diperbarui real-time</span>
       </div>
+      {previewData?.notesUnknownTokens && previewData.notesUnknownTokens.length > 0 ? (
+        // Feature 10: unknown tokens are never silently rewritten — the preview
+        // says exactly which placeholders the document will keep literal.
+        <div role="status" className="flex flex-col gap-1 rounded-lg border border-warning/40 bg-warning/10 p-3">
+          <p className="text-sm font-medium text-warning">Token catatan tidak dikenali</p>
+          <p className="text-xs text-muted-foreground">
+            <span className="font-mono">
+              {previewData.notesUnknownTokens.map((token) => `{${token}}`).join(", ")}
+            </span>{" "}
+            tetap tampil apa adanya di dokumen. Periksa ejaan token atau hapus placeholder ini.
+          </p>
+        </div>
+      ) : null}
       <div className="overflow-auto rounded-lg border border-border bg-muted/20 p-4">
         {previewData ? (
           <InvoiceRenderer data={previewData} className="mx-auto shadow-sm" />

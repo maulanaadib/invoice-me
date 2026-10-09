@@ -66,9 +66,15 @@ export interface BankSnapshot {
   accountHolder: string;
   branch: string | null;
   currency: string;
-  /** "**** **** 3449" — the number is encrypted at rest, the snapshot keeps
-   * the masked form only (security-standards: no plaintext account number). */
+  /** "**** **** 3449" — summary cards and rows issued before feature 10. */
   maskedNumber: string;
+  /**
+   * FULL account number, frozen at issue (spec 10: "nomor lengkap hanya di
+   * invoice (snapshot)"). The issued document is the one artifact allowed to
+   * carry the real number — rows issued before feature 10 lack this field and
+   * the renderer falls back to `maskedNumber`.
+   */
+  accountNumber?: string;
   last4: string;
 }
 

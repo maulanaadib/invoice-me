@@ -366,9 +366,22 @@ export default async function InvoiceDetailPage({
                 ) : null}
               </dl>
               {invoice.notes ? (
-                <p className="mt-4 whitespace-pre-wrap text-sm text-muted-foreground">
-                  {invoice.notes}
-                </p>
+                <>
+                  {/* Feature 10: the card shows the resolved text — identical to
+                      what the printed document carries. */}
+                  <p className="mt-4 whitespace-pre-wrap text-sm text-muted-foreground">
+                    {invoice.notesDisplay}
+                  </p>
+                  {invoice.notesUnknownTokens.length > 0 ? (
+                    <p className="mt-2 text-xs text-warning">
+                      Token tidak dikenal{" "}
+                      <span className="font-mono">
+                        {invoice.notesUnknownTokens.map((token) => `{${token}}`).join(", ")}
+                      </span>{" "}
+                      tampil apa adanya di dokumen.
+                    </p>
+                  ) : null}
+                </>
               ) : null}
               {!invoice.isDraft ? (
                 <p className="mt-4 text-xs text-muted-foreground">

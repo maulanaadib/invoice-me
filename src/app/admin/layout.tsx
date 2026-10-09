@@ -32,6 +32,8 @@ export default async function AdminLayout({
     payments: scope ? can("payment.view", scope) : false,
     customers: scope ? can("customer.view", scope) : false,
     projects: scope ? can("project.view", scope) : false,
+    bankAccounts: scope ? can("bankAccount.view", scope) : false,
+    signers: scope ? can("signer.view", scope) : false,
   };
 
   return (

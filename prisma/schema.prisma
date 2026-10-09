@@ -319,6 +319,9 @@ model BankAccount {
   defaultForProfiles  InvoiceProfile[] @relation("ProfileDefaultBank")
   invoices            Invoice[]
 
+  // Feature 10: org-scoped list pagination (data-model convention: every
+  // composite index carries organizationId).
+  @@index([organizationId])
   @@map("BankAccount")
 }
 
@@ -338,6 +341,9 @@ model Signer {
   defaultForProfiles   InvoiceProfile[] @relation("ProfileDefaultSigner")
   invoices             Invoice[]
 
+  // Feature 10: org-scoped list pagination (data-model convention: every
+  // composite index carries organizationId).
+  @@index([organizationId])
   @@map("Signer")
 }
 

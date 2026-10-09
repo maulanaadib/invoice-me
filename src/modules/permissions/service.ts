@@ -50,6 +50,17 @@ export type PermissionAction =
   | "payment.record"
   | "payment.delete"
   | "payment.override"
+  // bank account & signer (feature 10): STAFF+ manages (spec "STAFF+ kelola"),
+  // VIEWER reads masked lists — the reveal of a full account number is gated by
+  // bankAccount.update, so VIEWER never receives plaintext.
+  | "bankAccount.view"
+  | "bankAccount.create"
+  | "bankAccount.update"
+  | "bankAccount.delete"
+  | "signer.view"
+  | "signer.create"
+  | "signer.update"
+  | "signer.delete"
   // reporting
   | "report.view";
 
@@ -76,9 +87,19 @@ const MATRIX: Record<OrganizationRole, readonly string[]> = {
     // reversal (payment.delete) and the overpayment override stay OWNER/ADMIN.
     "payment.view",
     "payment.record",
+    // Feature 10 spec: STAFF+ manages bank accounts and signers.
+    "bankAccount.*",
+    "signer.*",
     "report.view",
   ],
-  VIEWER: ["invoice.view", "invoice.download", "payment.view"],
+  VIEWER: [
+    "invoice.view",
+    "invoice.download",
+    "payment.view",
+    // Feature 10 spec: VIEWER read-only (masked account numbers).
+    "bankAccount.view",
+    "signer.view",
+  ],
 };
 
 /** OWNER-only actions: ADMIN is `* except` these (feature 01 spec). */
@@ -123,6 +144,8 @@ export const READ_ACTIONS: readonly PermissionAction[] = [
   "customer.view",
   "project.view",
   "payment.view",
+  "bankAccount.view",
+  "signer.view",
   "report.view",
 ];
 

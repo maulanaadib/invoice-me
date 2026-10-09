@@ -177,6 +177,7 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 | isDefault | Boolean | default false | |
 | isActive | Boolean | default true | |
 | createdAt / updatedAt | DateTime | | |
+| **index** | | `@@index([organizationId])` (feature 10) | list pagination per org |
 
 ### Signer
 
@@ -190,6 +191,7 @@ Migrasi feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom plat
 | signatureImagePath | String? | | storage path |
 | isDefault | Boolean | default false | |
 | isActive | Boolean | default true | |
+| **index** | | `@@index([organizationId])` (feature 10) | list pagination per org |
 
 ### Invoice
 
@@ -366,6 +368,7 @@ Dicatat oleh `RecordingStorageService` (decorator di `getStorageService`) pada s
 - `Invoice`: `[organizationId, status]`, `[organizationId, invoiceDate]`, `[organizationId, customerId]`, `[organizationId, projectReferenceId]`.
 - `Payment`: `[organizationId, paymentDate]`, `[invoiceId, paymentDate]`.
 - `ProjectReference`: `[organizationId, referenceNumber]`.
+- `BankAccount` / `Signer`: `[organizationId]` (feature 10).
 - Unique constraint: `[organizationId, number]` di Invoice, `[organizationId, code]` di InvoiceProfile, `[invoiceProfileId, sequenceKey]` di InvoiceSequence, `[invoiceId, version]` di InvoicePdf, `[userId, organizationId]` di Membership.
 
 ## Migration Rules
@@ -377,5 +380,6 @@ Dicatat oleh `RecordingStorageService` (decorator di `getStorageService`) pada s
 - Feature 01: `20261005232013_auth_multi_tenant` (additive) — kolom platform + admin plugin di `user`, `activeOrganizationId` di `session`, 3 nilai AuditAction baru.
 - Feature 07: `20261008102333_payments` (additive) — tabel `Payment` + enum `PaymentMethod` + index; tidak ada perubahan pada tabel invoice selain pemakaian kolom `amountPaid`/`remainingAfter`/`status` yang sudah ada.
 - Feature 09: `20261008142337_feature09_super_admin_panel` (additive) — tabel `UploadRecord` + 3 nilai enum `AuditAction` baru; tidak ada perubahan pada tabel lain.
+- Feature 10: `20261009001701_bank_signers` (additive) — index `[organizationId]` di `BankAccount` dan `Signer`; tidak ada perubahan kolom/tabel lain (multi-account CRUD, `bankSnapshot.accountNumber`, dan token notes adalah perilaku aplikasi di atas skema yang sudah ada).
 - Seed (`prisma db seed`) terpisah dari migration, idempotent, hanya untuk dev/acceptance test data (master prompt bagian 33: Sigit Berkarya, PT Dharma Polimetal Tbk, PO 5198021181).
 - Breaking migration (rename column, change type) hanya jika feature spec eksplisit dan ada data migration script.

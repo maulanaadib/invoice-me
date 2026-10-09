@@ -13,11 +13,13 @@ Lengkapi modul bank account dan signer: CRUD multi-account, encrypt at rest untu
   - **Masking di UI**: list/menu tampil `**** **** 3449`; nomor lengkap hanya di invoice (snapshot) dan halaman berizin (detail bank dengan permission).
   - Rotation key: re-encrypt semua nomor rekening saat key berubah (script migration `scripts/rotate-bank-key.sh` atau service function — bukan UI).
 - **Signer CRUD** (`/signers`): nama, jabatan, lokasi penanda tanganan, gambar tanda tangan opsional (upload, reuse storage), status default, aktif.
+  - **Ratified (engineer, 2026-10-09)**: signer service tetap di `modules/signers/service.ts` (item Implementation 3). Baris `architecture-standards.md` yang menulis `modules/bank-accounts` owns Signer dilaporkan stale untuk bundle sync terpisah (`selcy-sync`); builder TIDAK mengedit file context/standards.
 - **Pemilihan di invoice** (editor feature 04 integration): field `bankAccountId` + `signerId` di form invoice (section Pembayaran / Meterai dan Tanda Tangan), pilih dari list rekening/signer org, **snapshot** disimpan saat issue (feature 05).
 - **Token notes** (dari master prompt bagian 14): catatan default di invoice profile bisa memakai token — di feature ini, token **resolve di service layer** saat render invoice (preview + PDF):
   - `{INVOICE_NUMBER}`, `{REFERENCE_NUMBER}`, `{CUSTOMER_NAME}`, `{WORK_VALUE}`, `{BILLING_PERCENT}`, `{GRAND_TOTAL}`.
   - Contoh resolve: `Penagihan Down Payment 50% dari nilai PO sebesar Rp4.500.000. Mohon cantumkan nomor PO 5198021181 pada berita transfer.`
   - Token resolve dari data invoice + format id-ID.
+  - **Ratified (engineer, 2026-10-09)**: known token dengan nilai kosong (mis. `{REFERENCE_NUMBER}` di invoice tanpa PO, `{BILLING_PERCENT}` di invoice manual/custom) resolve ke **empty string** — dokumen terbit tidak pernah mencetak token literal. Unknown token tetap literal + warning di preview (tetap sesuai Check When Done).
 - **Permission**: STAFF+ kelola bank account & signer; VIEWER read-only (nomor masked).
 
 ## Implementation

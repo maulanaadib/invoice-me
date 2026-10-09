@@ -292,7 +292,10 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
                   Pembayaran
                 </p>
                 <p className="mt-1 font-medium">{data.bank.bankName} a.n. {data.bank.accountHolder}</p>
-                <p className="font-mono tabular-nums">{data.bank.maskedNumber}</p>
+                <p className="font-mono tabular-nums">
+                  {/* Full number for issued documents (snapshot), mask everywhere else. */}
+                  {data.bank.accountNumber ?? data.bank.maskedNumber}
+                </p>
                 {data.bank.branch ? <p className="text-muted-foreground">{data.bank.branch}</p> : null}
               </div>
             ) : null}

@@ -36,6 +36,7 @@ import {
 } from "@/modules/invoices/snapshots";
 import { getOfficialPdf, getPdfJob, type OfficialPdfView, type PdfJobView } from "@/modules/pdf/service";
 import { toBankAccountView } from "@/modules/bank-accounts/service";
+import { resolveNotesTokens } from "@/lib/tokens";
 import type { InvoiceCalcResult } from "@/modules/invoices/calculation";
 import type {
   BillingMode,
@@ -154,7 +155,12 @@ export interface InvoiceDetailView {
     customLabel: string | null;
   };
   stampMode: StampMode;
+  /** Stored notes, placeholders untouched (storage truth). */
   notes: string | null;
+  /** Feature 10: notes with tokens resolved — what the card renders. */
+  notesDisplay: string | null;
+  /** Unknown placeholders left literal in `notesDisplay` — the UI warns. */
+  notesUnknownTokens: string[];
   footerText: string | null;
   template: TemplateSnapshot | null;
 
@@ -392,6 +398,18 @@ export async function getInvoiceDetail(
   const pdfJob = await getPdfJob(invoice.id, ctx);
   const pdf = isDraft ? null : await getOfficialPdf(invoice.id, ctx);
 
+  // Feature 10: the detail card renders the SAME resolved text the document
+  // prints — tokens resolve in the service layer from the values this view
+  // already carries (snapshot-backed for issued rows).
+  const resolvedNotes = resolveNotesTokens(invoice.notes, {
+    invoiceNumber: invoice.number ?? invoice.numberPreview,
+    referenceNumber: invoice.referenceNumber,
+    customerName: customer?.name ?? null,
+    workValue: amounts.workValue,
+    billingPercent: invoice.billingPercent?.toString() ?? null,
+    grandTotal: amounts.grandTotal,
+  });
+
   return {
     id: invoice.id,
     status: invoice.status,
@@ -429,6 +447,8 @@ export async function getInvoiceDetail(
     },
     stampMode: invoice.stampMode,
     notes: invoice.notes,
+    notesDisplay: resolvedNotes.text,
+    notesUnknownTokens: resolvedNotes.unknownTokens,
     footerText: invoice.footerText,
     template: templateSnap,
     issuedAt: invoice.issuedAt?.toISOString() ?? null,

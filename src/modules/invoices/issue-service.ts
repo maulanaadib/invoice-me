@@ -27,7 +27,7 @@ import { allocateFinalNumber, buildNumberPreview } from "@/modules/invoices/numb
 import { validateNumberPattern } from "@/modules/profiles/number-pattern";
 import { sumBilledForProject } from "@/modules/invoices/billed";
 import { calcFromRows, type InvoiceServiceContext } from "@/modules/invoices/service";
-import { toBankAccountView } from "@/modules/bank-accounts/service";
+import { fullAccountNumber, toBankAccountView } from "@/modules/bank-accounts/service";
 import { enqueuePdfJob } from "@/modules/pdf/service";
 import type { InvoiceCalcResult } from "@/modules/invoices/calculation";
 import type {
@@ -242,6 +242,9 @@ export function buildSnapshots(
           branch: view.branch,
           currency: view.currency,
           maskedNumber: view.maskedNumber,
+          // Feature 10 policy: the issued document carries the real number
+          // ("nomor lengkap hanya di invoice (snapshot)"); nothing else does.
+          accountNumber: fullAccountNumber(invoice.bankAccount),
           last4: view.last4,
         };
       })()

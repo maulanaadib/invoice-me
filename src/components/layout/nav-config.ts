@@ -15,10 +15,12 @@ import {
   FileTextIcon,
   FolderKanbanIcon,
   HardDriveIcon,
+  LandmarkIcon,
   LayoutDashboardIcon,
   ReceiptTextIcon,
   ScrollTextIcon,
   SettingsIcon,
+  SignatureIcon,
   UsersIcon,
   UsersRoundIcon,
 } from "lucide-react";
@@ -28,6 +30,9 @@ export interface NavVisibility {
   payments: boolean;
   customers: boolean;
   projects: boolean;
+  /** Feature 10: VIEWER sees the masked lists, STAFF+ manages them. */
+  bankAccounts: boolean;
+  signers: boolean;
 }
 
 export interface NavLink {
@@ -55,6 +60,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/customers", label: "Customer", icon: UsersRoundIcon, requires: "customers" },
       { href: "/projects", label: "Project / PO", icon: FolderKanbanIcon, requires: "projects" },
       { href: "/profiles", label: "Profil Invoice", icon: FileTextIcon },
+      // Feature 10 — these routes exist now (feature 08 deliberately deferred
+      // the links: no placeholder hrefs before the feature ships).
+      { href: "/bank-accounts", label: "Rekening Bank", icon: LandmarkIcon, requires: "bankAccounts" },
+      { href: "/signers", label: "Penanda Tangan", icon: SignatureIcon, requires: "signers" },
     ],
   },
   {

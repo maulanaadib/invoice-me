@@ -1,11 +1,19 @@
 // src/modules/bank-accounts/service.ts
-// Bank account domain (feature 02 builds the module with the onboarding
-// default account; feature 10 adds multi-account CRUD). Account numbers are
-// encrypted at rest (AES-256-GCM) and only ever surface masked/last4.
+// Bank account domain. Feature 02 built the onboarding default account;
+// feature 10 completes multi-account CRUD (create/update/delete/set-default,
+// paginated list, authorized reveal of the full number).
+//
+// Account numbers are encrypted at rest (AES-256-GCM, crypto.ts) and only ever
+// leave this module MASKED — with exactly two exceptions, both named by spec 10:
+//   • `getBankAccountDetail` reveals the plaintext when the caller holds
+//     bankAccount.update ("halaman berizin — detail bank dengan permission";
+//     VIEWER gets null),
+//   • `fullAccountNumber` feeds the issue-time snapshot ("nomor lengkap hanya
+//     di invoice (snapshot)") — never a client payload.
 
 import { log } from "@/modules/audit/service";
 import { AppError } from "@/lib/errors";
-import { assertCan } from "@/modules/permissions/service";
+import { assertCan, can } from "@/modules/permissions/service";
 import {
   accountNumberLast4,
   decryptAccountNumber,
@@ -13,33 +21,14 @@ import {
   maskAccountNumber,
   normalizeAccountNumber,
 } from "@/modules/bank-accounts/crypto";
+import { BANK_ACCOUNTS_PAGE_SIZE, type BankAccountInput } from "@/modules/bank-accounts/schema";
 import { db } from "@/server/db";
-import type { BankAccount, OrganizationRole } from "@prisma/client";
-import { z } from "zod";
+import type { BankAccount, OrganizationRole, Prisma } from "@prisma/client";
 
 export { maskAccountNumber, normalizeAccountNumber } from "@/modules/bank-accounts/crypto";
-
-export const bankAccountSchema = z.object({
-  bankName: z.string().trim().min(2, "Nama bank wajib diisi.").max(60, "Maksimal 60 karakter."),
-  bankCode: z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
-    z.string().trim().max(12, "Maksimal 12 karakter.").nullable().optional(),
-  ),
-  accountNumber: z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
-    z
-      .string()
-      .trim()
-      .regex(/^[0-9\s.\-]{6,34}$/, "Nomor rekening 6–34 digit (boleh ada spasi/dash).")
-      .optional(),
-  ),
-  accountHolder: z.string().trim().min(2, "Atas nama wajib diisi.").max(80, "Maksimal 80 karakter."),
-  branch: z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
-    z.string().trim().max(80, "Maksimal 80 karakter.").nullable().optional(),
-  ),
-});
-export type BankAccountInput = z.infer<typeof bankAccountSchema>;
+// The schema lives in the client-safe module (feature 07 rule); re-exported
+// here so the onboarding action's feature-02 import path keeps working.
+export { bankAccountSchema, type BankAccountFormValues, type BankAccountInput } from "@/modules/bank-accounts/schema";
 
 export interface BankAccountServiceContext {
   scope: { organizationId: string; role: OrganizationRole; userId: string };
@@ -57,6 +46,9 @@ export interface BankAccountView {
   last4: string;
   currency: string;
   isDefault: boolean;
+  isActive: boolean;
+  /** ISO timestamp — management list column. */
+  createdAt: string;
 }
 
 export function toBankAccountView(account: BankAccount): BankAccountView {
@@ -72,10 +64,21 @@ export function toBankAccountView(account: BankAccount): BankAccountView {
     last4: account.accountNumberLast4,
     currency: account.currency,
     isDefault: account.isDefault,
+    isActive: account.isActive,
+    createdAt: account.createdAt.toISOString(),
   };
 }
 
-/** The organization's single default account (onboarding scope, feature 10 grows this). */
+/**
+ * Full plaintext number — ISSUE-TIME SNAPSHOT ONLY (spec 10: the invoice
+ * document is the one place the real number appears besides an authorized
+ * detail page). Never put this in a list payload, log, or audit metadata.
+ */
+export function fullAccountNumber(account: BankAccount): string {
+  return decryptAccountNumber(account.accountNumberEncrypted);
+}
+
+/** The organization's default account (onboarding scope). */
 export async function getDefaultBankAccount(
   organizationId: string,
 ): Promise<BankAccount | null> {
@@ -85,6 +88,7 @@ export async function getDefaultBankAccount(
   });
 }
 
+/** Active accounts only — the invoice editor's dropdown (masked view). */
 export async function listBankAccounts(organizationId: string): Promise<BankAccountView[]> {
   const rows = await db.bankAccount.findMany({
     where: { organizationId, isActive: true },
@@ -93,9 +97,282 @@ export async function listBankAccounts(organizationId: string): Promise<BankAcco
   return rows.map(toBankAccountView);
 }
 
+/** Management list: paginated, every row (inactive included, badge honest). */
+export async function listBankAccountsPage(
+  ctx: BankAccountServiceContext,
+  options: { page?: number } = {},
+): Promise<{
+  rows: BankAccountView[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}> {
+  assertCan("bankAccount.view", ctx.scope);
+  const pageSize = BANK_ACCOUNTS_PAGE_SIZE;
+  const where = { organizationId: ctx.scope.organizationId };
+  const total = await db.bankAccount.count({ where });
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(1, options.page ?? 1), pageCount);
+  const rows = await db.bankAccount.findMany({
+    where,
+    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }, { id: "asc" }],
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  });
+  return { rows: rows.map(toBankAccountView), total, page, pageSize, pageCount };
+}
+
+export interface BankAccountDetail extends BankAccountView {
+  /** Plaintext number when the caller may manage (STAFF+); null for VIEWER. */
+  accountNumber: string | null;
+}
+
+/** Detail for the edit/read page — org-scoped (IDOR → NOT_FOUND). */
+export async function getBankAccountDetail(
+  id: string,
+  ctx: BankAccountServiceContext,
+): Promise<BankAccountDetail> {
+  assertCan("bankAccount.view", ctx.scope);
+  const row = await db.bankAccount.findFirst({
+    where: { id, organizationId: ctx.scope.organizationId },
+  });
+  if (!row) throw new AppError("NOT_FOUND", "Rekening bank tidak ditemukan.");
+  const mayReveal = can("bankAccount.update", ctx.scope);
+  return {
+    ...toBankAccountView(row),
+    accountNumber: mayReveal ? decryptAccountNumber(row.accountNumberEncrypted) : null,
+  };
+}
+
+const ACCOUNT_NUMBER_FORMAT = "Nomor rekening harus 6–34 digit angka.";
+
+function digitsOf(accountNumber: string | undefined): string {
+  return accountNumber ? normalizeAccountNumber(accountNumber) : "";
+}
+
+function assertDigits(digits: string): void {
+  if (digits && !/^\d{6,34}$/.test(digits)) {
+    throw new AppError("VALIDATION_ERROR", ACCOUNT_NUMBER_FORMAT);
+  }
+}
+
+/** Profile defaults follow the org default (feature 02 pattern: the editor
+ * prefills from `InvoiceProfile.defaultBankAccountId`, and with one profile per
+ * organisation — recorded feature-08 decision — the two must not drift). */
+async function pointProfilesAtBank(
+  tx: Prisma.TransactionClient,
+  organizationId: string,
+  bankAccountId: string | null,
+  onlyProfilesPointingAt?: string,
+): Promise<void> {
+  await tx.invoiceProfile.updateMany({
+    where: {
+      organizationId,
+      ...(onlyProfilesPointingAt ? { defaultBankAccountId: onlyProfilesPointingAt } : {}),
+    },
+    data: { defaultBankAccountId: bankAccountId },
+  });
+}
+
+/** Becoming the default clears the flag on every other account of the org. */
+async function clearOtherDefaults(
+  tx: Prisma.TransactionClient,
+  organizationId: string,
+  keepId: string,
+): Promise<void> {
+  await tx.bankAccount.updateMany({
+    where: { organizationId, isDefault: true, id: { not: keepId } },
+    data: { isDefault: false },
+  });
+}
+
+export async function createBankAccount(
+  input: BankAccountInput,
+  ctx: BankAccountServiceContext,
+): Promise<BankAccount> {
+  assertCan("bankAccount.create", ctx.scope);
+  const digits = digitsOf(input.accountNumber);
+  assertDigits(digits);
+  if (!digits) {
+    throw new AppError("VALIDATION_ERROR", "Nomor rekening wajib diisi.");
+  }
+
+  const organizationId = ctx.scope.organizationId;
+  const hasDefault = await db.bankAccount.findFirst({
+    where: { organizationId, isDefault: true },
+    select: { id: true },
+  });
+  // First account is always the default; afterwards the checkbox decides.
+  const makeDefault = input.isDefault === true || hasDefault === null;
+
+  const account = await db.$transaction(async (tx) => {
+    // Row does not exist yet, so clearing "the default" clears every row.
+    if (makeDefault) {
+      await tx.bankAccount.updateMany({
+        where: { organizationId, isDefault: true },
+        data: { isDefault: false },
+      });
+    }
+    const created = await tx.bankAccount.create({
+      data: {
+        organizationId,
+        bankName: input.bankName,
+        bankCode: input.bankCode ?? null,
+        accountNumberEncrypted: encryptAccountNumber(digits),
+        accountNumberLast4: accountNumberLast4(digits),
+        accountHolder: input.accountHolder,
+        branch: input.branch ?? null,
+        currency: "IDR",
+        isDefault: makeDefault,
+        isActive: input.isActive ?? true,
+      },
+    });
+    if (makeDefault) await pointProfilesAtBank(tx, organizationId, created.id);
+    return created;
+  });
+
+  // Audit metadata never carries the number — only non-sensitive identifiers.
+  await log({
+    actorUserId: ctx.scope.userId,
+    organizationId,
+    action: "PROFILE_CHANGED",
+    entityType: "bankAccount",
+    entityId: account.id,
+    metadata: { change: "created", bankName: account.bankName, isDefault: makeDefault },
+    request: ctx.request ?? null,
+  });
+  return account;
+}
+
+export async function updateBankAccount(
+  id: string,
+  input: BankAccountInput,
+  ctx: BankAccountServiceContext,
+): Promise<BankAccount> {
+  assertCan("bankAccount.update", ctx.scope);
+  const organizationId = ctx.scope.organizationId;
+  const existing = await db.bankAccount.findFirst({ where: { id, organizationId } });
+  if (!existing) throw new AppError("NOT_FOUND", "Rekening bank tidak ditemukan.");
+
+  const digits = digitsOf(input.accountNumber);
+  assertDigits(digits);
+
+  // Absent flag = leave the current default state untouched (the form always
+  // sends an explicit value; a bare service call must not silently un-default).
+  const wantDefault = input.isDefault ?? existing.isDefault;
+  const becameDefault = wantDefault && !existing.isDefault;
+  const unsetDefault = !wantDefault && existing.isDefault;
+
+  const account = await db.$transaction(async (tx) => {
+    if (becameDefault) await clearOtherDefaults(tx, organizationId, id);
+    const updated = await tx.bankAccount.update({
+      where: { id: existing.id },
+      data: {
+        bankName: input.bankName,
+        bankCode: input.bankCode ?? null,
+        // Empty number on edit keeps the stored ciphertext: the plaintext is
+        // never round-tripped through the client for this path.
+        ...(digits
+          ? {
+              accountNumberEncrypted: encryptAccountNumber(digits),
+              accountNumberLast4: accountNumberLast4(digits),
+            }
+          : {}),
+        accountHolder: input.accountHolder,
+        branch: input.branch ?? null,
+        isActive: input.isActive ?? existing.isActive,
+        isDefault: wantDefault,
+      },
+    });
+    if (becameDefault) await pointProfilesAtBank(tx, organizationId, id);
+    if (unsetDefault) {
+      await pointProfilesAtBank(tx, organizationId, null, id);
+    }
+    return updated;
+  });
+
+  await log({
+    actorUserId: ctx.scope.userId,
+    organizationId,
+    action: "PROFILE_CHANGED",
+    entityType: "bankAccount",
+    entityId: account.id,
+    metadata: {
+      change: becameDefault || unsetDefault ? "defaultChanged" : "updated",
+      bankName: account.bankName,
+      isDefault: account.isDefault,
+    },
+    request: ctx.request ?? null,
+  });
+  return account;
+}
+
+/** "Jadikan rekening utama" — idempotent; also what the edit checkbox does. */
+export async function setDefaultBankAccount(
+  id: string,
+  ctx: BankAccountServiceContext,
+): Promise<BankAccount> {
+  assertCan("bankAccount.update", ctx.scope);
+  const organizationId = ctx.scope.organizationId;
+  const existing = await db.bankAccount.findFirst({ where: { id, organizationId } });
+  if (!existing) throw new AppError("NOT_FOUND", "Rekening bank tidak ditemukan.");
+  if (existing.isDefault) return existing;
+
+  const account = await db.$transaction(async (tx) => {
+    await clearOtherDefaults(tx, organizationId, id);
+    const updated = await tx.bankAccount.update({
+      where: { id: existing.id },
+      data: { isDefault: true },
+    });
+    await pointProfilesAtBank(tx, organizationId, id);
+    return updated;
+  });
+
+  await log({
+    actorUserId: ctx.scope.userId,
+    organizationId,
+    action: "PROFILE_CHANGED",
+    entityType: "bankAccount",
+    entityId: account.id,
+    metadata: { change: "defaultChanged", bankName: account.bankName, isDefault: true },
+    request: ctx.request ?? null,
+  });
+  return account;
+}
+
 /**
- * Creates the default account, or replaces the existing default's fields.
- * The plaintext number never leaves this module: only ciphertext is stored,
+ * Hard delete (data-model: soft delete exists only for Customer). The schema's
+ * FKs are SetNull on Invoice.bankAccountId and InvoiceProfile.defaultBankAccountId,
+ * so issued documents keep their frozen snapshot and the profile default simply
+ * clears; if the org default was removed, the next create auto-claims it.
+ */
+export async function deleteBankAccount(
+  id: string,
+  ctx: BankAccountServiceContext,
+): Promise<void> {
+  assertCan("bankAccount.delete", ctx.scope);
+  const organizationId = ctx.scope.organizationId;
+  const existing = await db.bankAccount.findFirst({ where: { id, organizationId } });
+  if (!existing) throw new AppError("NOT_FOUND", "Rekening bank tidak ditemukan.");
+
+  await db.bankAccount.delete({ where: { id: existing.id } });
+
+  await log({
+    actorUserId: ctx.scope.userId,
+    organizationId,
+    action: "PROFILE_CHANGED",
+    entityType: "bankAccount",
+    entityId: existing.id,
+    metadata: { change: "deleted", bankName: existing.bankName, wasDefault: existing.isDefault },
+    request: ctx.request ?? null,
+  });
+}
+
+/**
+ * Creates the default account, or replaces the existing default's fields
+ * (onboarding step 6 — feature 02 path, kept behaviorally intact). The
+ * plaintext number never leaves this module: only ciphertext is stored,
  * only the last4 is kept in the clear for masking.
  */
 export async function saveBankAccount(
@@ -106,12 +383,8 @@ export async function saveBankAccount(
 
   const existing = await getDefaultBankAccount(ctx.scope.organizationId);
 
-  // Empty number + existing account = keep the stored ciphertext (the plain
-  // number is never retrievable from the client); empty + no account = error.
-  const digits = input.accountNumber ? normalizeAccountNumber(input.accountNumber) : "";
-  if (digits && !/^\d{6,34}$/.test(digits)) {
-    throw new AppError("VALIDATION_ERROR", "Nomor rekening harus 6–34 digit angka.");
-  }
+  const digits = digitsOf(input.accountNumber);
+  assertDigits(digits);
 
   let encrypted: string;
   let last4: string;
@@ -165,7 +438,6 @@ export async function saveBankAccount(
     });
   }
 
-  // Audit metadata never carries the number — only non-sensitive identifiers.
   await log({
     actorUserId: ctx.scope.userId,
     organizationId: ctx.scope.organizationId,

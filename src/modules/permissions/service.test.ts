@@ -217,6 +217,51 @@ describe("suspended organization (feature 09, ratified rule)", () => {
   });
 });
 
+describe("bank accounts & signers (feature 10)", () => {
+  it("STAFF+ manages both resources (spec: STAFF+ kelola)", () => {
+    for (const role of ["STAFF", "ADMIN", "OWNER"] as const) {
+      const ctx = ctxFor(role);
+      expect(can("bankAccount.view", ctx)).toBe(true);
+      expect(can("bankAccount.create", ctx)).toBe(true);
+      expect(can("bankAccount.update", ctx)).toBe(true);
+      expect(can("bankAccount.delete", ctx)).toBe(true);
+      expect(can("signer.view", ctx)).toBe(true);
+      expect(can("signer.create", ctx)).toBe(true);
+      expect(can("signer.update", ctx)).toBe(true);
+      expect(can("signer.delete", ctx)).toBe(true);
+    }
+  });
+
+  it("VIEWER reads masked lists only — no writes (spec: VIEWER read-only)", () => {
+    const ctx = ctxFor("VIEWER");
+    expect(can("bankAccount.view", ctx)).toBe(true);
+    expect(can("signer.view", ctx)).toBe(true);
+    expect(can("bankAccount.create", ctx)).toBe(false);
+    expect(can("bankAccount.update", ctx)).toBe(false);
+    expect(can("bankAccount.delete", ctx)).toBe(false);
+    expect(can("signer.create", ctx)).toBe(false);
+    expect(can("signer.update", ctx)).toBe(false);
+    expect(can("signer.delete", ctx)).toBe(false);
+    // The full-number reveal hangs off update — VIEWER can never qualify.
+    expect(() => assertCan("bankAccount.update", ctx)).toThrow();
+  });
+
+  it("a suspended organization keeps the masked reads but blocks mutations", () => {
+    expect(
+      can("bankAccount.view", { organizationId: ORG, role: "VIEWER", organizationStatus: "SUSPENDED" }),
+    ).toBe(true);
+    expect(
+      can("signer.view", { organizationId: ORG, role: "STAFF", organizationStatus: "SUSPENDED" }),
+    ).toBe(true);
+    expect(
+      can("bankAccount.create", { organizationId: ORG, role: "STAFF", organizationStatus: "SUSPENDED" }),
+    ).toBe(false);
+    expect(
+      can("signer.delete", { organizationId: ORG, role: "OWNER", organizationStatus: "SUSPENDED" }),
+    ).toBe(false);
+  });
+});
+
 describe("spec acceptance example", () => {
   it("can('invoice.issue', ctx): OWNER true, VIEWER false", () => {
     const owner: Parameters<typeof can>[1] = { organizationId: ORG, role: "OWNER" };

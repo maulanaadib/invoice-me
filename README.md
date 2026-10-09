@@ -20,6 +20,31 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Rotating the bank account encryption key
+
+Bank account numbers are encrypted at rest (AES-256-GCM) with a key derived
+from `BANK_ACCOUNT_ENCRYPTION_KEY` (SHA-256 of the secret, stored value format
+`iv:tag:ciphertext`). To rotate the key — for example after a secret leak or a
+scheduled rotation in Coolify:
+
+```bash
+# 1. Pick a new secret (≥ 32 characters) and re-encrypt every stored number:
+NEW_BANK_ACCOUNT_ENCRYPTION_KEY="<new-secret-with-at-least-32-chars>" \
+  scripts/rotate-bank-key.sh
+
+# 2. Put the new secret in your environment as BANK_ACCOUNT_ENCRYPTION_KEY
+#    (Coolify dashboard in production, .env.local in development) and restart
+#    the app.
+```
+
+The script reads `DATABASE_URL` and the current key from the app's env files
+(`.env` / `.env.local`); set `OLD_BANK_ACCOUNT_ENCRYPTION_KEY` explicitly if
+your old key is not in those files. It decrypts each row with the old key,
+re-encrypts with the new key, verifies the round-trip **before** writing, and
+never prints a plaintext number or a key. Rows already on the new key are
+skipped, so the script is safe to re-run. This is a maintenance script — the
+app itself has no UI for rotation.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
