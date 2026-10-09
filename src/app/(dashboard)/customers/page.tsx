@@ -7,7 +7,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PlusIcon } from "lucide-react";
-import { CustomersTable, CUSTOMERS_PAGE_SIZE } from "@/components/tables/customers-table";
+import { CUSTOMERS_PAGE_SIZE } from "@/modules/admin/constants";
+import { CustomersTable } from "@/components/tables/customers-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { can } from "@/modules/permissions/service";
@@ -35,7 +36,8 @@ export default async function CustomersPage({
 
   const scope = await resolveActiveOrgScope(session);
   const params = await searchParams;
-  const page = Math.max(1, Number(first(params.page) ?? "1") || 1);
+  const requestedPage = Number(first(params.page) ?? "1");
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.trunc(requestedPage) : 1;
   const q = (first(params.q) ?? "").slice(0, 100);
 
   if (!scope) {

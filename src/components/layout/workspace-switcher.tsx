@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -72,30 +73,34 @@ export function WorkspaceSwitcher({
         <ChevronDownIcon aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-64">
-        <DropdownMenuLabel>Workspace aktif</DropdownMenuLabel>
-        {memberships.map((membership) => {
-          const isActive = membership.organization.id === active.organization.id;
-          return (
-            <DropdownMenuItem
-              key={membership.organization.id}
-              onClick={() => selectWorkspace(membership.organization.id)}
-              disabled={pending}
-            >
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate font-medium">{membership.organization.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {membership.organization.slug}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Workspace aktif</DropdownMenuLabel>
+          {memberships.map((membership) => {
+            const isActive = membership.organization.id === active.organization.id;
+            return (
+              <DropdownMenuItem
+                key={membership.organization.id}
+                onClick={() => selectWorkspace(membership.organization.id)}
+                disabled={pending}
+              >
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate font-medium">{membership.organization.name}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {membership.organization.slug}
+                  </span>
                 </span>
-              </span>
-              <Badge variant="outline">{membership.role}</Badge>
-              {isActive ? <CheckIcon aria-hidden="true" /> : null}
-            </DropdownMenuItem>
-          );
-        })}
+                <Badge variant="outline">{membership.role}</Badge>
+                {isActive ? <CheckIcon aria-hidden="true" /> : null}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="font-normal text-muted-foreground">
-          Peran menentukan izin aksi di dalam workspace.
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal text-muted-foreground">
+            Peran menentukan izin aksi di dalam workspace.
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

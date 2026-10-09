@@ -277,6 +277,10 @@ describe("super admin user management", () => {
     expect(listed.rows[0]?.id).toBe(target.id);
     expect(listed.rows[0]?.membershipCount).toBe(0);
 
+    const malformedPage = await listUsers({ page: Number.NaN, pageSize: 10 });
+    expect(malformedPage.page).toBe(1);
+    expect(malformedPage.rows.length).toBeGreaterThan(0);
+
     // Suspend: flag set, sessions revoked server-side, audited, login blocked.
     await suspendUser(target.id, { actorUserId: admin.id });
     const suspended = await db.user.findUnique({ where: { id: target.id } });

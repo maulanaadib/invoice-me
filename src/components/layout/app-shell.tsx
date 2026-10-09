@@ -11,9 +11,7 @@ import {
 } from "lucide-react";
 import { CommandPalette } from "@/components/layout/command-palette";
 import {
-  ADMIN_NAV_LINKS,
   NAV_GROUPS,
-  isAdminLinkActive,
   visibleLinks,
   type NavVisibility,
 } from "@/components/layout/nav-config";
@@ -25,6 +23,7 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -111,41 +110,6 @@ function NavList({
   );
 }
 
-/**
- * Feature 09: the super-admin panel's own sidebar (spec: "sidebar terpisah
- * dari dashboard user"). Rendered instead of the workspace nav on /admin/*.
- */
-function AdminNavList({ onNavigate }: { onNavigate?: () => void }) {
-  const pathname = usePathname();
-  return (
-    <nav aria-label="Navigasi administrator" className="flex flex-col gap-1 px-3 py-2">
-      <p className="px-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        Panel admin
-      </p>
-      {ADMIN_NAV_LINKS.map((link) => {
-        const active = isAdminLinkActive(link.href, pathname);
-        const Icon = link.icon;
-        return (
-          <GuardedLink
-            key={link.href}
-            href={link.href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              buttonVariants({ variant: active ? "secondary" : "ghost", size: "sm" }),
-              "w-full justify-start gap-2 font-normal",
-              active && "font-medium",
-            )}
-          >
-            <Icon aria-hidden="true" />
-            {link.label}
-          </GuardedLink>
-        );
-      })}
-    </nav>
-  );
-}
-
 function Breadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
@@ -212,24 +176,28 @@ function UserMenu({ user }: { user: ShellUser }) {
         <span className="hidden max-w-36 truncate sm:inline">{displayName}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-64">
-        <DropdownMenuLabel className="flex flex-col">
-          <span className="truncate font-medium text-foreground">{displayName}</span>
-          <span className="truncate text-xs font-normal text-muted-foreground">
-            {user.email}
-          </span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col">
+            <span className="truncate font-medium text-foreground">{displayName}</span>
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              {user.email}
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => guardedPush("/change-password")}
-          disabled={pending}
-        >
-          <KeyRoundIcon aria-hidden="true" />
-          Ubah kata sandi
-        </DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={signOut} disabled={pending}>
-          <LogOutIcon aria-hidden="true" />
-          {pending ? "Keluar…" : "Keluar"}
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={() => guardedPush("/change-password")}
+            disabled={pending}
+          >
+            <KeyRoundIcon aria-hidden="true" />
+            Ubah kata sandi
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={signOut} disabled={pending}>
+            <LogOutIcon aria-hidden="true" />
+            {pending ? "Keluar…" : "Keluar"}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -240,7 +208,6 @@ export function AppShell({
   memberships,
   activeOrganizationId,
   navVisibility,
-  adminNav = false,
   children,
 }: {
   user: ShellUser;
@@ -255,7 +222,7 @@ export function AppShell({
   const isSuperAdmin = user.platformRole === "SUPER_ADMIN";
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const pathname = usePathname();
-  const brandHref = adminNav ? "/admin" : "/dashboard";
+  const brandHref = "/dashboard";
   const isInvoiceEditor =
     pathname === "/invoices/new" || /^\/invoices\/[^/]+\/edit$/.test(pathname);
 
@@ -271,11 +238,7 @@ export function AppShell({
           </GuardedLink>
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto py-3">
-          {adminNav ? (
-            <AdminNavList />
-          ) : (
-            <NavList isSuperAdmin={isSuperAdmin} visibility={navVisibility} />
-          )}
+          <NavList isSuperAdmin={isSuperAdmin} visibility={navVisibility} />
         </div>
       </aside>
 
@@ -292,15 +255,11 @@ export function AppShell({
               <SheetHeader className="border-b border-border">
                 <SheetTitle>invoice-me</SheetTitle>
               </SheetHeader>
-              {adminNav ? (
-                <AdminNavList onNavigate={() => setMobileOpen(false)} />
-              ) : (
-                <NavList
-                  isSuperAdmin={isSuperAdmin}
-                  visibility={navVisibility}
-                  onNavigate={() => setMobileOpen(false)}
-                />
-              )}
+              <NavList
+                isSuperAdmin={isSuperAdmin}
+                visibility={navVisibility}
+                onNavigate={() => setMobileOpen(false)}
+              />
             </SheetContent>
           </Sheet>
 

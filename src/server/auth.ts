@@ -24,6 +24,9 @@ import { env } from "@/server/env";
 export const auth = betterAuth({
   appName: "invoice-me",
   baseURL: env.BETTER_AUTH_URL,
+  // Multi-front-door deployments (LAN IP + SSH tunnel + proxy): sign-out and
+  // other origin-checked POSTs otherwise fail with `INVALID_ORIGIN`.
+  trustedOrigins: env.BETTER_AUTH_TRUSTED_ORIGINS,
   secret: env.BETTER_AUTH_SECRET,
   database: prismaAdapter(db, { provider: "postgresql" }),
 

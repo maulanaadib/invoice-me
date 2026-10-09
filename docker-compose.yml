@@ -26,6 +26,10 @@ services:
       DATABASE_URL: postgresql://invoice:invoice@postgres:5432/invoice_me?schema=public
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${APP_URL:-http://localhost:3000}
+      # Origins Better Auth trusts for `Origin`-checked POSTs. The SSH tunnel
+      # surfaces as http://localhost:3000 on the client; the LAN IP is the
+      # direct front door. Comma-separated, mirrors better-auth's env var.
+      BETTER_AUTH_TRUSTED_ORIGINS: ${BETTER_AUTH_TRUSTED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.100:3000}
       APP_URL: ${APP_URL:-http://localhost:3000}
       INTERNAL_PDF_SECRET: ${INTERNAL_PDF_SECRET}
       INTERNAL_APP_URL: http://app:3000

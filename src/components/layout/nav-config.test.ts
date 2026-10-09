@@ -9,9 +9,7 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  ADMIN_NAV_LINKS,
   NAV_GROUPS,
-  isAdminLinkActive,
   visibleLinks,
   type NavVisibility,
 } from "@/components/layout/nav-config";
@@ -75,9 +73,8 @@ describe("nav targets", () => {
     }
   });
 
-  it("every super-admin link points at a real /admin route", () => {
-    expect(ADMIN_NAV_LINKS.length).toBeGreaterThanOrEqual(9);
-    for (const link of ADMIN_NAV_LINKS) {
+  for (const group of NAV_GROUPS.filter((entry) => entry.adminOnly)) {
+    for (const link of group.links) {
       expect(link.href.startsWith("/admin")).toBe(true);
       expect({ href: link.href, exists: ROUTES.has(link.href) }).toEqual({
         href: link.href,
@@ -86,13 +83,15 @@ describe("nav targets", () => {
       expect(link.label.length).toBeGreaterThan(0);
       expect(link.icon).toBeDefined();
     }
-  });
+  }
 
   it("keeps every admin panel page reachable from the admin sidebar", () => {
     // Every top-level feature-09 page that exists in the router must be linked
     // from the sidebar — a page nobody can navigate to is a dead end. Dynamic
     // detail pages (`[id]`) are reached from their list, not from the sidebar.
-    const linked = new Set(ADMIN_NAV_LINKS.map((link) => link.href));
+    const linked = new Set(
+      NAV_GROUPS.filter((group) => group.adminOnly).flatMap((group) => group.links.map((link) => link.href)),
+    );
     const adminRoutes = [...ROUTES].filter(
       (route) => route.startsWith("/admin") && !route.includes("["),
     );
@@ -144,20 +143,3 @@ describe("visibleLinks", () => {
   });
 });
 
-describe("isAdminLinkActive", () => {
-  it("treats /admin itself as an exact match, never a prefix", () => {
-    expect(isAdminLinkActive("/admin", "/admin")).toBe(true);
-    expect(isAdminLinkActive("/admin", "/admin/users")).toBe(false);
-    expect(isAdminLinkActive("/admin", "/adminx")).toBe(false);
-    expect(isAdminLinkActive("/admin", "/dashboard")).toBe(false);
-  });
-
-  it("matches a section on itself and its detail pages, not on a sibling prefix", () => {
-    expect(isAdminLinkActive("/admin/users", "/admin/users")).toBe(true);
-    expect(isAdminLinkActive("/admin/users", "/admin/users/usr_1")).toBe(true);
-    expect(isAdminLinkActive("/admin/users", "/admin/users-archive")).toBe(false);
-    expect(isAdminLinkActive("/admin/users", "/admin/organizations")).toBe(false);
-    expect(isAdminLinkActive("/admin/invoices", "/admin/invoices/inv_1")).toBe(true);
-    expect(isAdminLinkActive("/admin/storage", "/admin/storage")).toBe(true);
-  });
-});

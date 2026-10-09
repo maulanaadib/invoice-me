@@ -196,7 +196,9 @@ export interface ListCustomersQuery {
  */
 export async function listCustomers(ctx: CustomerServiceContext, query: ListCustomersQuery = {}) {
   requireOrgScope(ctx.scope);
-  const pageSize = Math.min(Math.max(query.pageSize ?? 20, 1), 100);
+  const requestedPage = Number.isFinite(query.page) ? Math.max(1, Math.trunc(query.page ?? 1)) : 1;
+  const requestedPageSize = Number.isFinite(query.pageSize) ? Math.trunc(query.pageSize ?? 20) : 20;
+  const pageSize = Math.min(Math.max(requestedPageSize || 20, 1), 100);
   const q = (query.q ?? "").trim().slice(0, 100);
 
   const where: Prisma.CustomerWhereInput = {
@@ -214,7 +216,7 @@ export async function listCustomers(ctx: CustomerServiceContext, query: ListCust
 
   const total = await db.customer.count({ where });
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const page = Math.min(Math.max(query.page ?? 1, 1), totalPages);
+  const page = Math.min(requestedPage, totalPages);
   const rows = await db.customer.findMany({
     where,
     orderBy: [{ companyName: "asc" }, { createdAt: "asc" }],

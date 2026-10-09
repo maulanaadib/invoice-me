@@ -6,3 +6,6 @@
 
 /** Rows per page of the /admin/users list (feature 01 page, feature 09 home). */
 export const USERS_PAGE_SIZE = 10;
+export const CUSTOMERS_PAGE_SIZE = 10;
+export const PROJECTS_PAGE_SIZE = 10;
+

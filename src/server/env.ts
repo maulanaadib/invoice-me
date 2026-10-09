@@ -15,6 +15,20 @@ const envSchema = z.object({
   // Auth
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
+  // Extra origins Better Auth accepts `Origin` from. The app is reached
+  // through several front doors: the LAN IP directly, and an SSH tunnel
+  // that surfaces as http://localhost:3000 on the developer's machine.
+  // Without these, sign-out and other origin-checked POSTs reject with
+  // `INVALID_ORIGIN` ("Gagal keluar, sesi belum berakhir").
+  BETTER_AUTH_TRUSTED_ORIGINS: z
+    .string()
+    .default("")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ),
 
   // PDF service
   INTERNAL_PDF_SECRET: z.string().min(32),

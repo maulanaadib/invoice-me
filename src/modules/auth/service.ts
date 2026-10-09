@@ -534,7 +534,9 @@ export interface ListUsersQuery {
 }
 
 export async function listUsers(query: ListUsersQuery) {
-  const pageSize = Math.min(Math.max(query.pageSize || 20, 1), 100);
+  const requestedPage = Number.isFinite(query.page) ? Math.max(1, Math.trunc(query.page)) : 1;
+  const requestedPageSize = Number.isFinite(query.pageSize) ? Math.trunc(query.pageSize) : 20;
+  const pageSize = Math.min(Math.max(requestedPageSize || 20, 1), 100);
   const q = (query.q ?? "").trim().slice(0, 100);
   const where: Prisma.userWhereInput = {
     AND: [
@@ -553,7 +555,7 @@ export async function listUsers(query: ListUsersQuery) {
   };
   const total = await db.user.count({ where });
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const page = Math.min(Math.max(query.page, 1), totalPages);
+  const page = Math.min(requestedPage, totalPages);
   const rows = await db.user.findMany({
     where,
     orderBy: { createdAt: "desc" },

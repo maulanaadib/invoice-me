@@ -25,7 +25,8 @@ export default async function AdminUsersPage({
   if (session.user.platformRole !== "SUPER_ADMIN") redirect("/unauthorized");
 
   const params = await searchParams;
-  const page = Math.max(1, Number(first(params.page) ?? "1") || 1);
+  const requestedPage = Number(first(params.page) ?? "1");
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.trunc(requestedPage) : 1;
   const q = (first(params.q) ?? "").slice(0, 100);
   const rawStatus = first(params.status);
   const status: UserStatus | undefined =

@@ -368,6 +368,10 @@ describe("server-side pagination and search", () => {
   });
 
   it("search never crosses the organization boundary", async () => {
+    const result = await listCustomers(ownerCtx(), { page: Number.NaN, pageSize: 10 });
+    expect(result.page).toBe(1);
+    expect(result.rows.length).toBeGreaterThan(0);
+
     const otherResult = await listCustomers(ownerCtx(otherOrg.id), { q: "Dharma" });
     expect(otherResult.rows).toHaveLength(0);
     expect(otherResult.total).toBe(0);
@@ -386,6 +390,10 @@ describe("server-side pagination and search", () => {
       projectInput(customer.id, { referenceNumber: "SPK-99123", title: "Servis Line 3" }),
       ownerCtx(),
     );
+
+    const result = await listProjects(ownerCtx(), { page: Number.NaN, pageSize: 10 });
+    expect(result.page).toBe(1);
+    expect(result.rows.length).toBeGreaterThan(0);
 
     const byNumber = await listProjects(ownerCtx(), { q: "99123" });
     expect(byNumber.rows).toHaveLength(1);
