@@ -25,7 +25,7 @@
 //   - invoice DOWN_PAYMENT 50% (31 Juli 2026) → INV/SB/VII/2026/001 via the
 //     REAL numbering engine, not a hardcoded number
 
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createHash, randomBytes } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { hashPassword } from "better-auth/crypto";
@@ -144,6 +144,62 @@ const ACCEPTANCE_BILLING_PERCENT = 50;
 const ACCEPTANCE_WORK_VALUE = dp(ACCEPTANCE_ITEM_QTY * Number(ACCEPTANCE_ITEM_PRICE));
 const ACCEPTANCE_BILLING_BASE = dp(Number(ACCEPTANCE_WORK_VALUE) * (ACCEPTANCE_BILLING_PERCENT / 100));
 const ACCEPTANCE_GRAND_TOTAL = ACCEPTANCE_BILLING_BASE; // no tax, no discount, no rounding
+
+// calculateInvoice output for the acceptance fixture (5 × 900.000, DP 50%,
+// tax NONE — see src/modules/invoices/calculation.ts:72). Hardcoded because
+// the seed is plain ESM and cannot import the TypeScript engine; the values
+// are asserted below against the fixture arithmetic.
+const ACCEPTANCE_CALC_RESULT = {
+  lineAmounts: [ACCEPTANCE_WORK_VALUE],
+  itemsSubtotal: ACCEPTANCE_WORK_VALUE,
+  workValue: ACCEPTANCE_WORK_VALUE,
+  previouslyBilled: "0.00",
+  billingBase: ACCEPTANCE_BILLING_BASE,
+  remainingAfter: ACCEPTANCE_BILLING_BASE,
+  discountAmount: "0.00",
+  additionalAmount: "0.00",
+  taxMode: "NONE",
+  taxPercent: "0.00",
+  taxIncludedInTotal: "0.00",
+  taxAmount: "0.00",
+  roundingAmount: "0.00",
+  grandTotal: ACCEPTANCE_GRAND_TOTAL,
+};
+
+// CalculationSnapshot (src/modules/invoices/snapshots.ts:101) — the frozen
+// document the print route renders from. `calc` is mandatory: renderer-data
+// reads calculation.calc.taxIncludedInTotal.
+const ACCEPTANCE_CALCULATION_SNAPSHOT = {
+  invoiceType: "DOWN_PAYMENT",
+  billingMode: "PERCENT",
+  billingPercent: String(ACCEPTANCE_BILLING_PERCENT),
+  billingAmount: null,
+  workValue: ACCEPTANCE_WORK_VALUE,
+  itemsSubtotal: ACCEPTANCE_WORK_VALUE,
+  previouslyBilled: "0.00",
+  billingBase: ACCEPTANCE_BILLING_BASE,
+  discountAmount: "0.00",
+  additionalAmount: "0.00",
+  taxMode: "NONE",
+  taxPercent: null,
+  taxAmount: "0.00",
+  roundingAmount: "0.00",
+  grandTotal: ACCEPTANCE_GRAND_TOTAL,
+  remainingAfter: ACCEPTANCE_GRAND_TOTAL,
+  calc: ACCEPTANCE_CALC_RESULT,
+  items: [
+    {
+      position: 1,
+      description: "Pemasangan bracket frame",
+      details: null,
+      quantity: String(ACCEPTANCE_ITEM_QTY),
+      unit: "Unit",
+      unitPrice: ACCEPTANCE_ITEM_PRICE,
+      discountAmount: "0.00",
+      lineAmount: ACCEPTANCE_WORK_VALUE,
+    },
+  ],
+};
 
 if (ACCEPTANCE_WORK_VALUE !== "4500000.00" || ACCEPTANCE_BILLING_BASE !== "2250000.00") {
   throw new Error(
@@ -309,7 +365,22 @@ async function main() {
     where: { organizationId: sbOrg.id, number: "INV/SB/VII/2026/001" },
   });
   if (sbInvoice) {
-    console.log("[seed] acceptance sample already present (INV/SB/VII/2026/001) — skipping");
+    // Earlier seeds wrote the calculation snapshot flat (no `calc`), which
+    // crashed the print route ("Cannot read properties of undefined (reading
+    // taxIncludedInTotal)"). Repair such rows in place instead of skipping —
+    // the invoice id stays stable and PdfJobs can then render it.
+    const snapshot = sbInvoice.calculationSnapshot;
+    const flat =
+      typeof snapshot === "object" && snapshot !== null && !("calc" in snapshot);
+    if (flat) {
+      await prisma.invoice.update({
+        where: { id: sbInvoice.id },
+        data: { calculationSnapshot: ACCEPTANCE_CALCULATION_SNAPSHOT },
+      });
+      console.log("[seed] acceptance sample repaired: calculationSnapshot.calc added");
+    } else {
+      console.log("[seed] acceptance sample already present (INV/SB/VII/2026/001) — skipping");
+    }
     return;
   }
 
@@ -471,6 +542,7 @@ async function main() {
           {
             position: 1,
             description: "Pemasangan bracket frame",
+            details: null,
             quantity: String(ACCEPTANCE_ITEM_QTY),
             unit: "Unit",
             unitPrice: ACCEPTANCE_ITEM_PRICE,
@@ -522,33 +594,7 @@ async function main() {
         location: sbSigner.location,
         signaturePath: null,
       },
-      calculationSnapshot: {
-        invoiceType: "DOWN_PAYMENT",
-        billingMode: "PERCENT",
-        billingPercent: String(ACCEPTANCE_BILLING_PERCENT),
-        workValue: ACCEPTANCE_WORK_VALUE,
-        itemsSubtotal: ACCEPTANCE_WORK_VALUE,
-        previouslyBilled: "0.00",
-        billingBase: ACCEPTANCE_BILLING_BASE,
-        discountAmount: "0.00",
-        additionalAmount: "0.00",
-        taxMode: "NONE",
-        taxAmount: "0.00",
-        roundingAmount: "0.00",
-        grandTotal: ACCEPTANCE_GRAND_TOTAL,
-        remainingAfter: ACCEPTANCE_GRAND_TOTAL,
-        items: [
-          {
-            position: 1,
-            description: "Pemasangan bracket frame",
-            quantity: String(ACCEPTANCE_ITEM_QTY),
-            unit: "Unit",
-            unitPrice: ACCEPTANCE_ITEM_PRICE,
-            discountAmount: "0.00",
-            lineAmount: ACCEPTANCE_WORK_VALUE,
-          },
-        ],
-      },
+      calculationSnapshot: ACCEPTANCE_CALCULATION_SNAPSHOT,
       templateSnapshot: {
         templateKey: "corporate-blue",
         primaryColor: "#2563eb",
