@@ -47,6 +47,137 @@ app itself has no UI for rotation.
 
 ## Backup and restore
 
+Two scripts back up and restore the entire instance: the PostgreSQL database
+**and** the file storage (uploads + generated invoice PDFs).
+
+```bash
+scripts/backup.sh                      # create a backup
+scripts/restore.sh --dry-run <dir>     # verify a backup, change nothing
+scripts/restore.sh <dir>               # full restore (with downtime)
+```
+
+### What a backup contains
+
+Each run writes one timestamped directory (ISO-8601 UTC) under `BACKUP_DEST`
+(default `/backups`):
+
+```
+/backups/2026-10-10T02-00-00Z/
+├── db.dump               # pg_dump --format=custom (compressed, --no-owner --no-acl)
+├── storage.tar.gz        # tar.gz of $STORAGE_ROOT/{uploads,invoices}
+├── storage-files.sha256  # sha256 of every file inside the storage archive
+├── manifest.json         # metadata: timestamp, database, sizes, per-file sha256
+└── manifest.sha256       # sha256 of all of the above (the tamper seal)
+```
+
+`manifest.sha256` covers every artifact **and** `manifest.json` itself, so any
+modification — of a file or of the manifest — is detected before a restore
+touches anything.
+
+### Configuration
+
+All optional; the scripts read the same `.env` / `.env.local` the app reads,
+and variables set by the caller always win.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `BACKUP_DEST` | `/backups` | Where backup directories are written (mount this as a persistent volume). |
+| `BACKUP_RETENTION_DAYS` | `30` | Backups older than this are deleted on each successful run (minimum 1). Applies to pre-restore snapshots too. |
+| `BACKUP_EXTERNAL_PATH` | *(unset)* | If set, every backup is also copied there (rsync when available, `cp -a` otherwise) — see "a second copy" below. |
+| `PG_CONTAINER` | *(auto)* | Postgres container name for the `docker exec` fallback; auto-detected from `DATABASE_URL` when unset. |
+| `PG_DUMP_BIN` / `PG_RESTORE_BIN` / `PSQL_BIN` | *(unset)* | Full command overrides when the tools live somewhere unusual. |
+| `RESTORE_TEST_DATABASE` | `invoice_me_restore_check` | Isolated database used to prove a dump restores before production is touched. |
+
+The scripts need `pg_dump` / `pg_restore` / `psql`. They resolve the tools in
+this order: explicit `PG_*_BIN` override → binaries on the host `PATH` →
+`docker exec` into the postgres container (matching the published port for
+`localhost` URLs, the container name otherwise). On a host that only has
+Docker — the usual ZimaOS/Coolify situation — the fallback means the scripts
+work out of the box.
+
+### Scheduling
+
+**Host cron (recommended on ZimaOS/Coolify hosts):**
+
+```cron
+# Daily at 02:00 — scripts resolve pg tools via docker exec automatically.
+0 2 * * * cd /path/to/invoice-me && BACKUP_DEST=/backups scripts/backup.sh >> /var/log/invoice-me-backup.log 2>&1
+```
+
+**Coolify scheduled task:** create a "Command" task (daily) running
+`scripts/backup.sh` from the repository checkout on the host. Note the task
+must run somewhere the scripts exist **and** PostgreSQL tools are reachable —
+the app image does not ship `postgresql-client`; either run the task via host
+cron as above, or add `postgresql-client` to the image (deploy concern,
+feature 11C).
+
+### A backup on the same disk is not a final backup
+
+If the host disk dies, both the database volume **and** `/backups` die with
+it. Always copy backups to another device — a NAS, another machine, or object
+storage. Set `BACKUP_EXTERNAL_PATH` to a mount on another device and every
+run is copied there automatically; alternatively pull from elsewhere:
+
+```bash
+# From your NAS, every night: pull the newest backup off the app host.
+rsync -av --delete host:/backups/ /mnt/nas/invoice-me-backups/
+```
+
+Check that the external copy actually arrives (monitor the
+`backup disalin ke penyimpanan eksternal` log line, or the exit code — a
+failed external copy makes the run exit `1` instead of `0`).
+
+### Restoring
+
+1. **Verify first** — `scripts/restore.sh --dry-run <backup-dir>` checks every
+   checksum (manifest + each file inside the storage archive) and changes
+   nothing. Run it whenever you suspect a backup, and periodically to prove
+   your backups are restorable.
+2. **Stop the app** — a restore replaces the database, so the app must be
+   down: `docker compose stop app` (or stop the Coolify service).
+3. **Restore** — `scripts/restore.sh <backup-dir>`. The script asks you to
+   **type the database name** as confirmation (pipe it in automation:
+   `echo "invoice_me" | scripts/restore.sh <dir>`). Then it:
+   - snapshots the current database + storage to
+     `$BACKUP_DEST/pre-restore/<timestamp>*` **before changing anything**;
+   - proves the dump restores into the isolated `RESTORE_TEST_DATABASE`
+     first — a broken dump aborts here with production untouched;
+   - overwrites the database, extracts the storage archive, and verifies
+     every restored file against `storage-files.sha256`.
+4. **Start the app** — `docker compose start app`, then check `/health` and
+   log in.
+
+Exit codes: `0` success · `1` aborted before any change (declined
+confirmation, tool missing) · `2` fatal — a failed verification or restore is
+**rolled back** from the pre-restore snapshot automatically; if the rollback
+itself cannot complete, the script prints the snapshot path for manual
+recovery. The snapshot is kept after a successful restore and follows the
+same retention rotation; delete it once you have confirmed the app is
+healthy.
+
+### Troubleshooting
+
+- **`pg_restore: error: invalid URI query parameter: "schema"`** — you are
+  invoking the tools by hand with the app's Prisma URL. The scripts strip
+  `?schema=public` automatically; when calling `pg_dump`/`psql` yourself, use
+  the URL without the query string.
+- **`pg_dump: error: server version mismatch` / `pg_restore: error: aborting
+  because of server version mismatch`** — the client is newer than the server
+  (PostgreSQL refuses a dump from a newer major client). Use tools matching
+  the server (this project runs PostgreSQL 16): the `docker exec` fallback
+  uses the container's own client and never hits this.
+- **`permission denied to create database`** — the restore verifies dumps in
+  an isolated database and rebuilds the target database, so the `DATABASE_URL`
+  role needs `CREATEDB` (the default compose/Coolify role has it).
+- **`pg_dump: command not found` and the docker fallback also fails** — no
+  `postgresql-client` on the host and no reachable postgres container. Install
+  the client, or set `PG_CONTAINER` (or `PG_DUMP_BIN`) explicitly.
+- **`BACKUP_DEST tidak bisa ditulis`** — the directory does not exist or the
+  user running the script cannot write there; on Docker hosts mount it as a
+  volume and mind the file permissions.
+
+## Backup and restore
+
 Two companion scripts protect the whole application state — the PostgreSQL
 database and the storage volume (`uploads/` and official `invoices/` PDFs
 under `STORAGE_ROOT`):

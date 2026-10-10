@@ -87,6 +87,12 @@ The canonical list, decided once in Stage 5c so every feature uses the same name
 | `BANK_ACCOUNT_ENCRYPTION_KEY` | Key encrypt nomor rekening at rest | dev key di `.env.local` | not provisioned yet (rotate di Coolify) |
 | `GLITCHTIP_DSN` | Error tracking DSN | `none` (disabled in dev) | not provisioned yet (self-hosted GlitchTip) |
 | `CLOUDFLARE_TUNNEL_TOKEN` | Optional cloudflared tunnel | not set | not provisioned yet (optional profile) |
+| `BACKUP_DEST` | **Script-only** (backup/restore, bukan env aplikasi): output direktori backup | not set (default `/backups`) | `/backups` (volume) |
+| `BACKUP_RETENTION_DAYS` | **Script-only**: hapus backup lebih tua dari N hari (min 1) | not set (default `30`) | `30` |
+| `BACKUP_EXTERNAL_PATH` | **Script-only**: salinan backup eksternal (NAS/rsync) — disk yang sama bukan backup final | not set (opsional) | not provisioned yet (opsional mount NAS) |
+| `PG_CONTAINER` | **Script-only**: container postgres untuk fallback `docker exec` (auto-detect dari DATABASE_URL bila kosong) | not set (auto) | not set (auto) |
+| `PG_DUMP_BIN` / `PG_RESTORE_BIN` / `PSQL_BIN` | **Script-only**: override komplit alat PostgreSQL | not set | not set (opsional) |
+| `RESTORE_TEST_DATABASE` | **Script-only**: database terisolasi untuk verifikasi dump sebelum restore produksi | not set (default `invoice_me_restore_check`) | not set (default sama) |
 
 Rules:
 - Dev values live in the dev env file Stage 5c named (`.env.local` for Next.js), which is gitignored.
