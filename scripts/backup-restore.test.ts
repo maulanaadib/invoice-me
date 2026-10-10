@@ -475,6 +475,47 @@ describe("restore.sh — explicit confirmation + isolated check DB + full restor
     ]);
   }, 60_000);
 
+  it("--test-db restores ONLY into the isolated check DB — production untouched", async () => {
+    const backupDir = latestBackupDirIn(targetBackupDest);
+    const res = runScript(
+      "restore.sh",
+      ["--test-db", backupDir],
+      { DATABASE_URL: urlFor(TARGET_DB), STORAGE_ROOT: storageRoot, BACKUP_DEST: targetBackupDest },
+    );
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain("HANYA ke database terisolasi");
+    expect(res.stdout).toContain(SCRATCH_CHECK_DB);
+
+    const events = parseEvents(res.stderr);
+    const done = events.find(
+      (event) => event.msg === "restore --test-db selesai dan terverifikasi",
+    );
+    expect(done?.testDatabase).toBe(SCRATCH_CHECK_DB);
+
+    // The check DB holds the BACKUP state (id=1 only) and is kept for
+    // inspection; the production target still has the post-backup row.
+    expect(await readNotes(SCRATCH_CHECK_DB)).toEqual([{ id: 1, v: "original" }]);
+    expect(await readNotes(TARGET_DB)).toEqual([
+      { id: 1, v: "original" },
+      { id: 2, v: "post-backup" },
+    ]);
+
+    // Extracted storage landed in a temp dir (path printed) with the exact
+    // backed-up bytes — nothing was written to STORAGE_ROOT.
+    const storageDirMatch = res.stdout.match(/Storage diekstrak ke: ([^\s(]+)/);
+    expect(storageDirMatch).toBeTruthy();
+    expect(
+      readFileSync(
+        join(storageDirMatch?.[1] as string, "uploads", "organizations", "org1", "logos", "logo.png"),
+        "utf8",
+      ),
+    ).toBe("logo-bytes");
+    rmSync(storageDirMatch?.[1] as string, { recursive: true, force: true });
+
+    // Clean up the kept check DB so later assertions about it stay meaningful.
+    await admin.$executeRawUnsafe(`DROP DATABASE IF EXISTS "${SCRATCH_CHECK_DB}" WITH (FORCE)`);
+  }, 60_000);
+
   it("restores into the isolated check DB first, then rewinds database + storage, and keeps a pre-restore snapshot", async () => {
     const backupDir = latestBackupDirIn(targetBackupDest);
     // Add a file that must disappear after the restore.

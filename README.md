@@ -53,6 +53,7 @@ Two scripts back up and restore the entire instance: the PostgreSQL database
 ```bash
 scripts/backup.sh                      # create a backup
 scripts/restore.sh --dry-run <dir>     # verify a backup, change nothing
+scripts/restore.sh --test-db <dir>     # restore into an isolated check DB only
 scripts/restore.sh <dir>               # full restore (with downtime)
 ```
 
@@ -133,9 +134,15 @@ failed external copy makes the run exit `1` instead of `0`).
    checksum (manifest + each file inside the storage archive) and changes
    nothing. Run it whenever you suspect a backup, and periodically to prove
    your backups are restorable.
-2. **Stop the app** — a restore replaces the database, so the app must be
+2. **(Optional) rehearse into an isolated database** —
+   `scripts/restore.sh --test-db <backup-dir>` rebuilds the check database
+   (`RESTORE_TEST_DATABASE`, default `invoice_me_restore_check`) from the dump
+   and extracts storage into a temporary directory, verifying both. The
+   production database and `STORAGE_ROOT` are never touched; the check
+   database is kept afterwards so you can inspect it.
+3. **Stop the app** — a restore replaces the database, so the app must be
    down: `docker compose stop app` (or stop the Coolify service).
-3. **Restore** — `scripts/restore.sh <backup-dir>`. The script asks you to
+4. **Restore** — `scripts/restore.sh <backup-dir>`. The script asks you to
    **type the database name** as confirmation (pipe it in automation:
    `echo "invoice_me" | scripts/restore.sh <dir>`). Then it:
    - snapshots the current database + storage to
@@ -144,7 +151,7 @@ failed external copy makes the run exit `1` instead of `0`).
      first — a broken dump aborts here with production untouched;
    - overwrites the database, extracts the storage archive, and verifies
      every restored file against `storage-files.sha256`.
-4. **Start the app** — `docker compose start app`, then check `/health` and
+5. **Start the app** — `docker compose start app`, then check `/health` and
    log in.
 
 Exit codes: `0` success · `1` aborted before any change (declined

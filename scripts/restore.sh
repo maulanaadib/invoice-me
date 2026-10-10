@@ -4,6 +4,8 @@
 #
 # Usage:
 #   scripts/restore.sh --dry-run <backup-dir>    verify only — no changes at all
+#   scripts/restore.sh --test-db <backup-dir>    restore into an ISOLATED check
+#                                                database only (never production)
 #   scripts/restore.sh <backup-dir>              full restore (with downtime)
 #
 # The real restore runs in this order:
@@ -20,6 +22,11 @@
 #   6. Overwrite the production database, extract storage (current files are
 #      moved into the pre-restore snapshot dir first), then verify checksums
 #      post-restore. ANY failure → rollback from the snapshot + exit 2.
+#
+# --test-db performs steps 1–2 and step 5 only: it rebuilds the isolated
+# check database from the dump and extracts storage into a temporary
+# directory, so you can prove a backup restores without any production
+# impact.
 #
 # Exit codes: 0 success (a passing --dry-run included) · 1 aborted before any
 # change (declined confirmation, missing tool) · 2 fatal (verification or
@@ -82,12 +89,14 @@ log_event() {
 # ─── Configuration ───────────────────────────────────────────────────────────
 
 DRY_RUN=false
+TEST_DB_MODE=false
 BACKUP_DIR=""
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
+    --test-db) TEST_DB_MODE=true ;;
     -h|--help)
-      printf 'Usage: scripts/restore.sh [--dry-run] <backup-dir>\n'
+      printf 'Usage: scripts/restore.sh [--dry-run|--test-db] <backup-dir>\n'
       exit 0
       ;;
     -*) printf 'ERROR: opsi tidak dikenal: %s\n' "$arg" >&2; exit 1 ;;
@@ -100,6 +109,11 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+if [ "$DRY_RUN" = "true" ] && [ "$TEST_DB_MODE" = "true" ]; then
+  printf 'ERROR: --dry-run dan --test-db tidak bisa dipakai bersamaan.\n' >&2
+  exit 1
+fi
 
 if [ -z "$BACKUP_DIR" ]; then
   printf 'ERROR: direktori backup belum diberikan.\n' >&2
@@ -243,7 +257,8 @@ VERIFY_DIR=""
 trap '[ -z "$VERIFY_DIR" ] || rm -rf "$VERIFY_DIR"' EXIT
 
 if [ -f "$STORAGE_ARCHIVE" ]; then
-  if [ -z "$STORAGE_ROOT" ]; then
+  # Full mode extracts into STORAGE_ROOT — the other modes use temp dirs.
+  if [ -z "$STORAGE_ROOT" ] && [ "$TEST_DB_MODE" != "true" ]; then
     printf 'ERROR: STORAGE_ROOT tidak di-set — archive storage ada di backup ini.\n' >&2
     log_event error "STORAGE_ROOT wajib untuk backup yang memuat storage" "backupDir=$BACKUP_DIR"
     exit 2
@@ -318,6 +333,95 @@ require_tool() {
 require_tool pg_dump PG_DUMP_VIA
 require_tool pg_restore PG_RESTORE_VIA
 require_tool psql PSQL_VIA
+
+# ─── Isolated check-database restore (shared by --test-db and full mode) ─────
+
+# restore_into_scratch — rebuild $RESTORE_TEST_DATABASE from the dump.
+# Never touches the production database. On failure: sets SCRATCH_ERROR,
+# drops the scratch database, returns 1.
+SCRATCH_ERROR=""
+restore_into_scratch() {
+  local err
+  SCRATCH_ERROR=""
+  if ! "${PSQL[@]}" "$DB_ADMIN_URL" -c "DROP DATABASE IF EXISTS \"$RESTORE_TEST_DATABASE\" WITH (FORCE)" \
+      >/dev/null 2>&1; then
+    SCRATCH_ERROR="tidak bisa menyiapkan database test (butuh hak CREATE DATABASE)"
+    return 1
+  fi
+  if ! "${PSQL[@]}" "$DB_ADMIN_URL" -c "CREATE DATABASE \"$RESTORE_TEST_DATABASE\"" >/dev/null 2>&1; then
+    SCRATCH_ERROR="tidak bisa membuat database test (butuh hak CREATE DATABASE)"
+    return 1
+  fi
+  err="$(mktemp)"
+  if ! "${PG_RESTORE[@]}" --exit-on-error --no-owner --no-acl \
+      -d "${DB_CLEAN%/*}/$RESTORE_TEST_DATABASE" < "$BACKUP_DIR/db.dump" 2> "$err"; then
+    SCRATCH_ERROR="$(redact "$(head -c 500 "$err")")"
+    rm -f "$err"
+    "${PSQL[@]}" "$DB_ADMIN_URL" -c "DROP DATABASE IF EXISTS \"$RESTORE_TEST_DATABASE\" WITH (FORCE)" \
+      >/dev/null 2>&1 || true
+    return 1
+  fi
+  rm -f "$err"
+  return 0
+}
+
+# ─── Mode --test-db: prove the backup restores, zero production impact ───────
+
+if [ "$TEST_DB_MODE" = "true" ]; then
+  printf 'Mode --test-db: restore HANYA ke database terisolasi "%s".\n' "$RESTORE_TEST_DATABASE"
+  printf 'Database produksi "%s" dan storage TIDAK disentuh.\n' "$DB_NAME"
+  if ! restore_into_scratch; then
+    printf 'ERROR: restore ke database test gagal: %s\n' "$SCRATCH_ERROR" >&2
+    log_event error "restore --test-db gagal — dump tidak bisa direstore" \
+      "testDatabase=$RESTORE_TEST_DATABASE" "error=$SCRATCH_ERROR"
+    exit 2
+  fi
+  TEST_STORAGE_DIR=""
+  case "$STORAGE_STATE" in
+    files)
+      TEST_STORAGE_DIR="$(mktemp -d)"
+      if ! tar -xzf "$STORAGE_ARCHIVE" -C "$TEST_STORAGE_DIR"; then
+        printf 'ERROR: ekstraksi storage ke direktori sementara gagal.\n' >&2
+        log_event error "restore --test-db: ekstraksi storage gagal" "backupDir=$BACKUP_DIR"
+        "${PSQL[@]}" "$DB_ADMIN_URL" -c "DROP DATABASE IF EXISTS \"$RESTORE_TEST_DATABASE\" WITH (FORCE)" \
+          >/dev/null 2>&1 || true
+        exit 2
+      fi
+      if [ "$STORAGE_MANIFEST_USABLE" = "true" ] \
+        && ! ( cd "$TEST_STORAGE_DIR" && sha256sum -c --quiet "$STORAGE_MANIFEST" >/dev/null 2>&1 ); then
+        printf 'ERROR: checksum file storage tidak cocok setelah ekstraksi (backup korup).\n' >&2
+        log_event error "restore --test-db: verifikasi checksum storage gagal" \
+          "backupDir=$BACKUP_DIR" "members=$VERIFY_MEMBERS"
+        rm -rf "$TEST_STORAGE_DIR"
+        "${PSQL[@]}" "$DB_ADMIN_URL" -c "DROP DATABASE IF EXISTS \"$RESTORE_TEST_DATABASE\" WITH (FORCE)" \
+          >/dev/null 2>&1 || true
+        exit 2
+      fi
+      log_event info "storage diekstrak dan terverifikasi di direktori sementara" \
+        "storageDir=$TEST_STORAGE_DIR" "members=$VERIFY_MEMBERS"
+      ;;
+    empty)
+      log_event info "backup berasal dari storage kosong" "backupDir=$BACKUP_DIR"
+      ;;
+    absent)
+      log_event warn "backup tanpa archive storage" "backupDir=$BACKUP_DIR"
+      ;;
+  esac
+  TEST_TABLES="$("${PSQL[@]}" "${DB_CLEAN%/*}/$RESTORE_TEST_DATABASE" -tAc \
+    "SELECT count(*) FROM pg_catalog.pg_tables WHERE schemaname = 'public'" 2>/dev/null | tr -d '[:space:]')" \
+    || TEST_TABLES=""
+  log_event info "restore --test-db selesai dan terverifikasi" \
+    "testDatabase=$RESTORE_TEST_DATABASE" "publicTables=$TEST_TABLES" \
+    "storageState=$STORAGE_STATE" "members=$VERIFY_MEMBERS" \
+    "storageDir=${TEST_STORAGE_DIR:-}"
+  printf '\nRestore terisolasi SELESAI dan terverifikasi.\n'
+  printf '• Database test "%s" (publicTables=%s) disimpan untuk inspeksi.\n' \
+    "$RESTORE_TEST_DATABASE" "${TEST_TABLES:-?}"
+  printf '  Hapus dengan: psql <admin-url> -c '"'"'DROP DATABASE "%s"'"'"'\n' "$RESTORE_TEST_DATABASE"
+  [ -n "$TEST_STORAGE_DIR" ] && \
+    printf '• Storage diekstrak ke: %s (hapus setelah selesai).\n' "$TEST_STORAGE_DIR"
+  exit 0
+fi
 
 # ─── Explicit confirmation — type the database name ──────────────────────────
 
@@ -420,31 +524,12 @@ rollback_and_fail() {
 # ─── Step 1: prove the dump restores into an isolated scratch database ───────
 
 printf 'Memverifikasi dump ke database test terisolasi "%s" ...\n' "$RESTORE_TEST_DATABASE"
-if ! "${PSQL[@]}" "$DB_ADMIN_URL" -c "DROP DATABASE IF EXISTS \"$RESTORE_TEST_DATABASE\" WITH (FORCE)" \
-    >/dev/null 2>&1; then
-  printf 'ERROR: tidak bisa menyiapkan database test (butuh hak CREATE DATABASE) — tidak ada perubahan.\n' >&2
-  log_event error "persiapan database test gagal" "testDatabase=$RESTORE_TEST_DATABASE" \
-    "tool=$PSQL_VIA"
-  exit 2
-fi
-if ! "${PSQL[@]}" "$DB_ADMIN_URL" -c "CREATE DATABASE \"$RESTORE_TEST_DATABASE\"" >/dev/null 2>&1; then
-  printf 'ERROR: tidak bisa membuat database test (butuh hak CREATE DATABASE) — tidak ada perubahan.\n' >&2
-  log_event error "pembuatan database test gagal" "testDatabase=$RESTORE_TEST_DATABASE" \
-    "tool=$PSQL_VIA"
-  exit 2
-fi
-SCRATCH_ERR="$(mktemp)"
-if ! "${PG_RESTORE[@]}" --exit-on-error --no-owner --no-acl \
-    -d "${DB_CLEAN%/*}/$RESTORE_TEST_DATABASE" < "$BACKUP_DIR/db.dump" 2> "$SCRATCH_ERR"; then
+if ! restore_into_scratch; then
   log_event error "restore ke database test gagal — dump tidak valid, produksi tidak disentuh" \
-    "testDatabase=$RESTORE_TEST_DATABASE" "error=$(redact "$(head -c 500 "$SCRATCH_ERR")")"
-  rm -f "$SCRATCH_ERR"
-  "${PSQL[@]}" "$DB_ADMIN_URL" -c "DROP DATABASE IF EXISTS \"$RESTORE_TEST_DATABASE\" WITH (FORCE)" \
-    >/dev/null 2>&1 || true
+    "testDatabase=$RESTORE_TEST_DATABASE" "error=$SCRATCH_ERROR"
   printf 'ERROR: dump tidak bisa direstore ke database test — produksi TIDAK disentuh.\n' >&2
   exit 2
 fi
-rm -f "$SCRATCH_ERR"
 log_event info "dump terbukti restorable di database test terisolasi" \
   "testDatabase=$RESTORE_TEST_DATABASE"
 
