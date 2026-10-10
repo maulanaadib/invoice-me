@@ -28,7 +28,7 @@
 //   scripts/maintenance.sh
 //   STORAGE_ROOT=/data DATABASE_URL=... scripts/maintenance.sh
 
-import { readdir, rm } from "node:fs/promises";
+import { readdir, rm, stat } from "node:fs/promises";
 import { join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { PrismaClient } from "@prisma/client";
@@ -133,9 +133,19 @@ async function walkFiles(dir, root, out = []) {
  * database record references. Idempotent: a second run finds nothing to
  * delete. Individual failures are logged and counted instead of aborting the
  * job, so one unreadable file never stops the sweep.
+ *
+ * Grace period (TOCTOU guard): a file whose record is written a moment AFTER
+ * the file itself (upload → DB column, or the PDF worker writing the file
+ * before its InvoicePdf row) would be unreferenced during the snapshot
+ * window and deleted as an orphan, leaving a dangling record. Files younger
+ * than ORPHAN_GRACE_MS are skipped — a sweep that runs on a cron will always
+ * catch them on the next pass once their records have landed.
  */
+export const ORPHAN_GRACE_MS = 60 * 60 * 1000; // 1 hour
+
 export async function cleanupOrphanFiles(prisma, options = {}) {
   const storageRoot = resolve(options.storageRoot ?? process.env.STORAGE_ROOT ?? "./.data");
+  const graceMs = options.graceMs ?? ORPHAN_GRACE_MS;
   const log = options.log ?? logEvent;
   const referenced = await collectReferencedPaths(prisma);
   const files = await walkFiles(storageRoot, storageRoot);
@@ -143,12 +153,21 @@ export async function cleanupOrphanFiles(prisma, options = {}) {
   let kept = 0;
   let deleted = 0;
   let failed = 0;
+  let skippedRecent = 0;
+  const cutoff = Date.now() - graceMs;
   for (const relativePath of files) {
     if (referenced.has(relativePath)) {
       kept += 1;
       continue;
     }
     try {
+      const stats = await stat(join(storageRoot, relativePath));
+      if (stats.mtimeMs > cutoff) {
+        // The record may still be on its way — never delete a fresh file.
+        skippedRecent += 1;
+        kept += 1;
+        continue;
+      }
       await rm(join(storageRoot, relativePath), { force: true });
       deleted += 1;
       log({ job: "orphan-cleanup", event: "deleted", path: relativePath });
@@ -171,8 +190,9 @@ export async function cleanupOrphanFiles(prisma, options = {}) {
     kept,
     deleted,
     failed,
+    skippedRecent,
   });
-  return { scanned: files.length, kept, deleted, failed };
+  return { scanned: files.length, kept, deleted, failed, skippedRecent };
 }
 
 /**

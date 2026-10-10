@@ -27,12 +27,12 @@ function expectLocked(run: () => unknown): AppError {
 }
 
 describe("PAYABLE_STATUSES", () => {
-  it("is exactly the issued family (spec: ISSUED/SENT/PARTIALLY_PAID/PAID)", () => {
-    expect([...PAYABLE_STATUSES]).toEqual(["ISSUED", "SENT", "PARTIALLY_PAID", "PAID"]);
+  it("is the issued family plus OVERDUE (11A sweep persists OVERDUE; a late invoice stays payable)", () => {
+    expect([...PAYABLE_STATUSES]).toEqual(["ISSUED", "SENT", "PARTIALLY_PAID", "PAID", "OVERDUE"]);
     expect(isPayable("DRAFT")).toBe(false);
     expect(isPayable("CANCELLED")).toBe(false);
     expect(isPayable("REVISED")).toBe(false);
-    expect(isPayable("OVERDUE")).toBe(false);
+    expect(isPayable("OVERDUE")).toBe(true);
   });
 });
 
@@ -138,13 +138,21 @@ describe("recomputePaymentStatus", () => {
     expect(error.message).toMatch(/dibatalkan/i);
   });
 
-  it("rejects REVISED and OVERDUE invoices (LOCKED)", () => {
+  it("rejects REVISED invoices (LOCKED) but recomputes an OVERDUE invoice (11A)", () => {
     expectLocked(() =>
       recomputePaymentStatus({ status: "REVISED", grandTotal: "1", amountPaid: "1" }),
     );
-    expectLocked(() =>
+    // The sweep persists OVERDUE; a payment on a late invoice must still move
+    // it to PAID, and a full reversal keeps it OVERDUE (still past due).
+    expect(
       recomputePaymentStatus({ status: "OVERDUE", grandTotal: "1", amountPaid: "1" }),
-    );
+    ).toBe("PAID");
+    expect(
+      recomputePaymentStatus({ status: "OVERDUE", grandTotal: "1", amountPaid: "0.5" }),
+    ).toBe("PARTIALLY_PAID");
+    expect(
+      recomputePaymentStatus({ status: "OVERDUE", grandTotal: "1", amountPaid: "0" }),
+    ).toBe("OVERDUE");
   });
 
   it("assertPayable agrees with isPayable for every status", () => {

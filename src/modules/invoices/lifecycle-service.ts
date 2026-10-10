@@ -93,19 +93,24 @@ async function getScopedInvoice(invoiceId: string, ctx: InvoiceServiceContext): 
   return invoice;
 }
 
-/** Statuses a cancellation is allowed to touch (spec: issued documents). */
+/** Statuses a cancellation is allowed to touch (spec: issued documents).
+ * Feature 11A adds OVERDUE — the sweep persists it, and a late invoice must
+ * stay cancellable (e.g. settled out of band, or written off). */
 export const CANCELABLE_STATUSES: readonly InvoiceStatus[] = [
   "ISSUED",
   "SENT",
   "PARTIALLY_PAID",
+  "OVERDUE",
 ];
 
 /** Statuses a revision is allowed to touch (unpaid issued documents — a
- * settled or cancelled document is not rewritten, it is what the books say). */
+ * settled or cancelled document is not rewritten, it is what the books say).
+ * Feature 11A adds OVERDUE — same reasoning as cancellation. */
 export const REVISABLE_STATUSES: readonly InvoiceStatus[] = [
   "ISSUED",
   "SENT",
   "PARTIALLY_PAID",
+  "OVERDUE",
 ];
 
 function assertCancellable(invoice: Invoice): void {
@@ -119,7 +124,10 @@ function assertCancellable(invoice: Invoice): void {
   if (invoice.status === "CANCELLED") {
     throw new AppError("LOCKED", "Invoice sudah pernah dibatalkan.");
   }
-  throw new AppError("LOCKED", "Invoice sudah digantikan revisi dan tidak dapat dibatalkan.");
+  if (invoice.status === "REVISED") {
+    throw new AppError("LOCKED", "Invoice sudah digantikan revisi dan tidak dapat dibatalkan.");
+  }
+  throw new AppError("LOCKED", "Status invoice tidak mengizinkan pembatalan.");
 }
 
 function assertRevisable(invoice: Invoice): void {
@@ -133,7 +141,10 @@ function assertRevisable(invoice: Invoice): void {
   if (invoice.status === "CANCELLED") {
     throw new AppError("LOCKED", "Invoice dibatalkan — buat invoice baru, bukan revisi.");
   }
-  throw new AppError("CONFLICT", "Invoice sudah direvisi — revisi hanya bisa dibuat sekali.");
+  if (invoice.status === "REVISED") {
+    throw new AppError("CONFLICT", "Invoice sudah direvisi — revisi hanya bisa dibuat sekali.");
+  }
+  throw new AppError("LOCKED", "Status invoice tidak mengizinkan revisi.");
 }
 
 // ─── Mark sent (STAFF+) ───────────────────────────────────────────────────

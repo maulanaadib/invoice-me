@@ -1,24 +1,181 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# invoice-me
 
-## Getting Started
+Platform invoice self-hosted multi-tenant untuk membuat, mengelola, dan
+mengekspor invoice profesional (Down Payment, Pelunasan, Full, Termin) dengan
+live preview A4 dan ekspor PDF. Dibangun untuk pemakaian internal
+multi-organization, dirancang untuk bisa dipublikasikan sebagai SaaS
+self-hosted.
 
-First, run the development server:
+## Stack
+
+- **Next.js** (App Router) + TypeScript strict + Tailwind + shadcn/ui
+- **Prisma** + **PostgreSQL 16**
+- **Better Auth** (username/email, tanpa pendaftaran publik)
+- **decimal.js** untuk uang; **Vitest** + **Playwright** untuk test
+- **pdf-service terpisah** (Playwright Chromium, request internal bertanda tangan)
+- **Docker Compose** (app + postgres + pdf-service), deploy target **Coolify**
+
+## Dokumen Legal
+
+Halaman publik `/privacy` (Kebijakan Privasi, UU PDP) dan `/terms`
+(Syarat & Ketentuan) tersedia tanpa login. Banner cookie consent muncul
+di setiap halaman (hanya cookie sesi esensial yang aktif saat ini).
+
+## Deployment di Coolify
+
+### Prasyarat
+
+- Server dengan **Docker** + **Docker Compose** (Coolify sudah menyediakannya).
+- Domain atau IP yang bisa diakses (untuk `APP_URL`).
+- Akses GitHub ke repo `maulanaadib/invoice-me`.
+
+### Langkah
+
+1. **Create project** di Coolify → beri nama `invoice-me`.
+2. **Link repo** `maulanaadib/invoice-me`, branch `main`.
+3. **Pilih Docker Compose** sebagai sumber (bukan Dockerfile langsung) —
+   `docker-compose.yml` ada di root repo. Coolify akan mem-build 3 service:
+   `app`, `postgres`, `pdf-service`.
+4. **Set environment variables** (lihat tabel di bawah) di dashboard Coolify —
+   jangan commit nilai produksi ke repo.
+5. **Deploy** — Coolify akan `docker compose up -d --build` dari bersih.
+6. **Verify** — buka `https://<domain-anda>/health` → harus merespons
+   `{ "status": "ok", ... }` (200). Cek juga `docker compose ps` → semua
+   service `healthy`.
+7. **First login** — buka `https://<domain-anda>/login`, masuk dengan akun
+   super admin (dibuat dari `SEED_ADMIN_*`), **segera ganti password**.
+8. **Backup & maintenance** — lihat bagian terkait di README ini.
+
+### Environment Variables (Produksi)
+
+Semua nilai di-set di dashboard Coolify, tidak di repo.
+
+| Variable | Value | Notes |
+| --- | --- | --- |
+| `NODE_ENV` | `production` | |
+| `APP_URL` | `https://<domain>` | Public base URL |
+| `APP_PORT` | `3000` | |
+| `DATABASE_URL` | `postgresql://<user>:<pass>@postgres:5432/invoice_me?schema=public` | |
+| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` | |
+| `BETTER_AUTH_URL` | `https://<domain>` | Sama dengan APP_URL |
+| `INTERNAL_PDF_SECRET` | `openssl rand -base64 32` | |
+| `INTERNAL_APP_URL` | `http://app:3000` | |
+| `PDF_SERVICE_URL` | `http://pdf-service:3001` | |
+| `PDF_WORKER_ENABLED` | `true` | |
+| `STORAGE_ROOT` | `/data` | |
+| `UPLOAD_MAX_MB` | `2` | |
+| `DEFAULT_TIMEZONE` | `Asia/Jakarta` | |
+| `SEED_ADMIN_USERNAME` | `admin` | Set sekali, ganti setelah login |
+| `SEED_ADMIN_EMAIL` | `admin@example.com` | |
+| `SEED_ADMIN_PASSWORD` | `openssl rand -base64 16` | **Ganti setelah first login** |
+| `BANK_ACCOUNT_ENCRYPTION_KEY` | `openssl rand -base64 32` | AES-256-GCM |
+| `GLITCHTIP_DSN` | *(opsional)* | Self-hosted GlitchTip |
+| `CLOUDFLARE_TUNNEL_TOKEN` | *(opsional)* | Hanya untuk profile `cloudflared` |
+
+Script-only (tidak dibaca app):
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `BACKUP_DEST` | `/backups` | Mount sebagai volume persistent |
+| `BACKUP_RETENTION_DAYS` | `30` | |
+| `BACKUP_EXTERNAL_PATH` | *(unset)* | NAS/external mount — **sangat disarankan** |
+| `PG_CONTAINER` | *(auto)* | Container postgres untuk fallback `docker exec` |
+| `RESTORE_TEST_DATABASE` | `invoice_me_restore_check` | |
+
+### Migration & Seed
+
+- **Migration** dijalankan otomatis saat container app start (`prisma migrate deploy`
+  di entrypoint) — lihat `docker-entrypoint.sh`.
+- **Seed** (`prisma/seed.mjs`) juga dijalankan otomatis saat
+  `SEED_ADMIN_PASSWORD` ter-set. Seed **idempotent** — run ulang tidak error,
+  tidak duplikat. Berisi: super admin + acceptance sample (Sigit Berkarya,
+  profile SB, customer PT Dharma Polimetal Tbk, PO 5198021181,
+  invoice DP 50% `INV/SB/VII/2026/001`).
+- Jika `SEED_ADMIN_PASSWORD` kosong, seed dilewati (production tanpa
+  credentials seed tetap boot normal — migration tetap jalan).
+
+### First Login
+
+1. Buka `https://<domain>/login`.
+2. Masuk dengan `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD`.
+3. **Segera ganti password** via menu profil → Ubah Kata Sandi.
+4. Buat organisasi & profil invoice via onboarding wizard (12 langkah).
+
+## Local Development
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Copy .env.example → .env.local, isi nilai dev
+cp .env.example .env.local
+
+# 3. Start postgres (compose dev)
+docker compose -f docker-compose.dev.yml up -d
+
+# 4. Jalankan migration
+npx prisma migrate deploy
+
+# 5. (Opsional) Seed data acceptance
+node prisma/seed.mjs
+
+# 6. Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Menjalankan Test
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run test        # Vitest unit + integration
+npm run test:e2e    # Playwright E2E (butuh dev server + postgres)
+```
+
+Test environment (`tests/test.env`) memakai database terpisah
+`invoice_me_test` — test tidak pernah menyentuh database dev.
+
+## Backup and Restore
+
+Lihat bagian **Backup and Restore** di bawah untuk panduan lengkap
+(README 11B). Singkatnya:
+
+```bash
+scripts/backup.sh                      # buat backup
+scripts/restore.sh --dry-run <dir>     # verifikasi, tanpa perubahan
+scripts/restore.sh --test-db <dir>     # latihan restore ke DB terisolasi
+scripts/restore.sh <dir>               # restore nyata (butuh downtime)
+```
+
+## Rotating the Bank Account Encryption Key
+
+Lihat bagian **Rotating the Bank Account Encryption Key** di bawah
+(README fitur 10).
+
+## Maintenance Jobs
+
+`scripts/maintenance.sh` (feature 11A): orphan file cleanup + overdue
+recompute batched. Idempoten, output JSON terstruktur.
+
+```bash
+scripts/maintenance.sh
+```
+
+Scheduling via Coolify Scheduled Task atau host cron — lihat
+bagian Maintenance di bawah.
+
+## Troubleshooting
+
+- **App tidak start** — cek `docker compose logs app` → biasanya env var
+  wajib hilang (fail-fast di `src/server/env.ts`).
+- **PDF gagal render** — pastikan `INTERNAL_PDF_SECRET` sama antara app dan
+  pdf-service; cek `docker compose logs pdf-service`.
+- **Migration error** — cek `docker compose logs app` saat startup;
+  `prisma migrate deploy` log muncul di entrypoint.
+- **Backup gagal** — lihat exit code & JSON log di stderr; pastikan
+  `BACKUP_DEST` writable dan `postgresql-client` / `PG_CONTAINER` ter-configure.
+
+---
 
 ## Rotating the bank account encryption key
 
@@ -183,156 +340,34 @@ healthy.
   user running the script cannot write there; on Docker hosts mount it as a
   volume and mind the file permissions.
 
-## Backup and restore
+## Maintenance Jobs
 
-Two companion scripts protect the whole application state — the PostgreSQL
-database and the storage volume (`uploads/` and official `invoices/` PDFs
-under `STORAGE_ROOT`):
+`scripts/maintenance.sh` (feature 11A) performs two idempotent sweeps:
 
-```bash
-scripts/backup.sh                    # one full backup run
-scripts/restore.sh --dry-run <dir>   # verify a backup — changes nothing
-scripts/restore.sh <dir>             # real restore (requires downtime)
-```
+1. **Orphan file cleanup** — walks `STORAGE_ROOT` (`uploads/` + `invoices/`)
+   and deletes files not referenced by any database column (`UploadRecord.path`,
+   `InvoicePdf.storagePath`, `Invoice.pdfPath`, `ProjectReference.attachmentPath`,
+   `InvoiceProfile.logoPath`, `Signer.signatureImagePath`, `Payment.proofPath`).
+   Hidden files (`.health-check`) are skipped; per-file failures do not abort
+   the sweep.
+2. **Overdue recompute (batched)** — updates `status` from `ISSUED`/`SENT`/
+   `PARTIALLY_PAID` to `OVERDUE` where `dueDate < startOfTodayJakarta`, in
+   batches of 100, stopping on no-progress/partial batch.
 
-### Where the output goes
-
-Each run of `scripts/backup.sh` writes exactly one directory under
-`BACKUP_DEST` (default `/backups`; a relative path is resolved against the
-repo root):
-
-```
-/backups/2026-10-10T03-15-00Z/
-  db.dump               pg_dump --format=custom --no-owner --no-acl
-  storage.tar.gz        tar.gz of $STORAGE_ROOT/{uploads,invoices}
-  storage-files.sha256  sha256 of every file inside the storage archive
-  manifest.json         run metadata (timestamp, database, sizes, hashes)
-  manifest.sha256       sha256 of the artifacts + manifest.json
-```
-
-The manifest is self-verified before the run is accepted, so a corrupt run is
-thrown away instead of being kept as a "backup". Structured JSON logs go to
-stderr (passwords and URLs are never logged); human prompts go to stdout.
-
-Configuration (env vars; the scripts load `.env` / `.env.local` themselves,
-and values already set by the caller win):
-
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `BACKUP_DEST` | `/backups` | Where backup directories are written |
-| `BACKUP_RETENTION_DAYS` | `30` | Backups older than this are deleted after each successful run |
-| `BACKUP_EXTERNAL_PATH` | *(unset)* | Optional NAS/external directory for a copy of every backup |
-| `STORAGE_ROOT` | from env files | Storage volume that gets archived |
-| `PG_CONTAINER` | *(auto)* | Postgres container name, when `pg_dump` is not on the host `PATH` |
-
-Exit codes: `0` success · `1` partial (a usable backup was kept, but a
-best-effort step failed — storage archive, external copy or retention) ·
-`2` fatal (no usable backup).
+Output: JSON per event to stderr. Exit codes: `0` success, `1` partial,
+`1` fatal. Idempotent — a second run reports `deleted:0, updated:0`.
 
 ### Scheduling
 
-The scripts are self-contained (they resolve their own env file and relative
-paths), so they can run unattended:
-
-- **Coolify scheduled task** — add a Scheduled Task on the app service that
-  runs `scripts/backup.sh` (for example daily at 03:00). The task only needs
-  the repo/working directory and the `BACKUP_DEST` volume mounted; no long
-  running process is involved.
-- **Host cron** — classic crontab entry on the machine running the stack:
-
-  ```cron
-  0 3 * * * cd /path/to/invoice-me && scripts/backup.sh >> /var/log/invoice-me-backup.log 2>&1
-  ```
-
-Rotate according to `BACKUP_RETENTION_DAYS` (default: keep 30 days); every
-run also deletes backups and pre-restore snapshots older than that and logs
-what it removed.
-
-### A backup on the same disk is not a final backup
-
-`BACKUP_DEST` lives on the same machine/volume as the database and uploads.
-That protects you against a mistaken delete or a bad migration — it does
-**not** protect you against disk failure, host loss, ransomware, or losing
-the whole box. Treat local backups as a working copy only.
-
-### Copying to a NAS or external disk (`BACKUP_EXTERNAL_PATH`)
-
-Set `BACKUP_EXTERNAL_PATH` to a directory on another device (NAS mount,
-external disk, another host) and every run is copied there with `rsync`
-(falling back to `cp -a` when `rsync` is unavailable):
-
-```bash
-BACKUP_EXTERNAL_PATH=/mnt/nas/invoice-me-backups scripts/backup.sh
-```
-
-A failed copy never destroys the local backup — the run exits `1` (partial)
-and the local directory stays intact. Alternatively, sync the whole
-destination yourself from a separate cron entry:
+**Coolify scheduled task** or **host cron** (daily, e.g. 03:30):
 
 ```cron
-30 3 * * * rsync -a /backups/ /mnt/nas/invoice-me-backups/
+30 3 * * * cd /path/to/invoice-me && scripts/maintenance.sh >> /var/log/invoice-me-maintenance.log 2>&1
 ```
-
-### Restoring
-
-1. **Verify first** (no changes at all):
-
-   ```bash
-   scripts/restore.sh --dry-run /backups/2026-10-10T03-15-00Z
-   ```
-
-   This checks `manifest.sha256` and every file inside `storage.tar.gz`.
-   A tampered or corrupt backup fails with exit code `2`.
-2. **Restore** during a maintenance window, in this order — **stop app →
-   restore → start app** (the database and the files must not be written
-   while they are replaced):
-
-   ```bash
-   scripts/restore.sh /backups/2026-10-10T03-15-00Z
-   ```
-
-   The script snapshots the current state to `$BACKUP_DEST/pre-restore/`
-   before touching anything, proves the dump restores into an isolated
-   scratch database (`RESTORE_TEST_DATABASE`, default
-   `invoice_me_restore_check`), and only then overwrites production. It
-   then re-verifies the checksums of the restored data. Any failure rolls
-   back from the pre-restore snapshot and exits `2`.
-3. The script asks you to **type the target database name exactly** to
-   confirm — piped input works for automation, but a wrong answer aborts
-   before any change (exit `1`).
-
-### Troubleshooting
-
-- **`pg_dump` / `pg_restore` version mismatch** — the dump is custom format
-  (`-Fc`), which older clients cannot read: `pg_restore: error: input file is
-  too complex` or `unsupported version` means the client is older than the
-  server. Restore with a client ≥ the server's major version (or run the
-  script where the matching `pg_restore` exists — it automatically falls
-  back to `docker exec` in the postgres container). Never dump with a client
-  much newer than the server you restore into.
-- **Permissions** — `BACKUP_DEST` must be writable by the user running the
-  script (`fatal: BACKUP_DEST tidak bisa ditulis`); on Coolify make sure the
-  volume/directory is mounted into the task and owned by the runtime user.
-  The same applies to `STORAGE_ROOT` (read) and `BACKUP_EXTERNAL_PATH`
-  (write) — an unwritable external path makes the run exit `1`, not `0`.
-- **`pg_dump tidak ditemukan`** — install `postgresql-client` on the host,
-  set `PG_CONTAINER` to the postgres container name, or set `PG_DUMP_BIN` to
-  an explicit binary/command.
-- **Exit code 1 vs 2** — `1` means a usable backup exists but a best-effort
-  step failed (check the JSON log for the `warn` event); `2` means no usable
-  backup was produced and the partial directory was removed.
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+- [Next.js Documentation](https://nextjs.org/docs) — learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) — an interactive Next.js tutorial.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) — your feedback and contributions are welcome!

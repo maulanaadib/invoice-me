@@ -25,26 +25,29 @@ import {
   validateCancelReason,
 } from "@/modules/invoices/lifecycle-service";
 
-// The spec's three issued-but-unpaid statuses must stay identical across every
-// gate that guards them — otherwise an invoice can be cancelled but not
-// revised, or vice versa.
+// The spec's three issued-but-unpaid statuses. Feature 11A: the maintenance
+// sweep persists OVERDUE, and a late invoice must stay cancellable and
+// revisable, so the mutation gates take one more member than the sweep's
+// eligibility set (OVERDUE is a *result* of the sweep, not an input to it).
 const UNPAID_ISSUED = ["ISSUED", "SENT", "PARTIALLY_PAID"] as const;
+const MUTATION_GATED = [...UNPAID_ISSUED, "OVERDUE"] as const;
 
 describe("status boundaries", () => {
-  it("CANCELABLE_STATUSES are the unpaid issued statuses", () => {
-    expect(CANCELABLE_STATUSES).toEqual([...UNPAID_ISSUED]);
-    expect(CANCELABLE_STATUSES).toHaveLength(3);
+  it("CANCELABLE_STATUSES are the unpaid issued statuses plus OVERDUE (11A)", () => {
+    expect(CANCELABLE_STATUSES).toEqual([...MUTATION_GATED]);
+    expect(CANCELABLE_STATUSES).toHaveLength(4);
     expect(CANCELABLE_STATUSES[0]).toBe("ISSUED");
   });
 
-  it("REVISABLE_STATUSES are the unpaid issued statuses", () => {
-    expect(REVISABLE_STATUSES).toEqual([...UNPAID_ISSUED]);
+  it("REVISABLE_STATUSES are the unpaid issued statuses plus OVERDUE (11A)", () => {
+    expect(REVISABLE_STATUSES).toEqual([...MUTATION_GATED]);
     expect(REVISABLE_STATUSES).toEqual(CANCELABLE_STATUSES);
   });
 
-  it("OVERDUE_ELIGIBLE_STATUSES are the unpaid issued statuses", () => {
+  it("OVERDUE_ELIGIBLE_STATUSES are the unpaid issued statuses (sweep inputs only)", () => {
     expect(OVERDUE_ELIGIBLE_STATUSES).toEqual([...UNPAID_ISSUED]);
-    expect(OVERDUE_ELIGIBLE_STATUSES).toEqual(CANCELABLE_STATUSES);
+    // OVERDUE is never an input to its own sweep.
+    expect(OVERDUE_ELIGIBLE_STATUSES).not.toContain("OVERDUE");
   });
 
   // A document that is cancelled, superseded or never issued is not a bill;
@@ -101,16 +104,21 @@ describe("status boundaries", () => {
     ]);
   });
 
-  it("the three gating arrays are identical and contain only unpaid issued statuses", () => {
-    const gating = [CANCELABLE_STATUSES, REVISABLE_STATUSES, OVERDUE_ELIGIBLE_STATUSES];
-    for (const list of gating) {
-      expect(list).toEqual(["ISSUED", "SENT", "PARTIALLY_PAID"]);
+  it("the two mutation gates are identical; the sweep's eligibility set is the unpaid issued statuses (11A)", () => {
+    expect(CANCELABLE_STATUSES).toEqual(REVISABLE_STATUSES);
+    expect(OVERDUE_ELIGIBLE_STATUSES).toEqual([...UNPAID_ISSUED]);
+    // Everything the sweep may turn INTO OVERDUE stays cancellable+revisable.
+    for (const status of OVERDUE_ELIGIBLE_STATUSES) {
+      expect(CANCELABLE_STATUSES).toContain(status);
+      expect(REVISABLE_STATUSES).toContain(status);
     }
+    expect(CANCELABLE_STATUSES).toContain("OVERDUE");
+    expect(REVISABLE_STATUSES).toContain("OVERDUE");
   });
 
   it("no status is missing from every gate (DRAFT/CANCELLED/REVISED are the only intentionally excluded ones)", () => {
     const gated = new Set([...CANCELABLE_STATUSES, ...REVISABLE_STATUSES, ...OVERDUE_ELIGIBLE_STATUSES]);
-    expect([...gated].sort()).toEqual(["ISSUED", "PARTIALLY_PAID", "SENT"]);
+    expect([...gated].sort()).toEqual(["ISSUED", "OVERDUE", "PARTIALLY_PAID", "SENT"]);
     const neverGated: InvoiceStatus[] = ["DRAFT", "CANCELLED", "REVISED"];
     expect(neverGated.every((s) => !gated.has(s))).toBe(true);
   });

@@ -257,9 +257,14 @@ function sortSpec(
 function statusWhere(status: InvoiceStatusFilter, now: Date): Prisma.InvoiceWhereInput {
   const startOfToday = new Date(`${todayInJakarta(now)}T00:00:00.000Z`);
   if (status === "OVERDUE") {
+    // Feature 11A: the maintenance sweep now PERSISTS OVERDUE, so a stored
+    // OVERDUE row must match the filter too (it cannot fall through the `in`
+    // clause — otherwise the "chase late payments" list comes back empty).
     return {
-      status: { in: [...OVERDUE_ELIGIBLE_STATUSES] },
-      dueDate: { not: null, lt: startOfToday },
+      OR: [
+        { status: { in: [...OVERDUE_ELIGIBLE_STATUSES] }, dueDate: { not: null, lt: startOfToday } },
+        { status: "OVERDUE" },
+      ],
     };
   }
   if (OVERDUE_ELIGIBLE_STATUSES.includes(status)) {

@@ -14,13 +14,21 @@ import { AppError } from "@/lib/errors";
 import Decimal from "decimal.js";
 import type { InvoiceStatus } from "@prisma/client";
 
-/** Statuses a payment may be recorded against (spec: ISSUED/SENT/
- * PARTIALLY_PAID/PAID). Everything else answers LOCKED. */
+/**
+ * Statuses a payment may be recorded against (spec: ISSUED/SENT/
+ * PARTIALLY_PAID/PAID). Everything else answers LOCKED.
+ *
+ * Feature 11A adds OVERDUE: the maintenance sweep now persists it, and an
+ * invoice that slips past its due date mid-repayment must still accept the
+ * remaining installments — freezing it would make the app unable to settle
+ * the exact invoices it exists to chase.
+ */
 export const PAYABLE_STATUSES: readonly InvoiceStatus[] = [
   "ISSUED",
   "SENT",
   "PARTIALLY_PAID",
   "PAID",
+  "OVERDUE",
 ];
 
 export function isPayable(status: InvoiceStatus): boolean {
@@ -66,6 +74,12 @@ export interface PaymentStatusSubject {
  * Reversal to zero: ISSUED/SENT keep their stored state, while PARTIALLY_PAID
  * and PAID only ever existed because payments did — they collapse back to
  * ISSUED (the neutral open state; the riwayat keeps the audit trail).
+ *
+ * Feature 11A: OVERDUE is also recompute-eligible. The maintenance sweep
+ * persists it, so an invoice can legitimately be OVERDUE when a payment
+ * arrives; the recompute then moves it to PAID/PARTIALLY_PAID like any other
+ * open bill. A reversal to zero on an OVERDUE row keeps it OVERDUE (it is
+ * still past due) rather than collapsing to ISSUED.
  */
 export function recomputePaymentStatus(invoice: PaymentStatusSubject): InvoiceStatus {
   assertPayable(invoice.status);

@@ -14,7 +14,7 @@
 // tree — so this sweep cannot eat another suite's files.
 
 import { execFileSync } from "node:child_process";
-import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, rm, utimes, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 import { parseCalendarDate, todayInJakarta } from "@/lib/date";
@@ -100,6 +100,20 @@ function runMaintenance(): string {
   });
 }
 
+/**
+ * Backdate a file past the orphan grace period. The grace guard (F-3) skips
+ * files whose mtime is younger than 1 hour, because a fresh file's database
+ * record may still be on its way. The fixtures here are seeded and swept in
+ * the same tick, so an orphan that is *meant* to be stale must be aged past
+ * the window — otherwise the sweep correctly skips it and the deletion
+ * assertion proves nothing.
+ */
+async function agePastGrace(relativePath: string): Promise<void> {
+  const absolute = join(storageRoot, relativePath);
+  const stale = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2h > 1h grace
+  await utimes(absolute, stale, stale);
+}
+
 function events(stdout: string, job: string, event: string): Record<string, unknown>[] {
   return stdout
     .split("\n")
@@ -144,12 +158,16 @@ beforeAll(async () => {
   // ── Storage fixtures (isolated root) ────────────────────────────────────
   storageRoot = await mkdtemp(join("/tmp/opencode", "maintenance-"));
 
-  // Orphan: no record anywhere → must be deleted.
+  // Orphan: no record anywhere → must be deleted. Aged past the grace period
+  // — a real orphan is by definition a file that has been unreferenced for a
+  // while, not one written a millisecond ago.
   ids.orphanUpload = `uploads/organizations/${org.id}/logos/orphan.png`;
   await seedFile(ids.orphanUpload, PNG);
   // Orphan in the generated-PDFs tree: no InvoicePdf / Invoice.pdfPath → deleted.
   ids.orphanPdf = `invoices/organizations/${org.id}/2026/orphan.pdf`;
   await seedFile(ids.orphanPdf, PDF_BYTES);
+  await agePastGrace(ids.orphanUpload);
+  await agePastGrace(ids.orphanPdf);
 
   // With a record (UploadRecord row) → must survive.
   ids.keptUpload = `uploads/organizations/${org.id}/logos/kept.png`;
@@ -197,6 +215,20 @@ describe("maintenance script — orphan file cleanup", () => {
     expect(record?.organizationId).toBe(org.id);
     const invoice = await db.invoice.findUniqueOrThrow({ where: { id: ids.issuedPast! } });
     expect(invoice.pdfPath).toBe(ids.keptPdf);
+  });
+
+  it("never deletes a fresh orphan inside the grace period (TOCTOU guard)", async () => {
+    // A file written milliseconds ago may simply not have its database row
+    // yet — the sweep must leave it alone and catch it on a later pass.
+    const fresh = `uploads/organizations/${org.id}/logos/fresh.png`;
+    await seedFile(fresh, PNG);
+
+    const stdout = runMaintenance();
+    expect(await fileExists(join(storageRoot, fresh))).toBe(true);
+
+    const summaries = events(stdout, "orphan-cleanup", "summary");
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0]?.deleted).toBe(0);
   });
 });
 

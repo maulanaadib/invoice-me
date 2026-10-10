@@ -137,9 +137,13 @@ function jakartaDayRange(
 function adminStatusWhere(status: InvoiceStatus, now: Date): Prisma.InvoiceWhereInput {
   const startOfToday = new Date(`${todayInJakarta(now)}T00:00:00.000Z`);
   if (status === "OVERDUE") {
+    // Feature 11A: the sweep persists OVERDUE, so stored OVERDUE rows must
+    // match this filter too (same fix as feature 08's list).
     return {
-      status: { in: [...OVERDUE_ELIGIBLE_STATUSES] },
-      dueDate: { not: null, lt: startOfToday },
+      OR: [
+        { status: { in: [...OVERDUE_ELIGIBLE_STATUSES] }, dueDate: { not: null, lt: startOfToday } },
+        { status: "OVERDUE" },
+      ],
     };
   }
   if (OVERDUE_ELIGIBLE_STATUSES.includes(status)) {
