@@ -135,34 +135,8 @@ npm run test:e2e    # Playwright E2E (butuh dev server + postgres)
 Test environment (`tests/test.env`) memakai database terpisah
 `invoice_me_test` — test tidak pernah menyentuh database dev.
 
-## Backup and Restore
-
-Lihat bagian **Backup and Restore** di bawah untuk panduan lengkap
-(README 11B). Singkatnya:
-
-```bash
-scripts/backup.sh                      # buat backup
-scripts/restore.sh --dry-run <dir>     # verifikasi, tanpa perubahan
-scripts/restore.sh --test-db <dir>     # latihan restore ke DB terisolasi
-scripts/restore.sh <dir>               # restore nyata (butuh downtime)
-```
-
-## Rotating the Bank Account Encryption Key
-
-Lihat bagian **Rotating the Bank Account Encryption Key** di bawah
-(README fitur 10).
-
-## Maintenance Jobs
-
-`scripts/maintenance.sh` (feature 11A): orphan file cleanup + overdue
-recompute batched. Idempoten, output JSON terstruktur.
-
-```bash
-scripts/maintenance.sh
-```
-
-Scheduling via Coolify Scheduled Task atau host cron — lihat
-bagian Maintenance di bawah.
+Operasional (backup/restore, rotasi key, maintenance) dijelaskan pada
+bagian lengkap di bawah.
 
 ## Troubleshooting
 
@@ -265,9 +239,10 @@ work out of the box.
 **Coolify scheduled task:** create a "Command" task (daily) running
 `scripts/backup.sh` from the repository checkout on the host. Note the task
 must run somewhere the scripts exist **and** PostgreSQL tools are reachable —
-the app image does not ship `postgresql-client`; either run the task via host
-cron as above, or add `postgresql-client` to the image (deploy concern,
-feature 11C).
+the app image does not ship `postgresql-client` (feature 11C kept the
+scripts' `docker exec` fallback as the sanctioned path: on a Docker-only host
+they use the postgres container's own tools, so host cron as above works out
+of the box).
 
 ### A backup on the same disk is not a final backup
 

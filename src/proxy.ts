@@ -11,7 +11,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/server/auth";
 import { logger } from "@/server/logger";
 
-const PUBLIC_PATHS = ["/login", "/forgot-password"];
+// Public pages: auth routes + the legal pages (feature 11C — /privacy and
+// /terms must be reachable WITHOUT a session, per security-standards
+// "halaman publik minimal rute /privacy dan /terms").
+const PUBLIC_PATHS = ["/login", "/forgot-password", "/privacy", "/terms"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -19,6 +22,14 @@ function isPublicPath(pathname: string): boolean {
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
+
+  // Public paths (/login, /forgot-password, /privacy, /terms) are decided
+  // AFTER the session lookup so signed-in users are still kept off the AUTH
+  // pages (redirect to dashboard / change-password) — but the legal pages
+  // stay reachable for them. Anonymous visitors reach all four directly.
+  // The internal print route authenticates with its own signed token
+  // (feature 06) and is excluded before any session logic runs.
+  if (pathname.startsWith("/print")) return NextResponse.next();
 
   let session: Awaited<ReturnType<typeof auth.api.getSession>> = null;
   try {
@@ -32,6 +43,14 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     session = null;
   }
 
+  // Legal pages (/privacy, /terms) are reachable by everyone — signed-in or
+  // anonymous (they link from the cookie banner on every page). The AUTH
+  // pages (/login, /forgot-password) are NOT: signed-in users get redirected
+  // away from them.
+  if (pathname === "/privacy" || pathname === "/terms") {
+    return NextResponse.next();
+  }
+
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("next", `${pathname}${search}`);
 
@@ -43,8 +62,16 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const mustChange = session.user.mustChangePassword === true;
   const isSuperAdmin = session.user.platformRole === "SUPER_ADMIN";
 
-  // Signed-in users do not belong on the auth pages.
-  if (isPublicPath(pathname)) {
+  // Signed-in users are kept off the AUTH pages (/login, /forgot-password)
+  // and routed to the force-change or dashboard. The legal pages (/privacy,
+  // /terms) are PUBLIC: signed-in users may read them normally (they link
+  // from the cookie banner on every page).
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/forgot-password" ||
+    pathname.startsWith("/forgot-password/")
+  ) {
     return NextResponse.redirect(
       new URL(mustChange ? "/change-password" : "/dashboard", request.url),
     );

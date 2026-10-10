@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { CookieConsentBanner } from "@/components/layout/cookie-consent";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          <CookieConsentBanner />
         </ThemeProvider>
       </body>
     </html>

@@ -7,13 +7,18 @@
 .next/*
 !.next/standalone
 !.next/static
+# Warm turbopack/font cache from the host — lets an offline build stage reuse
+# fetches (fonts) that already happened; a fresh machine simply rebuilds it.
+!.next/cache
 out/
 build/
 
 # Local dev data
 .data/
 
-# Environment secrets
+# Environment secrets — NEVER enter the image. Runtime values come from the
+# compose/Coolify environment; the build stage exports its own placeholders.
+.env
 .env.local
 .env.production
 .env.*.local
