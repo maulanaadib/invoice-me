@@ -22,7 +22,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 
 /**
@@ -30,6 +29,16 @@ import {
  * self-change (lockout guard) and re-checks the caller's own role; the form
  * stays closed for the current user's own row because of `isSelf`.
  */
+
+/** Trigger labels: `SelectValue` renders the raw enum (Base UI only resolves a
+ * label through an `items` map that no call site passes), so the trigger shows
+ * the human label itself — the value submitted stays USER/SUPER_ADMIN
+ * (card t_5084d0fd). */
+const PLATFORM_ROLE_LABELS: Record<"USER" | "SUPER_ADMIN", string> = {
+  USER: "User",
+  SUPER_ADMIN: "Super Admin",
+};
+
 export function SetPlatformRoleForm({
   userId,
   currentRole,
@@ -127,7 +136,7 @@ export function SetPlatformRoleForm({
                 }
               >
                 <SelectTrigger id={`role-${userId}`} className="w-full">
-                  <SelectValue />
+                  {PLATFORM_ROLE_LABELS[nextRole]}
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="USER">User — pengguna biasa</SelectItem>

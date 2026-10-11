@@ -49,7 +49,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GuardedLink, useNavigationBlocker } from "@/components/layout/navigation-blocker";
@@ -79,6 +78,37 @@ import type {
 } from "@/modules/invoices/service";
 
 const AUTOSAVE_DEBOUNCE_MS = 1000;
+
+/**
+ * Trigger labels for the stamp-mode select. `SelectValue` renders the raw
+ * value (Base UI only resolves a label through an `items` map that no call
+ * site passes), so the trigger renders the label itself — the same one the
+ * menu item shows (card t_5084d0fd).
+ */
+const STAMP_MODE_LABELS: Record<StampModeValue, string> = {
+  NONE: "Tanpa meterai",
+  E_METERAI: "E-Meterai",
+  PHYSICAL: "Meterai fisik",
+  BLANK_SPACE: "Ruang kosong",
+};
+
+/**
+ * Label for the option a select currently holds, or its placeholder.
+ *
+ * The trigger renders this string directly instead of `SelectValue`, which
+ * falls back to `String(value)` — the raw id/cuid/enum — because it has no
+ * `items` map to resolve a label from (card t_5084d0fd). The submitted value
+ * is untouched: it stays the raw id/enum.
+ */
+function triggerLabel<T extends { id: string }>(
+  rows: readonly T[],
+  selectedId: string | undefined,
+  labelOf: (row: T) => string,
+  fallback: string,
+): string {
+  const row = selectedId ? rows.find((candidate) => candidate.id === selectedId) : undefined;
+  return row ? labelOf(row) : fallback;
+}
 
 type SaveState =
   | { kind: "idle" }
@@ -504,7 +534,12 @@ export function InvoiceEditor({
               }}
             >
               <SelectTrigger id="invoice-profile">
-                <SelectValue placeholder="Pilih profil" />
+                {triggerLabel(
+                  profiles,
+                  values.profileId,
+                  (profile) => `${profile.name} (${profile.code})`,
+                  "Pilih profil",
+                )}
               </SelectTrigger>
               <SelectContent>
                 {profiles.map((profile) => (
@@ -536,7 +571,7 @@ export function InvoiceEditor({
               onValueChange={(type) => update({ invoiceType: type as InvoiceTypeValue })}
             >
               <SelectTrigger id="invoice-type">
-                <SelectValue />
+                {INVOICE_TYPE_LABELS[values.invoiceType]}
               </SelectTrigger>
               <SelectContent>
                 {INVOICE_TYPES.map((type) => (
@@ -556,7 +591,7 @@ export function InvoiceEditor({
                 onValueChange={(mode) => update({ billingMode: mode as "PERCENT" | "MANUAL" })}
               >
                 <SelectTrigger id="billing-mode">
-                  <SelectValue />
+                  {BILLING_MODE_LABELS[values.billingMode]}
                 </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(BILLING_MODE_LABELS) as Array<keyof typeof BILLING_MODE_LABELS>).map(
@@ -738,7 +773,12 @@ export function InvoiceEditor({
               onValueChange={(customerId) => update({ customerId: customerId ?? "", customerContactId: "" })}
             >
               <SelectTrigger id="invoice-customer">
-                <SelectValue placeholder="Pilih customer" />
+                {triggerLabel(
+                  options.customers,
+                  values.customerId,
+                  (customer) => customer.companyName,
+                  "Pilih customer",
+                )}
               </SelectTrigger>
               <SelectContent>
                 {options.customers.map((customer) => (
@@ -761,7 +801,12 @@ export function InvoiceEditor({
               disabled={contacts.length === 0}
             >
               <SelectTrigger id="invoice-contact">
-                <SelectValue placeholder={contacts.length === 0 ? "Customer ini belum punya PIC" : "Pilih PIC"} />
+                {triggerLabel(
+                  contacts,
+                  values.customerContactId,
+                  (contact) => (contact.isPrimary ? `${contact.name} (utama)` : contact.name),
+                  contacts.length === 0 ? "Customer ini belum punya PIC" : "Pilih PIC",
+                )}
               </SelectTrigger>
               <SelectContent>
                 {contacts.map((contact) => (
@@ -793,7 +838,12 @@ export function InvoiceEditor({
               }}
             >
               <SelectTrigger id="invoice-project">
-                <SelectValue placeholder="Tanpa referensi project" />
+                {triggerLabel(
+                  options.projects,
+                  values.projectReferenceId,
+                  (project) => `${project.title} — ${project.referenceNumber}`,
+                  "Tanpa referensi project",
+                )}
               </SelectTrigger>
               <SelectContent>
                 {options.projects.map((project) => (
@@ -811,7 +861,11 @@ export function InvoiceEditor({
               onValueChange={(type) => update({ referenceType: type ?? "" })}
             >
               <SelectTrigger id="reference-type">
-                <SelectValue />
+                {values.referenceType
+                  ? REFERENCE_TYPE_LABELS[
+                      values.referenceType as keyof typeof REFERENCE_TYPE_LABELS
+                    ] ?? values.referenceType
+                  : "Pilih jenis referensi"}
               </SelectTrigger>
               <SelectContent>
                 {REFERENCE_TYPES.map((type) => (
@@ -873,7 +927,7 @@ export function InvoiceEditor({
               onValueChange={(mode) => update({ taxMode: mode as TaxModeValue })}
             >
               <SelectTrigger id="tax-mode">
-                <SelectValue />
+                {INVOICE_TAX_MODE_LABELS[values.taxMode]}
               </SelectTrigger>
               <SelectContent>
                 {TAX_MODES.map((mode) => (
@@ -957,7 +1011,12 @@ export function InvoiceEditor({
             onValueChange={(bankAccountId) => update({ bankAccountId: bankAccountId ?? "" })}
           >
             <SelectTrigger id="bank-account">
-              <SelectValue placeholder="Pilih rekening" />
+              {triggerLabel(
+                options.banks,
+                values.bankAccountId,
+                (bank) => `${bank.bankName} — ${bank.maskedNumber} (${bank.accountHolder})`,
+                "Pilih rekening",
+              )}
             </SelectTrigger>
             <SelectContent>
               {options.banks.map((bank) => (
@@ -1012,18 +1071,12 @@ export function InvoiceEditor({
               onValueChange={(mode) => update({ stampMode: mode as StampModeValue })}
             >
               <SelectTrigger id="stamp-mode">
-                <SelectValue />
+                {STAMP_MODE_LABELS[values.stampMode]}
               </SelectTrigger>
               <SelectContent>
                 {STAMP_MODES.map((mode) => (
                   <SelectItem key={mode} value={mode}>
-                    {mode === "NONE"
-                      ? "Tanpa meterai"
-                      : mode === "E_METERAI"
-                        ? "E-Meterai"
-                        : mode === "PHYSICAL"
-                          ? "Meterai fisik"
-                          : "Ruang kosong"}
+                    {STAMP_MODE_LABELS[mode]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1036,7 +1089,12 @@ export function InvoiceEditor({
               onValueChange={(signerId) => update({ signerId: signerId ?? "" })}
             >
               <SelectTrigger id="signer">
-                <SelectValue placeholder="Pilih penanda tangan" />
+                {triggerLabel(
+                  options.signers,
+                  values.signerId,
+                  (signer) => (signer.title ? `${signer.name} — ${signer.title}` : signer.name),
+                  "Pilih penanda tangan",
+                )}
               </SelectTrigger>
               <SelectContent>
                 {options.signers.map((signer) => (

@@ -30,7 +30,7 @@ import { CopyIcon, GripVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/projects/currency-input";
 import { groupDigits } from "@/lib/money";
 import { calculateInvoice } from "@/modules/invoices/calculation";
@@ -261,7 +261,11 @@ function SortableItemRow({
             disabled={disabled}
           >
             <SelectTrigger id={`item-unit-${row.key}`} className="w-full" aria-label={`Unit item ${index + 1}`}>
-              <SelectValue placeholder="Unit" />
+              {/* The trigger renders the label itself: SelectValue would print
+                  the raw sentinel "__custom__" for a custom unit (card
+                  t_5084d0fd). Same predicate as the Select `value` below, so
+                  the trigger can never disagree with the stored value. */}
+              {isCustomUnit ? "Unit khusus..." : row.unit}
             </SelectTrigger>
             <SelectContent>
               {UNIT_PRESETS.map((unit) => (
