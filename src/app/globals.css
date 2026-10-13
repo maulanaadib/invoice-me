@@ -4,74 +4,74 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── CSS Custom Property Tokens (ui-context.md — Corporate Blue) ─────────── */
+/* ─── CSS Custom Property Tokens (ui-context.md — Neutral + Blue Accent) ─── */
 
 :root {
   --background: hsl(0 0% 100%);
-  --foreground: hsl(222 47% 11%);
+  --foreground: hsl(240 10% 3.9%);
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222 47% 11%);
+  --card-foreground: hsl(240 10% 3.9%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222 47% 11%);
+  --popover-foreground: hsl(240 10% 3.9%);
   --primary: hsl(221 83% 53%);
-  --primary-foreground: hsl(210 40% 98%);
-  --secondary: hsl(210 40% 96%);
-  --secondary-foreground: hsl(222 47% 11%);
-  --muted: hsl(210 40% 96%);
-  --muted-foreground: hsl(215 16% 47%);
-  --accent: hsl(210 40% 96%);
-  --accent-foreground: hsl(222 47% 11%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(240 4.8% 95.9%);
+  --secondary-foreground: hsl(240 10% 3.9%);
+  --muted: hsl(240 4.8% 95.9%);
+  --muted-foreground: hsl(240 3.8% 46.1%);
+  --accent: hsl(240 4.8% 95.9%);
+  --accent-foreground: hsl(240 10% 3.9%);
   --destructive: hsl(0 72% 51%);
-  --destructive-foreground: hsl(210 40% 98%);
+  --destructive-foreground: hsl(0 0% 100%);
   --success: hsl(142 71% 45%);
   --warning: hsl(38 92% 50%);
-  --border: hsl(214 32% 91%);
-  --input: hsl(214 32% 91%);
+  --border: hsl(240 5.9% 90%);
+  --input: hsl(240 5.9% 90%);
   --ring: hsl(221 83% 53%);
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
   /* Sidebar */
-  --sidebar: hsl(210 40% 98%);
-  --sidebar-foreground: hsl(222 47% 11%);
+  --sidebar: hsl(240 5.9% 97%);
+  --sidebar-foreground: hsl(240 10% 3.9%);
   --sidebar-primary: hsl(221 83% 53%);
-  --sidebar-primary-foreground: hsl(210 40% 98%);
-  --sidebar-accent: hsl(210 40% 96%);
-  --sidebar-accent-foreground: hsl(222 47% 11%);
-  --sidebar-border: hsl(214 32% 91%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground: hsl(240 10% 3.9%);
+  --sidebar-border: hsl(240 5.9% 90%);
   --sidebar-ring: hsl(221 83% 53%);
 }
 
 .dark {
-  --background: hsl(222 47% 8%);
-  --foreground: hsl(210 40% 98%);
-  --card: hsl(222 47% 10%);
-  --card-foreground: hsl(210 40% 98%);
-  --popover: hsl(222 47% 10%);
-  --popover-foreground: hsl(210 40% 98%);
+  --background: hsl(240 10% 3.9%);
+  --foreground: hsl(240 5% 96%);
+  --card: hsl(240 10% 5.5%);
+  --card-foreground: hsl(240 5% 96%);
+  --popover: hsl(240 10% 5.5%);
+  --popover-foreground: hsl(240 5% 96%);
   --primary: hsl(217 91% 60%);
-  --primary-foreground: hsl(222 47% 11%);
-  --secondary: hsl(217 33% 17%);
-  --secondary-foreground: hsl(210 40% 98%);
-  --muted: hsl(217 33% 17%);
-  --muted-foreground: hsl(215 20% 65%);
-  --accent: hsl(217 33% 17%);
-  --accent-foreground: hsl(210 40% 98%);
-  --destructive: hsl(0 63% 31%);
-  --destructive-foreground: hsl(210 40% 98%);
+  --primary-foreground: hsl(240 10% 3.9%);
+  --secondary: hsl(240 3.7% 15.9%);
+  --secondary-foreground: hsl(240 5% 96%);
+  --muted: hsl(240 3.7% 15.9%);
+  --muted-foreground: hsl(240 5% 64.9%);
+  --accent: hsl(240 3.7% 15.9%);
+  --accent-foreground: hsl(240 5% 96%);
+  --destructive: hsl(0 63% 45%);
+  --destructive-foreground: hsl(240 5% 96%);
   --success: hsl(142 69% 45%);
   --warning: hsl(38 92% 50%);
-  --border: hsl(217 33% 20%);
-  --input: hsl(217 33% 20%);
+  --border: hsl(240 3.7% 18%);
+  --input: hsl(240 3.7% 18%);
   --ring: hsl(217 91% 60%);
 
   /* Sidebar */
-  --sidebar: hsl(222 47% 10%);
-  --sidebar-foreground: hsl(210 40% 98%);
+  --sidebar: hsl(240 10% 5.5%);
+  --sidebar-foreground: hsl(240 5% 96%);
   --sidebar-primary: hsl(217 91% 60%);
-  --sidebar-primary-foreground: hsl(222 47% 11%);
-  --sidebar-accent: hsl(217 33% 17%);
-  --sidebar-accent-foreground: hsl(210 40% 98%);
-  --sidebar-border: hsl(217 33% 20%);
+  --sidebar-primary-foreground: hsl(240 10% 3.9%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 5% 96%);
+  --sidebar-border: hsl(240 3.7% 18%);
   --sidebar-ring: hsl(217 91% 60%);
 }
 
@@ -110,10 +110,17 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
-  --radius-sm: calc(var(--radius) * 0.75);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) * 1.5);
-  --radius-xl: calc(var(--radius) * 2);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.6);
+
+  /* Subtle elevation — soft neutral shadows, no heavy drop shadows */
+  --shadow-xs: 0 1px 2px 0 hsl(240 10% 3.9% / 0.05);
+  --shadow-sm: 0 1px 2px 0 hsl(240 10% 3.9% / 0.06), 0 1px 3px 0 hsl(240 10% 3.9% / 0.04);
+  --shadow-md: 0 2px 4px -1px hsl(240 10% 3.9% / 0.06), 0 4px 6px -2px hsl(240 10% 3.9% / 0.05);
+  --shadow-lg: 0 4px 6px -2px hsl(240 10% 3.9% / 0.05), 0 10px 15px -3px hsl(240 10% 3.9% / 0.08);
+  --shadow-xl: 0 8px 10px -4px hsl(240 10% 3.9% / 0.06), 0 20px 25px -5px hsl(240 10% 3.9% / 0.1);
 }
 
 /* ─── Base styles ────────────────────────────────────────────────────────── */
@@ -124,7 +131,11 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply tracking-tight;
   }
 }
 
@@ -136,13 +147,13 @@
 .invoice-preview {
   color-scheme: light;
   --background: hsl(0 0% 100%);
-  --foreground: hsl(222 47% 11%);
+  --foreground: hsl(240 10% 3.9%);
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222 47% 11%);
-  --muted: hsl(210 40% 96%);
-  --muted-foreground: hsl(215 16% 47%);
-  --border: hsl(214 32% 91%);
-  --input: hsl(214 32% 91%);
+  --card-foreground: hsl(240 10% 3.9%);
+  --muted: hsl(240 4.8% 95.9%);
+  --muted-foreground: hsl(240 3.8% 46.1%);
+  --border: hsl(240 5.9% 90%);
+  --input: hsl(240 5.9% 90%);
 }
 
 /* ─── Print: always light mode, A4, no nav chrome ───────────────────────── */
@@ -150,12 +161,12 @@
 @media print {
   :root {
     --background: hsl(0 0% 100%);
-    --foreground: hsl(222 47% 11%);
+    --foreground: hsl(240 10% 3.9%);
     --card: hsl(0 0% 100%);
   }
 
   body {
     background-color: white !important;
-    color: hsl(222 47% 11%) !important;
+    color: hsl(240 10% 3.9%) !important;
   }
 }

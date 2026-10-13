@@ -8,18 +8,20 @@ All colors are defined as CSS custom properties in `globals.css` and mapped to T
 
 | Role | CSS Variable | Hex / Value (light) | Hex (dark) |
 | --- | --- | --- | --- |
-| Background | `--background` | `hsl(0 0% 100%)` | `hsl(222 47% 8%)` |
-| Foreground | `--foreground` | `hsl(222 47% 11%)` | `hsl(210 40% 98%)` |
-| Card | `--card` | `hsl(0 0% 100%)` | `hsl(222 47% 10%)` |
-| Primary (brand) | `--primary` | `hsl(221 83% 53%)` (Corporate Blue) | `hsl(217 91% 60%)` |
-| Primary Foreground | `--primary-foreground` | `hsl(210 40% 98%)` | `hsl(222 47% 11%)` |
-| Secondary | `--secondary` | `hsl(210 40% 96%)` | `hsl(217 33% 17%)` |
-| Muted | `--muted` | `hsl(210 40% 96%)` | `hsl(217 33% 17%)` |
-| Destructive | `--destructive` | `hsl(0 72% 51%)` | `hsl(0 63% 31%)` |
+| Background | `--background` | `hsl(0 0% 100%)` | `hsl(240 10% 3.9%)` |
+| Foreground | `--foreground` | `hsl(240 10% 3.9%)` | `hsl(240 5% 96%)` |
+| Card | `--card` | `hsl(0 0% 100%)` | `hsl(240 10% 5.5%)` |
+| Primary (accent) | `--primary` | `hsl(221 83% 53%)` (blue accent) | `hsl(217 91% 60%)` |
+| Primary Foreground | `--primary-foreground` | `hsl(0 0% 100%)` | `hsl(240 10% 3.9%)` |
+| Secondary | `--secondary` | `hsl(240 4.8% 95.9%)` | `hsl(240 3.7% 15.9%)` |
+| Muted | `--muted` | `hsl(240 4.8% 95.9%)` | `hsl(240 3.7% 15.9%)` |
+| Destructive | `--destructive` | `hsl(0 72% 51%)` | `hsl(0 63% 45%)` |
 | Success | `--success` | `hsl(142 71% 45%)` | `hsl(142 69% 45%)` |
 | Warning | `--warning` | `hsl(38 92% 50%)` | `hsl(38 92% 50%)` |
-| Border | `--border` | `hsl(214 32% 91%)` | `hsl(217 33% 20%)` |
+| Border | `--border` | `hsl(240 5.9% 90%)` | `hsl(240 3.7% 18%)` |
 | Ring | `--ring` | `hsl(221 83% 53%)` | `hsl(217 91% 60%)` |
+
+Palette direction: **modern SaaS neutral** (Linear/Vercel-style) — netral zinc scale untuk semua surface/teks, biru hanya sebagai accent (`primary`/`ring`). Radius dasar `--radius: 0.625rem` (10px); skala radius: `sm` 6px, `md` 8px, `lg` 10px, `xl` 16px. Shadow subtle (`--shadow-xs`…`--shadow-xl`, tint netral `hsl(240 10% 3.9%)`, opacity rendah) — tidak ada drop shadow berat. Heading (`h1`–`h4`) memakai `tracking-tight`; body `antialiased`.
 
 Tailwind utility names map to these variables. Components pakai `bg-background`, `text-foreground`, `bg-primary` dll. **Invoice preview/PDF selalu pakai light palette + accent dari profile `primaryColor`** (di-inject via inline style, bukan override global token).
 
@@ -39,9 +41,9 @@ Radius increases with surface depth — smaller for inner elements, larger for o
 
 | Context | Class |
 | --- | --- |
-| Inner controls (input, button sm, badge) | `rounded-md` (6px) |
-| Buttons / default controls | `rounded-lg` (8px) |
-| Cards / dialogs / sheets | `rounded-xl` (12px) |
+| Inner controls (input, button sm, badge) | `rounded-md` (8px) |
+| Buttons / default controls | `rounded-lg` (10px) |
+| Cards / dialogs / sheets | `rounded-xl` (16px) |
 | Invoice preview A4 | `rounded-none` (dokumen, tajam) |
 
 Spacing scale: Tailwind default (4px base). Konsisten pakai token, tidak ada nilai padding/margin arbitrer.
