@@ -67,7 +67,7 @@ export default async function InvoicesPage({
 
   if (!scope) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <h1 className="text-2xl font-semibold tracking-tight">Invoice</h1>
         <Card>
           <CardHeader>
@@ -91,9 +91,9 @@ export default async function InvoicesPage({
   const mayCreate = can("invoice.draft.create", scope);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-semibold tracking-tight">Invoice</h1>
           <p className="text-sm text-muted-foreground">
             Seluruh invoice organisasi ini — draft sampai yang sudah dilunasi — dalam satu

@@ -222,7 +222,7 @@ export function InvoiceLifecycleActions({
             </DialogHeader>
 
             {active === "issue" || active === "revise" ? (
-              <p className="font-mono text-sm text-muted-foreground">{invoiceLabel}</p>
+              <p className="font-mono text-sm text-muted-foreground tabular-nums">{invoiceLabel}</p>
             ) : null}
 
             {active === "cancel" ? (

@@ -65,7 +65,10 @@ const DEFAULT_DATA: InvoicePreviewData = {
   email: null,
   website: null,
   taxId: null,
-  primaryColor: "#2563eb",
+  // Token form of the light-mode accent (--primary): the sample document is
+  // always light, so this default must not follow the app theme. No hex in
+  // components — the value still reaches the accent slots as plain CSS.
+  primaryColor: "hsl(221 83% 53%)",
   code: "INV",
   numberPattern: "INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}",
   defaultTaxMode: "EXCLUSIVE",
@@ -136,7 +139,7 @@ export function InvoicePreview({ data, bank, signer, className }: InvoicePreview
 
   return (
     <div
-      className={`invoice-preview overflow-hidden rounded-xl border border-border bg-card text-foreground ${className ?? ""}`}
+      className={`invoice-preview rounded-xl border border-border bg-card text-foreground shadow-xs ${className ?? ""}`}
     >
       {/* Header band — the accent color the user picks in the wizard. */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 text-white" style={{ backgroundColor: accent }}>

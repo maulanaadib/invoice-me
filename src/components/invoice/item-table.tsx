@@ -192,7 +192,7 @@ function SortableItemRow({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`rounded-lg border bg-card p-3 ${isDragging ? "z-10 opacity-80 shadow-lg" : ""}`}
+      className={`rounded-md border border-border bg-card p-3 ${isDragging ? "z-10 opacity-80 shadow-lg" : ""}`}
       aria-label={`Item ${index + 1}`}
     >
       <div className="grid grid-cols-[auto_1fr] gap-2 sm:grid-cols-[auto_minmax(0,1fr)_84px_112px_150px_130px_auto] sm:items-center">
@@ -203,7 +203,7 @@ function SortableItemRow({
           {...listeners}
           disabled={disabled}
           aria-label={`Susun ulang item ${index + 1} — gunakan tombol panah setelah fokus`}
-          className="cursor-grab touch-none rounded p-1 text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring active:cursor-grabbing"
+          className="cursor-grab touch-none rounded-sm p-1.5 text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring active:cursor-grabbing"
         >
           <GripVerticalIcon aria-hidden="true" className="size-4" />
         </button>
@@ -237,7 +237,7 @@ function SortableItemRow({
             id={`item-qty-${row.key}`}
             inputMode="decimal"
             placeholder="Qty"
-            className="text-right font-mono"
+            className="text-right font-mono tabular-nums"
             aria-invalid={qtyError ? true : undefined}
             value={row.quantity}
             disabled={disabled}

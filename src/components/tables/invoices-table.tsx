@@ -103,9 +103,7 @@ function SortHeader<TValue>({
     <button
       type="button"
       onClick={column.getToggleSortingHandler()}
-      className={`inline-flex items-center gap-1 rounded-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring ${
-        align === "right" ? "w-full justify-end" : ""
-      }`}
+      className={`inline-flex items-center gap-1 rounded-sm outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring ${sorted ? "text-foreground " : ""}${align === "right" ? "w-full justify-end" : ""}`}
     >
       {label}
       {sorted === "asc" ? (
@@ -131,7 +129,7 @@ function buildColumns(meta: {
       cell: (info) => (
         <Link
           href={`/invoices/${info.row.original.id}`}
-          className="font-mono font-medium hover:underline"
+          className="font-mono font-medium tabular-nums hover:underline"
         >
           {info.getValue()}
         </Link>
@@ -143,7 +141,7 @@ function buildColumns(meta: {
       sortDescFirst: true,
       header: (ctx) => <SortHeader label="Tanggal" column={ctx.column} />,
       cell: (info) => (
-        <span className="whitespace-nowrap font-mono text-sm">
+        <span className="whitespace-nowrap font-mono text-sm tabular-nums">
           {formatDate(info.getValue())}
         </span>
       ),
@@ -156,7 +154,9 @@ function buildColumns(meta: {
     columnHelper.accessor((row) => row.referenceNumber ?? "—", {
       id: "reference",
       header: "Referensi",
-      cell: (info) => <span className="font-mono text-sm">{info.getValue()}</span>,
+      cell: (info) => (
+        <span className="font-mono text-sm tabular-nums">{info.getValue()}</span>
+      ),
     }),
     columnHelper.accessor((row) => row.invoiceType, {
       id: "type",
@@ -171,7 +171,7 @@ function buildColumns(meta: {
       id: "grandTotal",
       header: (ctx) => <SortHeader label="Grand total" column={ctx.column} align="right" />,
       cell: (info) => (
-        <span className="block whitespace-nowrap text-right font-mono font-medium">
+        <span className="block whitespace-nowrap text-right font-mono font-medium tabular-nums">
           {formatIdr(info.getValue())}
         </span>
       ),
@@ -187,7 +187,7 @@ function buildColumns(meta: {
       header: (ctx) => <SortHeader label="Jatuh tempo" column={ctx.column} />,
       cell: (info) =>
         info.getValue() ? (
-          <span className="whitespace-nowrap font-mono text-sm">
+          <span className="whitespace-nowrap font-mono text-sm tabular-nums">
             {formatDate(info.getValue())}
           </span>
         ) : (
@@ -331,7 +331,7 @@ export function InvoicesTable({
   return (
     <div className="flex flex-col gap-4">
       <form
-        className="flex flex-col gap-2 xl:flex-row xl:items-end"
+        className="flex flex-col gap-3 xl:flex-row xl:items-end"
         onSubmit={(event) => {
           event.preventDefault();
           push({
@@ -342,8 +342,8 @@ export function InvoicesTable({
           });
         }}
       >
-        <div className="flex flex-1 flex-col gap-1">
-          <label htmlFor="invoice-search" className="text-xs text-muted-foreground">
+        <div className="flex flex-1 flex-col gap-1.5">
+          <label htmlFor="invoice-search" className="text-xs font-medium text-muted-foreground">
             Cari
           </label>
           <Input
@@ -355,8 +355,8 @@ export function InvoicesTable({
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Status</span>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Status</span>
           <Select
             value={filters.status || ALL}
             onValueChange={(value) => {
@@ -385,8 +385,8 @@ export function InvoicesTable({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Jenis</span>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Jenis</span>
           <Select
             value={filters.type || ALL}
             onValueChange={(value) => {
@@ -412,8 +412,8 @@ export function InvoicesTable({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Customer</span>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Customer</span>
           <Select
             value={filters.customer || ALL}
             onValueChange={(value) => {
@@ -436,8 +436,8 @@ export function InvoicesTable({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">Profil invoice</span>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Profil invoice</span>
           <Select
             value={filters.profile || ALL}
             onValueChange={(value) => {
@@ -460,8 +460,8 @@ export function InvoicesTable({
           </Select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label htmlFor="invoice-from" className="text-xs text-muted-foreground">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="invoice-from" className="text-xs font-medium text-muted-foreground">
             Dari tanggal
           </label>
           <Input
@@ -469,10 +469,11 @@ export function InvoicesTable({
             type="date"
             value={fromInput}
             onChange={(event) => setFromInput(event.target.value)}
+            className="min-w-40"
           />
         </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="invoice-to" className="text-xs text-muted-foreground">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="invoice-to" className="text-xs font-medium text-muted-foreground">
             Sampai tanggal
           </label>
           <Input
@@ -480,11 +481,12 @@ export function InvoicesTable({
             type="date"
             value={toInput}
             onChange={(event) => setToInput(event.target.value)}
+            className="min-w-40"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Button type="submit" variant="outline" size="sm">
+          <Button type="submit" variant="outline">
             <FilterIcon aria-hidden="true" />
             Terapkan
           </Button>
@@ -492,7 +494,6 @@ export function InvoicesTable({
             <Button
               type="button"
               variant="ghost"
-              size="sm"
               onClick={() => {
                 setQInput("");
                 setFromInput("");
@@ -516,7 +517,7 @@ export function InvoicesTable({
       </form>
 
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+        <div className="rounded-md border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
           {hasFilter
             ? "Tidak ada invoice yang cocok dengan filter ini. Coba longgarkan filternya."
             : mayCreate
@@ -524,13 +525,16 @@ export function InvoicesTable({
               : "Belum ada invoice di organisasi ini."}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className="h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground"
+                    >
                       {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                     </TableHead>
                   ))}
@@ -541,7 +545,7 @@ export function InvoicesTable({
               {table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getAllCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="py-2.5 px-3">
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}
@@ -552,8 +556,8 @@ export function InvoicesTable({
         </div>
       )}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground tabular-nums">
           Total {total} invoice · Halaman {page} dari {pageCount}
         </p>
         <div className="flex items-center gap-2">

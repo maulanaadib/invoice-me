@@ -316,15 +316,15 @@ export function InvoiceRowActions({
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={`Aksi invoice ${row.label}`}
-          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <MoreHorizontalIcon aria-hidden="true" />
+          <MoreHorizontalIcon aria-hidden="true" className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-56">
           {/* Base UI: a GroupLabel must live inside a Menu.Group — without it
               the popup throws and the row menu would never render. */}
           <DropdownMenuGroup>
-            <DropdownMenuLabel className="truncate font-mono">
+            <DropdownMenuLabel className="truncate font-mono tabular-nums">
               {row.label} — {row.customerName}
             </DropdownMenuLabel>
           </DropdownMenuGroup>
@@ -466,7 +466,7 @@ export function InvoiceRowActions({
                 ) : null}
               </div>
             ) : (
-              <p className="font-mono text-sm text-muted-foreground">{row.label}</p>
+              <p className="font-mono text-sm text-muted-foreground tabular-nums">{row.label}</p>
             )}
 
             <DialogFooter>

@@ -477,8 +477,8 @@ export function InvoiceEditor({
 
   const formSection = (
     <form onSubmit={onSaveDraft} className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-semibold tracking-tight">
             {isEdit ? "Edit draft invoice" : "Invoice baru"}
           </h1>
@@ -520,8 +520,8 @@ export function InvoiceEditor({
       ) : null}
 
       {/* 1 — Profil invoice */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           1 · Profil invoice
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -551,7 +551,7 @@ export function InvoiceEditor({
             </Select>
           </div>
           <p className="self-end text-xs text-muted-foreground">
-            Nomor sementara: <span className="font-mono">{numberPreview ?? "—"}</span>
+            Nomor sementara: <span className="font-mono tabular-nums">{numberPreview ?? "—"}</span>
           </p>
         </div>
       </section>
@@ -559,8 +559,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 2 — Jenis penagihan */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           2 · Jenis penagihan
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -693,20 +693,20 @@ export function InvoiceEditor({
             without one), sisa + total ditagihkan = the settlement billing base
             (same rows the A4 renderer prints). */}
         {values.invoiceType === "SETTLEMENT" ? (
-          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+          <div className="rounded-md border border-border bg-muted/30 p-4 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Nilai pekerjaan</span>
-              <span className="font-mono">{formatIdr(previewData?.calc.workValue ?? "0")}</span>
+              <span className="font-mono tabular-nums">{formatIdr(previewData?.calc.workValue ?? "0")}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Sudah ditagihkan</span>
-              <span className="font-mono">
+              <span className="font-mono tabular-nums">
                 {formatIdr(previewData?.calc.previouslyBilled ?? "0")}
               </span>
             </div>
             <div className="flex justify-between font-semibold">
               <span>Sisa / pelunasan</span>
-              <span className="font-mono">
+              <span className="font-mono tabular-nums">
                 {formatIdr(previewData?.calc.billingBase ?? "0")}
               </span>
             </div>
@@ -723,8 +723,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 3 — Informasi invoice */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           3 · Informasi invoice
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -761,8 +761,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 4 — Customer / PIC */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           4 · Customer / PIC
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -824,8 +824,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 5 — Project / PO */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           5 · Project / PO
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -900,9 +900,9 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 6 — Item pekerjaan */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             6 · Item pekerjaan
           </h2>
           <span className="text-xs text-muted-foreground">
@@ -915,8 +915,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 7 — Pajak dan ringkasan */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           7 · Pajak dan ringkasan
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -985,14 +985,14 @@ export function InvoiceEditor({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-4 text-sm">
+        <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-4 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Nilai pekerjaan</span>
-            <span className="font-mono">{formatIdr(previewData?.calc.workValue ?? "0")}</span>
+            <span className="font-mono tabular-nums">{formatIdr(previewData?.calc.workValue ?? "0")}</span>
           </div>
           <div className="flex justify-between font-semibold">
             <span>Total ditagihkan</span>
-            <span className="font-mono">{formatIdr(previewData?.calc.grandTotal ?? "0")}</span>
+            <span className="font-mono tabular-nums">{formatIdr(previewData?.calc.grandTotal ?? "0")}</span>
           </div>
         </div>
       </section>
@@ -1000,8 +1000,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 8 — Pembayaran */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           8 · Pembayaran
         </h2>
         <div className="flex flex-col gap-2">
@@ -1032,8 +1032,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 9 — Catatan */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           9 · Catatan
         </h2>
         <div className="flex flex-col gap-2">
@@ -1059,8 +1059,8 @@ export function InvoiceEditor({
       <Separator />
 
       {/* 10 — Meterai dan tanda tangan */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <section className="flex flex-col gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           10 · Meterai dan tanda tangan
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1131,9 +1131,9 @@ export function InvoiceEditor({
   );
 
   const previewSection = (
-    <div className="lg:sticky lg:top-6 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="lg:sticky lg:top-20 flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           11 · Pratinjau
         </h2>
         <span className="text-xs text-muted-foreground">A4 portrait · diperbarui real-time</span>
@@ -1141,10 +1141,10 @@ export function InvoiceEditor({
       {previewData?.notesUnknownTokens && previewData.notesUnknownTokens.length > 0 ? (
         // Feature 10: unknown tokens are never silently rewritten — the preview
         // says exactly which placeholders the document will keep literal.
-        <div role="status" className="flex flex-col gap-1 rounded-lg border border-warning/40 bg-warning/10 p-3">
+        <div role="status" className="flex flex-col gap-1 rounded-md border border-warning/40 bg-warning/10 p-3">
           <p className="text-sm font-medium text-warning">Token catatan tidak dikenali</p>
           <p className="text-xs text-muted-foreground">
-            <span className="font-mono">
+            <span className="font-mono tabular-nums">
               {previewData.notesUnknownTokens.map((token) => `{${token}}`).join(", ")}
             </span>{" "}
             tetap tampil apa adanya di dokumen. Periksa ejaan token atau hapus placeholder ini.
