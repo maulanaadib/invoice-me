@@ -96,7 +96,7 @@ export function SummaryCards({ cards }: { cards: DashboardCards }) {
       {metrics.map((metric) => {
         const Icon = metric.icon;
         return (
-          <Card key={metric.key}>
+          <Card key={metric.key} className="ring-border shadow-xs">
             <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {metric.label}
@@ -105,7 +105,7 @@ export function SummaryCards({ cards }: { cards: DashboardCards }) {
             </CardHeader>
             <CardContent className="flex flex-col gap-1">
               <span
-                className={`text-2xl font-semibold tracking-tight ${TONE_CLASS[metric.tone ?? "default"]}`}
+                className={`text-2xl font-semibold tracking-tight tabular-nums ${TONE_CLASS[metric.tone ?? "default"]}`}
               >
                 {metric.value}
               </span>

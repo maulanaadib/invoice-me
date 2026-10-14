@@ -77,10 +77,10 @@ function NavList({
 }) {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-col gap-5 px-3 py-2">
+    <nav className="flex flex-col gap-6 px-3 py-4">
       {NAV_GROUPS.filter((group) => !group.adminOnly || isSuperAdmin).map((group) => (
         <div key={group.title} className="flex flex-col gap-1">
-          <p className="px-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          <p className="px-3 pb-1.5 text-xs font-medium tracking-widest text-muted-foreground uppercase">
             {group.title}
           </p>
           {visibleLinks(group.links, visibility).map((link) => {
@@ -96,10 +96,19 @@ function NavList({
                 className={cn(
                   buttonVariants({ variant: active ? "secondary" : "ghost", size: "sm" }),
                   "w-full justify-start gap-2 font-normal",
-                  active && "font-medium",
+                  "hover:bg-sidebar-accent hover:text-foreground",
+                  active && "bg-sidebar-accent font-medium text-foreground",
                 )}
               >
-                <Icon aria-hidden="true" />
+                <Icon
+                  aria-hidden="true"
+                  className={cn(
+                    "size-3.5",
+                    active
+                      ? "text-primary"
+                      : "text-muted-foreground group-hover/button:text-foreground",
+                  )}
+                />
                 {link.label}
               </GuardedLink>
             );
@@ -231,7 +240,7 @@ export function AppShell({
   return (
     <NavigationBlockerProvider>
     <div className="flex min-h-screen bg-background">
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
         <div className="flex h-14 items-center border-b border-border px-4">
           <GuardedLink href={brandHref} className="text-base font-semibold tracking-tight">
             invoice-me
@@ -243,7 +252,7 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/75 lg:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/90 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/75 lg:px-6">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger
               aria-label="Buka menu navigasi"
@@ -278,7 +287,7 @@ export function AppShell({
 
         <main
           className={cn(
-            "mx-auto w-full flex-1 px-3 py-6 lg:px-6",
+            "mx-auto w-full flex-1 px-4 py-8 lg:px-8",
             // The split-screen invoice editor owns the widest canvas (form +
             // sticky A4 preview); every other page keeps the reading width.
             isInvoiceEditor ? "max-w-[1680px]" : "max-w-6xl",

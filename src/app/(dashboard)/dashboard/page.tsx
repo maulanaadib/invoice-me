@@ -37,8 +37,8 @@ export default async function DashboardPage() {
   const scope = await resolveActiveOrgScope(session);
   if (!scope) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Ringkasan tagihan dan pembayaran workspace aktif Anda.
@@ -66,8 +66,8 @@ export default async function DashboardPage() {
   const displayName = session.user.name || session.user.username || session.user.email;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">
           Halo, {displayName}
         </h1>
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
       <SummaryCards cards={cards} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Tagihan vs pembayaran</CardTitle>
             <CardDescription>
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
           <CardContent>
             {series.empty ? (
               <div
-                className="rounded-lg border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground"
+                className="rounded-md border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground"
                 data-testid="dashboard-chart-empty"
               >
                 Belum ada tagihan atau pembayaran dalam 12 bulan terakhir.
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Aktivitas terbaru</CardTitle>
             <CardDescription>5 event terakhir di organisasi ini.</CardDescription>

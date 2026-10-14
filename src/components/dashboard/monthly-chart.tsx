@@ -49,14 +49,14 @@ export function MonthlyChart({ points }: MonthlyChartProps) {
   }));
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm" style={{ background: TAGIHAN_COLOR }} aria-hidden="true" />
+          <span className="size-2.5 rounded-xs" style={{ background: TAGIHAN_COLOR }} aria-hidden="true" />
           Tagihan
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm" style={{ background: BAYAR_COLOR }} aria-hidden="true" />
+          <span className="size-2.5 rounded-xs" style={{ background: BAYAR_COLOR }} aria-hidden="true" />
           Pembayaran
         </span>
       </div>

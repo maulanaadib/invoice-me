@@ -37,7 +37,7 @@ export function formatActivityTime(iso: string): string {
 export function ActivityTimeline({ items }: { items: DashboardActivity[] }) {
   if (items.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+      <p className="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
         Belum ada aktivitas. Event muncul begitu invoice atau pembayaran pertama
         tercatat.
       </p>
@@ -59,7 +59,7 @@ export function ActivityTimeline({ items }: { items: DashboardActivity[] }) {
                 aria-hidden="true"
               />
             ) : null}
-            <span className="relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-card">
+            <span className="relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-muted/50">
               <Icon className="size-3.5 text-muted-foreground" aria-hidden="true" />
             </span>
             <div className="flex min-w-0 flex-col gap-0.5 pt-0.5">
