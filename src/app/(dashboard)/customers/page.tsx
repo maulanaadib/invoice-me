@@ -42,9 +42,9 @@ export default async function CustomersPage({
 
   if (!scope) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <h1 className="text-2xl font-semibold tracking-tight">Customer</h1>
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Belum ada workspace aktif</CardTitle>
             <CardDescription>
@@ -60,9 +60,9 @@ export default async function CustomersPage({
   const mayCreate = can("customer.create", scope);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-semibold tracking-tight">Customer</h1>
           <p className="text-sm text-muted-foreground">
             Master data customer dan PIC untuk penagihan. Soft delete: customer yang dihapus

@@ -39,6 +39,8 @@ export const dynamic = "force-dynamic";
 
 const FIELD_CLASS =
   "h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground";
+const HEAD_CLASS = "h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground";
+const CELL_CLASS = "py-2.5 px-3";
 
 const STATUS_VARIANTS: Record<
   PdfJobStatus,
@@ -69,8 +71,8 @@ export default async function AdminPdfJobsPage({
   const hasFilter = Boolean(invoice || status);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Job PDF</h1>
         <p className="text-sm text-muted-foreground">
           Antrean pembuatan PDF resmi. Job gagal bisa diulang — percobaan tidak
@@ -82,7 +84,7 @@ export default async function AdminPdfJobsPage({
         method="get"
         className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4"
       >
-        <div className="flex min-w-56 flex-col gap-1">
+        <div className="flex min-w-56 flex-col gap-1.5">
           <Label htmlFor="admin-pdf-invoice">Invoice</Label>
           <Input
             id="admin-pdf-invoice"
@@ -92,7 +94,7 @@ export default async function AdminPdfJobsPage({
             maxLength={100}
           />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="admin-pdf-status">Status</Label>
           <select
             id="admin-pdf-status"
@@ -140,27 +142,29 @@ export default async function AdminPdfJobsPage({
           resetHref={result.total > 0 || hasFilter ? "/admin/pdf-jobs" : undefined}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Dibuat</TableHead>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Percobaan</TableHead>
-                <TableHead className="text-right">Durasi</TableHead>
-                <TableHead>Selesai</TableHead>
-                <TableHead>Pesan galat</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead className={HEAD_CLASS}>Dibuat</TableHead>
+                <TableHead className={HEAD_CLASS}>Invoice</TableHead>
+                <TableHead className={HEAD_CLASS}>Status</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>Percobaan</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>Durasi</TableHead>
+                <TableHead className={HEAD_CLASS}>Selesai</TableHead>
+                <TableHead className={HEAD_CLASS}>Pesan galat</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {result.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                  <TableCell
+                    className={`${CELL_CLASS} whitespace-nowrap font-mono text-sm text-muted-foreground tabular-nums`}
+                  >
                     {formatDateTime(row.createdAt)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     <Link
                       href={`/admin/invoices/${row.invoiceId}`}
                       className="block max-w-56 truncate font-mono text-xs font-medium text-primary underline-offset-4 hover:underline"
@@ -171,21 +175,23 @@ export default async function AdminPdfJobsPage({
                       {row.organizationName}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     <Badge variant={STATUS_VARIANTS[row.status]}>
                       {PDF_STATUS_LABELS[row.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
                     {row.attempt}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
                     {formatDuration(row.durationMs)}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                  <TableCell
+                    className={`${CELL_CLASS} whitespace-nowrap font-mono text-sm text-muted-foreground tabular-nums`}
+                  >
                     {row.finishedAt ? formatDateTime(row.finishedAt) : "—"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     {row.errorMessage ? (
                       <span
                         className="line-clamp-2 max-w-72 text-xs text-destructive"
@@ -197,7 +203,7 @@ export default async function AdminPdfJobsPage({
                       <span className="text-sm text-muted-foreground">—</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className={`${CELL_CLASS} text-right`}>
                     {row.status === "FAILED" ? (
                       <RetryPdfJobButton jobId={row.id} />
                     ) : (

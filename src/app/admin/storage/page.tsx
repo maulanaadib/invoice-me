@@ -33,6 +33,10 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+/** Shared table header / cell treatment (matches the invoice list). */
+const HEAD_CLASS = "h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground";
+const CELL_CLASS = "py-2.5 px-3";
+
 export default async function AdminStoragePage() {
   const ctx = await adminPageContext();
   const usage = await getStorageUsage(ctx);
@@ -56,8 +60,8 @@ export default async function AdminStoragePage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Penyimpanan</h1>
         <p className="text-sm text-muted-foreground">
           Pemakaian disk per organisasi (upload + PDF resmi). File yang belum
@@ -68,7 +72,7 @@ export default async function AdminStoragePage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {summary.map((card) => (
-          <Card key={card.label}>
+          <Card key={card.label} className="ring-border shadow-xs">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {card.label}
@@ -90,41 +94,43 @@ export default async function AdminStoragePage() {
           description="Storage usage muncul setelah ada organisasi di instance ini."
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Organisasi</TableHead>
-                <TableHead className="text-right">File upload</TableHead>
-                <TableHead className="text-right">Ukuran upload</TableHead>
-                <TableHead className="text-right">File PDF</TableHead>
-                <TableHead className="text-right">Ukuran PDF</TableHead>
-                <TableHead className="text-right">Total file</TableHead>
-                <TableHead className="text-right">Total ukuran</TableHead>
+                <TableHead className={HEAD_CLASS}>Organisasi</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>File upload</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>Ukuran upload</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>File PDF</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>Ukuran PDF</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>Total file</TableHead>
+                <TableHead className={`${HEAD_CLASS} text-right`}>Total ukuran</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {usage.rows.map((row) => (
                 <TableRow key={row.organizationId}>
-                  <TableCell className="font-medium">
+                  <TableCell className={`${CELL_CLASS} font-medium`}>
                     <span className="block max-w-56 truncate">{row.organizationName}</span>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
                     {row.uploadFiles}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
                     {formatBytes(row.uploadBytes)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
                     {row.pdfFiles}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
                     {formatBytes(row.pdfBytes)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className={`${CELL_CLASS} text-right font-mono tabular-nums`}>
                     {row.totalFiles}
                   </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
+                  <TableCell
+                    className={`${CELL_CLASS} text-right font-mono font-medium tabular-nums`}
+                  >
                     {formatBytes(row.totalBytes)}
                   </TableCell>
                 </TableRow>

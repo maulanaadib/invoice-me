@@ -44,6 +44,10 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+/** Shared table header / cell treatment (matches the invoice list). */
+const HEAD_CLASS = "h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground";
+const CELL_CLASS = "py-2.5 px-3";
+
 export default async function AdminOrganizationDetailPage({
   params,
 }: {
@@ -71,7 +75,7 @@ export default async function AdminOrganizationDetailPage({
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-3">
         <Link
           href="/admin/organizations"
@@ -99,7 +103,7 @@ export default async function AdminOrganizationDetailPage({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card p-4 shadow-xs">
         <div className="text-sm text-muted-foreground">
           {organization.status === "ACTIVE"
             ? "Menangguhkan organisasi memblokir login dan aksi baru anggotanya — data tetap tersimpan dan tetap bisa dibaca."
@@ -114,7 +118,7 @@ export default async function AdminOrganizationDetailPage({
 
       <div className="grid gap-4 sm:grid-cols-4">
         {summary.map((card) => (
-          <Card key={card.label}>
+          <Card key={card.label} className="ring-border shadow-xs">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {card.label}
@@ -129,7 +133,7 @@ export default async function AdminOrganizationDetailPage({
         ))}
       </div>
 
-      <Card>
+      <Card className="ring-border shadow-xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Rincian penyimpanan</CardTitle>
           <CardDescription>Upload + PDF resmi milik organisasi ini.</CardDescription>
@@ -139,7 +143,7 @@ export default async function AdminOrganizationDetailPage({
             <span className="text-muted-foreground">
               Upload ({storage.uploadFiles} file)
             </span>
-            <span className="font-medium tabular-nums">
+            <span className="font-mono font-medium tabular-nums">
               {formatBytes(storage.uploadBytes)}
             </span>
           </div>
@@ -147,39 +151,39 @@ export default async function AdminOrganizationDetailPage({
             <span className="text-muted-foreground">
               PDF resmi ({storage.pdfFiles} file)
             </span>
-            <span className="font-medium tabular-nums">
+            <span className="font-mono font-medium tabular-nums">
               {formatBytes(storage.pdfBytes)}
             </span>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="ring-border shadow-xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Anggota</CardTitle>
           <CardDescription>{memberships.length} baris (semua status).</CardDescription>
         </CardHeader>
         <CardContent>
           {memberships.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <div className="rounded-md border border-dashed border-border px-6 py-10 text-center text-sm text-muted-foreground">
               Organisasi ini belum punya anggota.
-            </p>
+            </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Anggota</TableHead>
-                    <TableHead>Peran</TableHead>
-                    <TableHead>Status keanggotaan</TableHead>
-                    <TableHead>Status akun</TableHead>
-                    <TableHead>Bergabung</TableHead>
+                    <TableHead className={HEAD_CLASS}>Anggota</TableHead>
+                    <TableHead className={HEAD_CLASS}>Peran</TableHead>
+                    <TableHead className={HEAD_CLASS}>Status keanggotaan</TableHead>
+                    <TableHead className={HEAD_CLASS}>Status akun</TableHead>
+                    <TableHead className={HEAD_CLASS}>Bergabung</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {memberships.map((membership) => (
                     <TableRow key={membership.id}>
-                      <TableCell>
+                      <TableCell className={CELL_CLASS}>
                         <Link
                           href={`/admin/users/${membership.userId}`}
                           className="block max-w-56 truncate text-sm font-medium underline-offset-4 hover:underline"
@@ -187,17 +191,17 @@ export default async function AdminOrganizationDetailPage({
                           {membership.name || membership.username || membership.userId}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={CELL_CLASS}>
                         <Badge variant="outline">{membership.role}</Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={CELL_CLASS}>
                         <Badge
                           variant={membership.status === "ACTIVE" ? "secondary" : "outline"}
                         >
                           {membership.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={CELL_CLASS}>
                         <Badge
                           variant={
                             membership.userStatus === "SUSPENDED"
@@ -210,7 +214,9 @@ export default async function AdminOrganizationDetailPage({
                             : "Aktif"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                      <TableCell
+                        className={`${CELL_CLASS} whitespace-nowrap font-mono text-sm text-muted-foreground tabular-nums`}
+                      >
                         {formatDate(membership.joinedAt)}
                       </TableCell>
                     </TableRow>

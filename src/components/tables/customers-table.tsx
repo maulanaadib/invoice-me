@@ -81,7 +81,12 @@ const columns = columnHelper.columns([
   columnHelper.accessor("contactCount", {
     id: "pic",
     header: "PIC",
-    cell: (info) => (info.getValue() > 0 ? `${info.getValue()} orang` : "—"),
+    cell: (info) =>
+      info.getValue() > 0 ? (
+        <span className="font-mono text-sm tabular-nums">{info.getValue()} orang</span>
+      ) : (
+        <span className="text-sm text-muted-foreground">—</span>
+      ),
   }),
   columnHelper.accessor("isActive", {
     id: "status",
@@ -96,7 +101,11 @@ const columns = columnHelper.columns([
   columnHelper.accessor("createdAt", {
     id: "createdAt",
     header: "Dibuat",
-    cell: (info) => <span className="text-sm">{formatDate(info.getValue())}</span>,
+    cell: (info) => (
+      <span className="whitespace-nowrap font-mono text-sm tabular-nums">
+        {formatDate(info.getValue())}
+      </span>
+    ),
   }),
   columnHelper.display({
     id: "actions",
@@ -192,19 +201,22 @@ export function CustomersTable({ rows, total, page, pageSize, q }: CustomersTabl
       </form>
 
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
+        <div className="rounded-md border border-dashed border-border px-6 py-12 text-center text-sm text-muted-foreground">
           {q
             ? "Tidak ada customer yang cocok dengan pencarian ini."
             : "Belum ada customer di organisasi ini. Buat customer pertama lewat tombol “Tambah customer”."}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className="h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground"
+                    >
                       {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                     </TableHead>
                   ))}
@@ -215,7 +227,7 @@ export function CustomersTable({ rows, total, page, pageSize, q }: CustomersTabl
               {table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getAllCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="py-2.5 px-3">
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}
@@ -226,8 +238,8 @@ export function CustomersTable({ rows, total, page, pageSize, q }: CustomersTabl
         </div>
       )}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground tabular-nums">
           Total {total} customer · Halaman {page} dari {pageCount}
         </p>
         <div className="flex items-center gap-2">

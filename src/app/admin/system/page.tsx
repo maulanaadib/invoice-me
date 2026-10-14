@@ -32,6 +32,10 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+/** Shared table header / cell treatment (matches the invoice list). */
+const HEAD_CLASS = "h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground";
+const CELL_CLASS = "py-2.5 px-3";
+
 function StatusBadge({ probe }: { probe: HealthProbe }) {
   return (
     <Badge variant={probe.status === "ok" ? "default" : "destructive"}>
@@ -50,7 +54,7 @@ function ProbeCard({
   description: string;
 }) {
   return (
-    <Card>
+    <Card className="ring-border shadow-xs">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -80,8 +84,8 @@ export default async function AdminSystemPage() {
   const operational = health.envChecks.filter((check) => check.value !== null);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Kesehatan sistem</h1>
         <p className="text-sm text-muted-foreground">
           Pemeriksaan langsung terhadap database, volume penyimpanan, dan
@@ -109,27 +113,27 @@ export default async function AdminSystemPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Versi</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted-foreground">Aplikasi</span>
-              <span className="font-medium tabular-nums">{health.version.app}</span>
+              <span className="font-mono font-medium tabular-nums">{health.version.app}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted-foreground">Node.js</span>
-              <span className="font-medium tabular-nums">{health.version.node}</span>
+              <span className="font-mono font-medium tabular-nums">{health.version.node}</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <span className="text-muted-foreground">Next.js</span>
-              <span className="font-medium tabular-nums">{health.version.next}</span>
+              <span className="font-mono font-medium tabular-nums">{health.version.next}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Variabel rahasia</CardTitle>
             <CardDescription>
@@ -149,7 +153,7 @@ export default async function AdminSystemPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="ring-border shadow-xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Konfigurasi operasional</CardTitle>
           <CardDescription>
@@ -162,15 +166,17 @@ export default async function AdminSystemPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Variabel</TableHead>
-                  <TableHead>Nilai</TableHead>
+                  <TableHead className={HEAD_CLASS}>Variabel</TableHead>
+                  <TableHead className={HEAD_CLASS}>Nilai</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {operational.map((check) => (
                   <TableRow key={check.name}>
-                    <TableCell className="font-mono text-xs">{check.name}</TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className={`${CELL_CLASS} font-mono text-xs`}>
+                      {check.name}
+                    </TableCell>
+                    <TableCell className={`${CELL_CLASS} font-mono text-xs`}>
                       {check.value ?? "—"}
                     </TableCell>
                   </TableRow>

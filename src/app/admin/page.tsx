@@ -76,8 +76,8 @@ export default async function AdminOverviewPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Ringkasan platform</h1>
         <p className="text-sm text-muted-foreground">
           Kondisi instance self-hosted: pengguna, organisasi, tagihan, job PDF,
@@ -87,7 +87,7 @@ export default async function AdminOverviewPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <Card key={card.label}>
+          <Card key={card.label} className="ring-border shadow-xs">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {card.label}

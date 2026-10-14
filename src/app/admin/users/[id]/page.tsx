@@ -49,7 +49,7 @@ export default async function AdminUserDetailPage({
   }));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-3">
         <Link
           href="/admin/users"
@@ -79,7 +79,7 @@ export default async function AdminUserDetailPage({
       <UserDetailActions userId={user.id} status={user.status} />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Informasi akun</CardTitle>
           </CardHeader>
@@ -95,21 +95,25 @@ export default async function AdminUserDetailPage({
               </div>
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-muted-foreground">Dibuat</dt>
-                <dd className="font-medium">{formatDateTime(user.createdAt)}</dd>
+                <dd className="font-mono font-medium tabular-nums">
+                  {formatDateTime(user.createdAt)}
+                </dd>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-muted-foreground">Diperbarui</dt>
-                <dd className="font-medium">{formatDateTime(user.updatedAt)}</dd>
+                <dd className="font-mono font-medium tabular-nums">
+                  {formatDateTime(user.updatedAt)}
+                </dd>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-muted-foreground">Invoice dibuat (total)</dt>
-                <dd className="font-medium tabular-nums">{invoiceCount}</dd>
+                <dd className="font-mono font-medium tabular-nums">{invoiceCount}</dd>
               </div>
             </dl>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Platform role</CardTitle>
             <CardDescription>
@@ -137,7 +141,7 @@ export default async function AdminUserDetailPage({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Keanggotaan organisasi</CardTitle>
             <CardDescription>
@@ -154,7 +158,7 @@ export default async function AdminUserDetailPage({
                 {memberships.map((membership) => (
                   <li
                     key={membership.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2"
+                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2"
                   >
                     <span className="min-w-0 truncate text-sm font-medium">
                       {membership.organization.name}
@@ -174,7 +178,7 @@ export default async function AdminUserDetailPage({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Invoice dibuat per organisasi</CardTitle>
             <CardDescription>
@@ -193,7 +197,7 @@ export default async function AdminUserDetailPage({
                 {invoicesByOrg.map((entry) => (
                   <li
                     key={entry.organizationId}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2"
+                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2"
                   >
                     <Link
                       href={`/admin/organizations/${entry.organizationId}`}
@@ -201,7 +205,7 @@ export default async function AdminUserDetailPage({
                     >
                       {entry.organizationName}
                     </Link>
-                    <span className="shrink-0 text-sm font-medium tabular-nums">
+                    <span className="shrink-0 font-mono text-sm font-medium tabular-nums">
                       {entry.count} invoice
                     </span>
                   </li>
@@ -212,7 +216,7 @@ export default async function AdminUserDetailPage({
         </Card>
       </div>
 
-      <Card>
+      <Card className="ring-border shadow-xs">
         <CardHeader>
           <CardTitle>Sesi aktif</CardTitle>
           <CardDescription>

@@ -37,6 +37,8 @@ export const dynamic = "force-dynamic";
 
 const FIELD_CLASS =
   "h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground";
+const HEAD_CLASS = "h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground";
+const CELL_CLASS = "py-2.5 px-3";
 
 export default async function AdminAuditLogsPage({
   searchParams,
@@ -59,8 +61,8 @@ export default async function AdminAuditLogsPage({
   const hasFilter = Boolean(action || actor || organizationId || from || to);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Log audit</h1>
         <p className="text-sm text-muted-foreground">
           Jejak seluruh aktivitas platform — login, perubahan data, aksi super
@@ -73,7 +75,7 @@ export default async function AdminAuditLogsPage({
         method="get"
         className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4"
       >
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="admin-audit-action">Aksi</Label>
           <select
             id="admin-audit-action"
@@ -89,7 +91,7 @@ export default async function AdminAuditLogsPage({
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="admin-audit-actor">Pelaku</Label>
           <select
             id="admin-audit-actor"
@@ -105,7 +107,7 @@ export default async function AdminAuditLogsPage({
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="admin-audit-org">Organisasi</Label>
           <select
             id="admin-audit-org"
@@ -121,7 +123,7 @@ export default async function AdminAuditLogsPage({
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="admin-audit-from">Dari</Label>
           <input
             id="admin-audit-from"
@@ -131,7 +133,7 @@ export default async function AdminAuditLogsPage({
             className={FIELD_CLASS}
           />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="admin-audit-to">Sampai</Label>
           <input
             id="admin-audit-to"
@@ -173,32 +175,34 @@ export default async function AdminAuditLogsPage({
           resetHref={result.total > 0 || hasFilter ? "/admin/audit-logs" : undefined}
         />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Waktu</TableHead>
-                <TableHead>Aksi</TableHead>
-                <TableHead>Pelaku</TableHead>
-                <TableHead>Organisasi</TableHead>
-                <TableHead>Entitas</TableHead>
-                <TableHead>IP</TableHead>
-                <TableHead>Metadata</TableHead>
+                <TableHead className={HEAD_CLASS}>Waktu</TableHead>
+                <TableHead className={HEAD_CLASS}>Aksi</TableHead>
+                <TableHead className={HEAD_CLASS}>Pelaku</TableHead>
+                <TableHead className={HEAD_CLASS}>Organisasi</TableHead>
+                <TableHead className={HEAD_CLASS}>Entitas</TableHead>
+                <TableHead className={HEAD_CLASS}>IP</TableHead>
+                <TableHead className={HEAD_CLASS}>Metadata</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {result.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                  <TableCell
+                    className={`${CELL_CLASS} whitespace-nowrap font-mono text-sm text-muted-foreground tabular-nums`}
+                  >
                     {formatDateTime(row.createdAt)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     <Badge variant="outline">{auditActionLabel(row.action)}</Badge>
-                    <span className="block text-[10px] text-muted-foreground">
+                    <span className="block font-mono text-[10px] text-muted-foreground">
                       {row.action}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     {row.actorUserId ? (
                       <Link
                         href={`/admin/users/${row.actorUserId}`}
@@ -210,7 +214,7 @@ export default async function AdminAuditLogsPage({
                       <span className="text-sm">{row.actorName}</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     {row.organizationId && row.organizationName ? (
                       <Link
                         href={`/admin/organizations/${row.organizationId}`}
@@ -223,7 +227,7 @@ export default async function AdminAuditLogsPage({
                       <span className="text-sm text-muted-foreground">—</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     <span className="block text-sm">{row.entityType}</span>
                     <span
                       className="block max-w-40 truncate font-mono text-[10px] text-muted-foreground"
@@ -232,10 +236,10 @@ export default async function AdminAuditLogsPage({
                       {row.entityId || "—"}
                     </span>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className={`${CELL_CLASS} font-mono text-xs text-muted-foreground`}>
                     {row.ipAddress ?? "—"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className={CELL_CLASS}>
                     <details>
                       <summary className="cursor-pointer select-none text-xs text-muted-foreground">
                         Lihat metadata

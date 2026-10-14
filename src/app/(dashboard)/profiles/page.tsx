@@ -37,8 +37,8 @@ export default async function ProfilesPage() {
   const mayEdit = scope ? can("org.settings.update", scope) : false;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Profil Invoice</h1>
         <p className="text-sm text-muted-foreground">
           Pengaturan identitas, tampilan, penomoran, pajak, dan meterai untuk invoice Anda.
@@ -46,7 +46,7 @@ export default async function ProfilesPage() {
       </div>
 
       {!scope ? (
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Belum ada workspace aktif</CardTitle>
             <CardDescription>
@@ -55,7 +55,7 @@ export default async function ProfilesPage() {
           </CardHeader>
         </Card>
       ) : (
-        <Card>
+        <Card className="ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Belum ada profil invoice</CardTitle>
             <CardDescription>

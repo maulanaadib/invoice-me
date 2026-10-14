@@ -41,8 +41,8 @@ export default async function AdminSettingsPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl font-semibold tracking-tight">Pengaturan platform</h1>
         <p className="text-sm text-muted-foreground">
           Konfigurasi baca-saja dari environment. Perubahan dilakukan di
@@ -51,7 +51,7 @@ export default async function AdminSettingsPage() {
         </p>
       </div>
 
-      <Card>
+      <Card className="ring-border shadow-xs">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Konfigurasi aktif</CardTitle>
           <CardDescription>
