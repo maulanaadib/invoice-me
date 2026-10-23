@@ -199,7 +199,7 @@ function renderPayloadFor(input: {
   referenceType: string | null;
   referenceNumber: string | null;
 }): RenderTokenPayload {
-  const issuerName = "Sigit Berkarya";
+  const issuerName = "Karya Nusantara";
   return {
     p: "render",
     printUrl: `http://127.0.0.1:${appSimPort}/print/invoices/${input.invoiceId}?token=placeholder`,
@@ -221,10 +221,10 @@ beforeAll(async () => {
   await resetDatabase();
 
   owner = await createUser({ username: "render.owner" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   await addMembership(owner.id, org.id, "OWNER");
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
 
   const customer = await createCustomer(
@@ -251,14 +251,14 @@ beforeAll(async () => {
     {
       bankName: "Bank Mandiri",
       accountNumber: "1234567890123456",
-      accountHolder: "PT Sigit Berkarya",
+      accountHolder: "PT Karya Nusantara",
       branch: "KCP Sudirman",
     },
     ownerCtx(),
   );
   bankId = bank.id;
   const signer = await saveSigner(
-    { name: "Sigit Berkarya", title: "Direktur", location: "Yogyakarta" },
+    { name: "Karya Nusantara", title: "Direktur", location: "Yogyakarta" },
     ownerCtx(),
   );
   signerId = signer.id;
@@ -454,7 +454,7 @@ describe("pdf-service", () => {
     const parser = new PDFParse({ data: new Uint8Array(bytes) });
     const info = await parser.getInfo();
     expect(info.info?.Title).toBe("INV/SB/VII/2026/001");
-    expect(info.info?.Author).toBe("Sigit Berkarya");
+    expect(info.info?.Author).toBe("Karya Nusantara");
 
     // Selectable text (bukan screenshot) — pdf-parse extracts the document.
     const text = await parser.getText();
@@ -519,10 +519,10 @@ describe("pdf-service", () => {
     expect(flat).toContain(normalized("Halaman 2 dari 2"));
     // Issuer reference line (no PO on this one).
     expect(lowerNormalized(text.text)).toContain(
-      lowerNormalized("Invoice ini diterbitkan oleh Sigit Berkarya."),
+      lowerNormalized("Invoice ini diterbitkan oleh Karya Nusantara."),
     );
     // The grand total shows on page 2 with the signature block.
     expect(flat).toContain(normalized("Rp 4.500.000"));
-    expect(page2Text).toContain("Sigit");
+    expect(page2Text).toContain("Karya Nusantara");
   }, 90_000);
 });

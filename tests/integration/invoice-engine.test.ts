@@ -147,7 +147,7 @@ beforeAll(async () => {
   owner = await createUser({ username: "inv.owner" });
   const staff = await createUser({ username: "inv.staff" });
   const viewer = await createUser({ username: "inv.viewer" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(staff.id, org.id, "STAFF");
@@ -156,7 +156,7 @@ beforeAll(async () => {
   staffId = staff.id;
   viewerId = viewer.id;
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
   // The other org needs its own profile before its drafts can exist.
   await createProfile(ownerCtx(otherOrg.id), { name: "Organisasi Lain", code: "OL" });
@@ -165,11 +165,11 @@ beforeAll(async () => {
     {
       bankName: "Bank Uji",
       accountNumber: "1234567890",
-      accountHolder: "PT Sigit Berkarya",
+      accountHolder: "PT Karya Nusantara",
     },
     ownerCtx(),
   );
-  await saveSigner({ name: "Sigit Berkarya", title: "Direktur" }, ownerCtx());
+  await saveSigner({ name: "Karya Nusantara", title: "Direktur" }, ownerCtx());
 
   const customer = await createCustomer(customerInput(), ownerCtx());
   customerId = customer.id;

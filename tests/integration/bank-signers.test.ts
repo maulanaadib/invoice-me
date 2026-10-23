@@ -148,14 +148,14 @@ beforeAll(async () => {
   owner = await createUser({ username: "bank.owner" });
   staff = await createUser({ username: "bank.staff" });
   viewer = await createUser({ username: "bank.viewer" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(staff.id, org.id, "STAFF");
   await addMembership(viewer.id, org.id, "VIEWER");
   await addMembership(owner.id, otherOrg.id, "OWNER");
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
   customerId = (await createCustomer(customerInput("PT Token Nusantara"), ownerCtx())).id;
 }, 60_000);
@@ -165,7 +165,7 @@ beforeAll(async () => {
 describe("bank account CRUD & encryption at rest (Check When Done)", () => {
   it("creates multi-account; the first becomes default, STAFF may create", async () => {
     const first = await createBankAccount(
-      { bankName: "Bank Uji", accountNumber: ACCOUNT_NUMBER, accountHolder: "PT Sigit Berkarya" },
+      { bankName: "Bank Uji", accountNumber: ACCOUNT_NUMBER, accountHolder: "PT Karya Nusantara" },
       staffCtx(),
     );
     bankAId = first.id;
@@ -179,7 +179,7 @@ describe("bank account CRUD & encryption at rest (Check When Done)", () => {
         bankName: "Bank Kedua",
         bankCode: "B2",
         accountNumber: "111222333444",
-        accountHolder: "PT Sigit Berkarya",
+        accountHolder: "PT Karya Nusantara",
         branch: "KCP Sudirman",
         isDefault: true,
       },
@@ -229,7 +229,7 @@ describe("bank account CRUD & encryption at rest (Check When Done)", () => {
       {
         bankName: "Bank Uji Rename",
         accountNumber: "",
-        accountHolder: "PT Sigit Berkarya",
+        accountHolder: "PT Karya Nusantara",
         isActive: true,
       },
       ownerCtx(),
@@ -243,7 +243,7 @@ describe("bank account CRUD & encryption at rest (Check When Done)", () => {
       {
         bankName: "Bank Uji Rename",
         accountNumber: "999888777012",
-        accountHolder: "PT Sigit Berkarya",
+        accountHolder: "PT Karya Nusantara",
         isActive: true,
       },
       ownerCtx(),
@@ -258,7 +258,7 @@ describe("bank account CRUD & encryption at rest (Check When Done)", () => {
       {
         bankName: "Bank Uji",
         accountNumber: ACCOUNT_NUMBER,
-        accountHolder: "PT Sigit Berkarya",
+        accountHolder: "PT Karya Nusantara",
         isActive: true,
       },
       ownerCtx(),
@@ -396,7 +396,7 @@ describe("signer CRUD & signature upload (Check When Done)", () => {
   it("creates with a PNG signature — sniffed content, stored under the org signature folder", async () => {
     const file = new File([PNG_BYTES], "tanda-tangan.png", { type: "image/png" });
     const signer = await createSigner(
-      { name: "Sigit Wicaksono", title: "Direktur", location: "Yogyakarta" },
+      { name: "Budi Santoso", title: "Direktur", location: "Yogyakarta" },
       staffCtx(),
       { signatureFile: file },
     );
@@ -432,7 +432,7 @@ describe("signer CRUD & signature upload (Check When Done)", () => {
     const before = await db.signer.findUnique({ where: { id: signerAId } });
     const kept = await updateSigner(
       signerAId,
-      { name: "Sigit Wicaksono", title: "Direktur Utama", location: "Yogyakarta", isActive: true },
+      { name: "Budi Santoso", title: "Direktur Utama", location: "Yogyakarta", isActive: true },
       ownerCtx(),
     );
     expect(kept.signatureImagePath).toBe(before!.signatureImagePath);
@@ -441,7 +441,7 @@ describe("signer CRUD & signature upload (Check When Done)", () => {
     const replacement = new File([PNG_BYTES], "baru.png", { type: "image/png" });
     const replaced = await updateSigner(
       signerAId,
-      { name: "Sigit Wicaksono", title: "Direktur Utama", location: "Yogyakarta", isActive: true },
+      { name: "Budi Santoso", title: "Direktur Utama", location: "Yogyakarta", isActive: true },
       ownerCtx(),
       { signatureFile: replacement },
     );
@@ -593,7 +593,7 @@ describe("editor integration & snapshot (Check When Done)", () => {
 
     expect(signerSnap).not.toBeNull();
     expect(signerSnap!.signerId).toBe(signerAId);
-    expect(signerSnap!.name).toBe("Sigit Wicaksono");
+    expect(signerSnap!.name).toBe("Budi Santoso");
   });
 
   it("the print/PDF source renders the full number, never the ciphertext", async () => {

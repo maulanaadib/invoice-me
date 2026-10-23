@@ -56,8 +56,8 @@ describe("audit metadata sample (Check When Done: 10 log terbaru)", () => {
           password: "kata-sandi-rahasia-11a",
           token: "token-rahasia-11a",
           apiKey: "api-key-rahasia-11a",
-          rekening: "1370021873449",
-          accountNumber: "1370021873449",
+          rekening: "1234567890123",
+          accountNumber: "1234567890123",
           npwp: "01.2345.6789.000001",
         },
         request: null,
@@ -77,7 +77,7 @@ describe("audit metadata sample (Check When Done: 10 log terbaru)", () => {
       expect(serialized).not.toContain("kata-sandi-rahasia-11a");
       expect(serialized).not.toContain("token-rahasia-11a");
       expect(serialized).not.toContain("api-key-rahasia-11a");
-      expect(serialized).not.toContain("1370021873449");
+      expect(serialized).not.toContain("1234567890123");
       expect(serialized).not.toContain("01.2345.6789.000001");
 
       const metadata = row.metadata as Record<string, unknown>;

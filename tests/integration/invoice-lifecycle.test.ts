@@ -152,14 +152,14 @@ beforeAll(async () => {
   owner = await createUser({ username: "lc.owner" });
   staff = await createUser({ username: "lc.staff" });
   viewer = await createUser({ username: "lc.viewer" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(staff.id, org.id, "STAFF");
   await addMembership(viewer.id, org.id, "VIEWER");
   await addMembership(owner.id, otherOrg.id, "OWNER");
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
   const foreignProfile = await createProfile(ownerCtx(otherOrg.id), {
     name: "Organisasi Lain",
@@ -171,12 +171,12 @@ beforeAll(async () => {
     {
       bankName: "Bank Uji",
       accountNumber: "1234567890",
-      accountHolder: "PT Sigit Berkarya",
+      accountHolder: "PT Karya Nusantara",
     },
     ownerCtx(),
   );
   bankId = bank.id;
-  const signer = await saveSigner({ name: "Sigit Berkarya", title: "Direktur" }, ownerCtx());
+  const signer = await saveSigner({ name: "Karya Nusantara", title: "Direktur" }, ownerCtx());
   signerId = signer.id;
 
   const customer = await createCustomer(customerInput(), ownerCtx());
@@ -308,14 +308,14 @@ describe("issue flow (Check When Done)", () => {
 describe("snapshot immutability (Check When Done)", () => {
   it("profile edits after issue never change the issued document", async () => {
     const before = await getInvoiceDetail(issuedId, ownerCtx());
-    expect(before.issuer.name).toBe("Sigit Berkarya");
+    expect(before.issuer.name).toBe("Karya Nusantara");
     expect(before.issuer.address).toBeNull();
     expect(before.issuer.logoPath).toBeNull();
 
     // Live master data really does change...
     await updateProfile(
       profileId,
-      { name: "Sigit Berkarya Baru", address: "Alamat BARU nomor 99" },
+      { name: "Karya Nusantara Baru", address: "Alamat BARU nomor 99" },
       ownerCtx(),
     );
     const oneByOnePng = Buffer.from(
@@ -328,13 +328,13 @@ describe("snapshot immutability (Check When Done)", () => {
       ownerCtx(),
     );
     const liveProfile = await db.invoiceProfile.findUnique({ where: { id: profileId } });
-    expect(liveProfile!.name).toBe("Sigit Berkarya Baru");
+    expect(liveProfile!.name).toBe("Karya Nusantara Baru");
     expect(liveProfile!.logoPath).not.toBeNull();
 
     // ...but the issued document still renders the frozen snapshot.
     const after = await getInvoiceDetail(issuedId, ownerCtx());
     expect(after.fromSnapshot).toBe(true);
-    expect(after.issuer.name).toBe("Sigit Berkarya");
+    expect(after.issuer.name).toBe("Karya Nusantara");
     expect(after.issuer.address).toBeNull();
     expect(after.issuer.logoPath).toBeNull();
     expect(after.issuer.primaryColor).toBe(before.issuer.primaryColor);
@@ -351,7 +351,7 @@ describe("snapshot immutability (Check When Done)", () => {
       ownerCtx(),
     );
     await saveBankAccount(
-      { bankName: "Bank Baru", accountNumber: "", accountHolder: "PT Sigit Berkarya" },
+      { bankName: "Bank Baru", accountNumber: "", accountHolder: "PT Karya Nusantara" },
       ownerCtx(),
     );
 

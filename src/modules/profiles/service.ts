@@ -209,7 +209,7 @@ export function toProfileView(profile: InvoiceProfile): ProfileView {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-/** Short invoice code derived from an organization name: "Sigit Berkarya" → "SIGIT". */
+/** Short invoice code derived from an organization name: "Karya Nusantara" → "KARYAN". */
 export function deriveProfileCode(name: string): string {
   const cleaned = name
     .normalize("NFKD")

@@ -1,5 +1,5 @@
 // prisma/seed.mjs — idempotent acceptance seed (feature 01 super admin +
-// feature-03 demo workspace + feature-11C Sigit Berkarya acceptance sample).
+// feature-03 demo workspace + feature-11C Karya Nusantara acceptance sample).
 // Plain Node ESM so `prisma db seed` and the Docker entrypoint work without
 // a TS loader. (The calculation/numbering logic below mirrors the app's
 // decimal.js engines — see src/modules/invoices/calculation.ts — but is
@@ -17,9 +17,9 @@
 // The customer/project are created only when absent — re-running is a no-op.
 //
 // Feature 11C acceptance sample (master prompt bagian 33):
-//   - organization "Sigit Berkarya" (slug: sigit-berkarya)
-//   - profile SB (Yogyakarta, WhatsApp 0851 5688 8959, pola INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3})
-//   - bank Mandiri 1370021873449 (encrypted at rest via BANK_ACCOUNT_ENCRYPTION_KEY)
+//   - organization "Karya Nusantara" (slug: karya-nusantara)
+//   - profile SB (Yogyakarta, WhatsApp 0812 3456 7890, pola INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3})
+//   - bank Mandiri 1234567890123 (encrypted at rest via BANK_ACCOUNT_ENCRYPTION_KEY)
 //   - customer PT Dharma Polimetal Tbk + PIC Abdul Aziz (Purchasing)
 //   - PO 5198021181 (15 Juli 2026, nilai 4.500.000)
 //   - invoice DOWN_PAYMENT 50% (31 Juli 2026) → INV/SB/VII/2026/001 via the
@@ -344,11 +344,11 @@ async function main() {
     `[seed] demo workspace ready: org=${demoOrg.slug} customer=${customer.companyName} (PO 5198021181)`,
   );
 
-  // ── Feature 11C: Sigit Berkarya acceptance sample ─────────────────────────
+  // ── Feature 11C: Karya Nusantara acceptance sample ─────────────────────────
   const sbOrg = await prisma.organization.upsert({
-    where: { slug: "sigit-berkarya" },
-    update: { name: "Sigit Berkarya" },
-    create: { name: "Sigit Berkarya", slug: "sigit-berkarya" },
+    where: { slug: "karya-nusantara" },
+    update: { name: "Karya Nusantara" },
+    create: { name: "Karya Nusantara", slug: "karya-nusantara" },
   });
   const sbMembership = await prisma.membership.findUnique({
     where: { userId_organizationId: { userId: user.id, organizationId: sbOrg.id } },
@@ -392,10 +392,10 @@ async function main() {
     create: {
       id: "seed_profile_sb",
       organizationId: sbOrg.id,
-      name: "Sigit Berkarya",
+      name: "Karya Nusantara",
       code: "SB",
-      address: "Jl. Kaliurang KM 5, Yogyakarta",
-      whatsapp: "0851 5688 8959",
+      address: "Jl. Sudirman No. 1, Jakarta",
+      whatsapp: "0812 3456 7890",
       numberPattern: "INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}",
       defaultStampMode: "E_METERAI",
     },
@@ -408,21 +408,21 @@ async function main() {
       id: "seed_bank_mandiri",
       organizationId: sbOrg.id,
       bankName: "Bank Mandiri",
-      accountNumberEncrypted: encryptAccountNumber("1370021873449"),
-      accountNumberLast4: "3449",
-      accountHolder: "Sigit Berkarya",
+      accountNumberEncrypted: encryptAccountNumber("1234567890123"),
+      accountNumberLast4: "0123",
+      accountHolder: "Karya Nusantara",
       isDefault: true,
       isActive: true,
     },
   });
 
   const sbSigner = await prisma.signer.upsert({
-    where: { id: "seed_signer_sigit" },
+    where: { id: "seed_signer_budi" },
     update: {},
     create: {
-      id: "seed_signer_sigit",
+      id: "seed_signer_budi",
       organizationId: sbOrg.id,
-      name: "Sigit",
+      name: "Budi",
       title: "Direktur",
       location: "Yogyakarta",
       isDefault: true,
@@ -583,8 +583,8 @@ async function main() {
         bankAccountId: sbBank.id,
         bankName: sbBank.bankName,
         accountHolder: sbBank.accountHolder,
-        maskedNumber: "**** **** 3449",
-        last4: "3449",
+        maskedNumber: "**** **** 0123",
+        last4: "0123",
         currency: "IDR",
       },
       signerSnapshot: {

@@ -75,10 +75,10 @@ function draftInput(seq: number): InvoiceDraftFormOutput {
 beforeAll(async () => {
   await resetDatabase();
   owner = await createUser({ username: "nc.owner" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   await addMembership(owner.id, org.id, "OWNER");
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
   const customer = await createCustomer(customerInput(), ownerCtx());
   customerId = customer.id;

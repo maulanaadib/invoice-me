@@ -143,7 +143,7 @@ beforeAll(async () => {
   await resetDatabase();
   owner = await createUser({ username: "dash.owner" });
   viewer = await createUser({ username: "dash.viewer" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   emptyOrg = await createOrganization("Organisasi Kosong");
   await addMembership(owner.id, org.id, "OWNER");
@@ -151,7 +151,7 @@ beforeAll(async () => {
   await addMembership(owner.id, otherOrg.id, "OWNER");
   await addMembership(owner.id, emptyOrg.id, "OWNER");
 
-  profileId = (await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" })).id;
+  profileId = (await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" })).id;
   customerId = (await createCustomer(customerInput("PT Dharma Dashboard"), ownerCtx())).id;
 
   await make("draft1", { issue: false, invoiceDate: daysAgo(4) });

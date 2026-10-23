@@ -74,7 +74,7 @@ test.describe("invoice PDF end-to-end (fitur 06)", () => {
     organizationId = org.id;
     await addMembership(user.id, org.id, "OWNER");
 
-    const profile = await createProfile(ctx(), { name: "Sigit Berkarya", code: "SB" });
+    const profile = await createProfile(ctx(), { name: "Karya Nusantara", code: "SB" });
     profileId = profile.id;
 
     const customer = await createCustomer(
@@ -101,13 +101,13 @@ test.describe("invoice PDF end-to-end (fitur 06)", () => {
       {
         bankName: "Bank Mandiri",
         accountNumber: "1234567890123456",
-        accountHolder: "PT Sigit Berkarya",
+        accountHolder: "PT Karya Nusantara",
         branch: "KCP Sudirman",
       },
       ctx(),
     );
     const signer = await saveSigner(
-      { name: "Sigit Berkarya", title: "Direktur", location: "Yogyakarta" },
+      { name: "Karya Nusantara", title: "Direktur", location: "Yogyakarta" },
       ctx(),
     );
 

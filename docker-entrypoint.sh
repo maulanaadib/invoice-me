@@ -2,7 +2,7 @@
 # docker-entrypoint.sh — runs at container start (feature 11C, spec item 7):
 #   1. prisma migrate deploy — forward-only migration (data-model.md rule).
 #   2. prisma db seed — idempotent acceptance seed (super admin from env,
-#      Sigit Berkarya org + demo data). Skipped when SEED_ADMIN_PASSWORD is
+#      Karya Nusantara org + demo data). Skipped when SEED_ADMIN_PASSWORD is
 #      unset so a production instance without seed credentials boots cleanly
 #      (the migration still runs; no fake data is created without the env
 #      contract being met).

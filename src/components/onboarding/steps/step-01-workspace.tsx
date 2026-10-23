@@ -129,7 +129,7 @@ export function Step1Workspace() {
             <Input
               id="org-name"
               name="name"
-              placeholder="mis. Sigit Berkarya"
+              placeholder="mis. Karya Nusantara"
               autoComplete="organization"
               disabled={pending}
               aria-invalid={Boolean(fieldError(state, "name")) || undefined}

@@ -50,7 +50,7 @@ function draftView(overrides: Partial<InvoiceDraftView> = {}): InvoiceDraftView 
     numberPreview: "INV/SB/VII/2026/001",
     profile: {
       id: "profile-1",
-      name: "Sigit Berkarya",
+      name: "Karya Nusantara",
       legalName: null,
       code: "SB",
       logoPath: null,

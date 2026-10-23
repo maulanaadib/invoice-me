@@ -89,7 +89,7 @@ beforeAll(async () => {
   await resetDatabase();
   owner = await createUser({ username: "profile.owner" });
   const viewer = await createUser({ username: "profile.viewer" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(viewer.id, org.id, "VIEWER");
@@ -103,7 +103,7 @@ function viewerCtx() {
 
 describe("invoice profile CRUD", () => {
   it("creates with data-model defaults and writes a PROFILE_CHANGED audit", async () => {
-    const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+    const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
     expect(profile.id).toBeTruthy();
     expect(profile.code).toBe("SB");
     expect(profile.numberPattern).toBe("INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}");
@@ -130,10 +130,10 @@ describe("invoice profile CRUD", () => {
 
     const updated = await updateProfile(
       profile!.id,
-      { legalName: "PT Sigit Berkarya", address: "Jl. Merdeka No. 1, Jakarta", primaryColor: "#ff5500" },
+      { legalName: "PT Karya Nusantara", address: "Jl. Merdeka No. 1, Jakarta", primaryColor: "#ff5500" },
       ownerCtx(),
     );
-    expect(updated.legalName).toBe("PT Sigit Berkarya");
+    expect(updated.legalName).toBe("PT Karya Nusantara");
     expect(updated.primaryColor).toBe("#ff5500");
 
     const audits = await db.auditLog.findMany({
@@ -163,7 +163,7 @@ describe("authorization", () => {
 
     // Nothing changed on disk-of-truth.
     const after = await getProfileForScope(profile!.id, ownerCtx());
-    expect(after.name).toBe("Sigit Berkarya");
+    expect(after.name).toBe("Karya Nusantara");
   });
 
   it("answers 404 for a profile from another organization and for a missing id", async () => {
@@ -210,7 +210,7 @@ describe("number pattern validation (action-layer schemas)", () => {
 
   it("profileUpdateSchema (the /profiles/[id] edit) validates the pattern the same way", () => {
     const base = {
-      name: "Sigit Berkarya",
+      name: "Karya Nusantara",
       code: "SB",
       legalName: null,
       address: null,
@@ -255,7 +255,7 @@ describe("bank account encryption at rest", () => {
         bankName: "Bank Central Asia",
         bankCode: "BCA",
         accountNumber: PLAIN_NUMBER,
-        accountHolder: "Sigit Berkarya",
+        accountHolder: "Karya Nusantara",
         branch: "Jakarta",
       },
       ownerCtx(),
@@ -301,7 +301,7 @@ describe("bank account encryption at rest", () => {
         bankName: "Bank Mandiri",
         bankCode: null,
         accountNumber: "",
-        accountHolder: "Sigit Berkarya",
+        accountHolder: "Karya Nusantara",
         branch: null,
       },
       ownerCtx(),

@@ -121,13 +121,13 @@ beforeAll(async () => {
   owner = await createUser({ username: "pdf.owner" });
   staff = await createUser({ username: "pdf.staff" });
   viewer = await createUser({ username: "pdf.viewer" });
-  org = await createOrganization("Sigit Berkarya");
-  foreignOrg = await createOrganization("Sigit Lain");
+  org = await createOrganization("Karya Nusantara");
+  foreignOrg = await createOrganization("Org Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(staff.id, org.id, "STAFF");
   await addMembership(viewer.id, org.id, "VIEWER");
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
 
   const customer = await createCustomer(
@@ -154,14 +154,14 @@ beforeAll(async () => {
     {
       bankName: "Bank Uji",
       accountNumber: "1234567890123456",
-      accountHolder: "PT Sigit Berkarya",
+      accountHolder: "PT Karya Nusantara",
       branch: "KCP Sudirman",
     },
     ownerCtx(),
   );
   bankId = bank.id;
   const signer = await saveSigner(
-    { name: "Sigit Berkarya", title: "Direktur", location: "Yogyakarta" },
+    { name: "Karya Nusantara", title: "Direktur", location: "Yogyakarta" },
     ownerCtx(),
   );
   signerId = signer.id;

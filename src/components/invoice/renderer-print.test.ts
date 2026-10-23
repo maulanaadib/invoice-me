@@ -32,7 +32,7 @@ function makeData(overrides: Partial<InvoiceRendererData> = {}): InvoiceRenderer
     dueDate: "2026-07-31",
     referenceType: "PURCHASE_ORDER",
     referenceNumber: "5198021181",
-    issuer: { name: "Sigit Berkarya", legalName: "PT Sigit Berkarya" },
+    issuer: { name: "Karya Nusantara", legalName: "PT Karya Nusantara" },
     customer: { name: "PT Dharma Polimetal Tbk" },
     contactName: "Budi Santoso",
     contactTitle: "Procurement",
@@ -50,7 +50,7 @@ function makeData(overrides: Partial<InvoiceRendererData> = {}): InvoiceRenderer
     calc,
     taxIncludedInTotal: calc.taxIncludedInTotal,
     bank: null,
-    signer: { name: "Sigit", title: "Direktur", location: "Yogyakarta", signaturePath: null },
+    signer: { name: "Budi", title: "Direktur", location: "Yogyakarta", signaturePath: null },
     stampMode: "NONE",
     settings: { hideZeroRows: true, hideStampLabel: false },
     primaryColor: "#2563eb",
@@ -85,7 +85,7 @@ describe("meterai slots", () => {
     expect(html).toContain("border-dashed");
     expect(html).toContain('aria-label="Slot e-meterai"');
     // Left of the signature block: the slot markup appears before the name.
-    expect(html.indexOf("Slot E-Meterai")).toBeLessThan(html.indexOf(">Sigit</p>"));
+    expect(html.indexOf("Slot E-Meterai")).toBeLessThan(html.indexOf(">Budi</p>"));
   });
 
   it("the E_METERAI label can be switched off while the slot stays", () => {
@@ -116,7 +116,7 @@ describe("meterai slots", () => {
     const html = render({ stampMode: "NONE" });
     expect(html).not.toContain('aria-label="Slot e-meterai"');
     expect(html).not.toContain('aria-label="Area meterai fisik"');
-    expect(html).toContain(">Sigit</p>");
+    expect(html).toContain(">Budi</p>");
     expect(html).toContain("Direktur");
   });
 
@@ -131,7 +131,7 @@ describe("signature block", () => {
   it("carries location + date, name and title", () => {
     const html = render();
     expect(html).toContain("Yogyakarta, 01 Juli 2026");
-    expect(html).toContain(">Sigit</p>");
+    expect(html).toContain(">Budi</p>");
     expect(html).toContain("Direktur");
   });
 

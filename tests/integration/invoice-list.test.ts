@@ -163,14 +163,14 @@ beforeAll(async () => {
   owner = await createUser({ username: "list.owner" });
   staff = await createUser({ username: "list.staff" });
   viewer = await createUser({ username: "list.viewer" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(staff.id, org.id, "STAFF");
   await addMembership(viewer.id, org.id, "VIEWER");
   await addMembership(owner.id, otherOrg.id, "OWNER");
 
-  profileId = (await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" })).id;
+  profileId = (await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" })).id;
   cDharma = (await createCustomer(customerInput("PT Dharma Karya Prima"), ownerCtx())).id;
   cSentosa = (await createCustomer(customerInput("PT Sentosa Makmur"), ownerCtx())).id;
 
@@ -560,7 +560,7 @@ describe("command search + filter options", () => {
     ]);
     // One invoice profile per organization (feature 02 rule) — the filter must
     // offer exactly this org's profile, and a foreign profile id matches 0 rows.
-    expect(options.profiles.map((row) => row.name)).toEqual(["Sigit Berkarya"]);
+    expect(options.profiles.map((row) => row.name)).toEqual(["Karya Nusantara"]);
     const byProfile = await list(ownerCtx(), { profile: options.profiles[0]!.id, pageSize: 50 });
     expect(byProfile.total).toBe(7);
     const foreignProfileFilter = await list(ownerCtx(), { profile: foreignProfileId });

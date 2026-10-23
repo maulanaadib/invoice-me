@@ -43,7 +43,7 @@ describe("invoicePdfFooter", () => {
         referenceType: "PURCHASE_ORDER",
         referenceNumber: "5198021181",
         customerName: "PT Dharma Polimetal Tbk",
-        issuerName: "Sigit Berkarya",
+        issuerName: "Karya Nusantara",
       }),
     ).toBe(
       "Invoice ini dibuat berdasarkan Purchase Order PT Dharma Polimetal Tbk Nomor 5198021181.",
@@ -56,9 +56,9 @@ describe("invoicePdfFooter", () => {
         referenceType: null,
         referenceNumber: null,
         customerName: "PT Dharma Polimetal Tbk",
-        issuerName: "Sigit Berkarya",
+        issuerName: "Karya Nusantara",
       }),
-    ).toBe("Invoice ini diterbitkan oleh Sigit Berkarya.");
+    ).toBe("Invoice ini diterbitkan oleh Karya Nusantara.");
   });
 
   it("falls back to the issuer line for non-PO reference types", () => {
@@ -67,9 +67,9 @@ describe("invoicePdfFooter", () => {
         referenceType: "CONTRACT",
         referenceNumber: "KW-001",
         customerName: "PT Dharma Polimetal Tbk",
-        issuerName: "Sigit Berkarya",
+        issuerName: "Karya Nusantara",
       }),
-    ).toBe("Invoice ini diterbitkan oleh Sigit Berkarya.");
+    ).toBe("Invoice ini diterbitkan oleh Karya Nusantara.");
   });
 
   it("falls back to the issuer line when the customer name is absent", () => {
@@ -78,8 +78,8 @@ describe("invoicePdfFooter", () => {
         referenceType: "PURCHASE_ORDER",
         referenceNumber: "5198021181",
         customerName: null,
-        issuerName: "Sigit Berkarya",
+        issuerName: "Karya Nusantara",
       }),
-    ).toBe("Invoice ini diterbitkan oleh Sigit Berkarya.");
+    ).toBe("Invoice ini diterbitkan oleh Karya Nusantara.");
   });
 });

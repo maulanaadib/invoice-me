@@ -88,7 +88,7 @@ Script-only (tidak dibaca app):
   di entrypoint) — lihat `docker-entrypoint.sh`.
 - **Seed** (`prisma/seed.mjs`) juga dijalankan otomatis saat
   `SEED_ADMIN_PASSWORD` ter-set. Seed **idempotent** — run ulang tidak error,
-  tidak duplikat. Berisi: super admin + acceptance sample (Sigit Berkarya,
+  tidak duplikat. Berisi: super admin + acceptance sample (Karya Nusantara,
   profile SB, customer PT Dharma Polimetal Tbk, PO 5198021181,
   invoice DP 50% `INV/SB/VII/2026/001`).
 - Jika `SEED_ADMIN_PASSWORD` kosong, seed dilewati (production tanpa

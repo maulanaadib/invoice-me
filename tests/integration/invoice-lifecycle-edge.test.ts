@@ -94,14 +94,14 @@ beforeAll(async () => {
   owner = await createUser({ username: "edge.owner" });
   admin = await createUser({ username: "edge.admin" });
   staff = await createUser({ username: "edge.staff" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(admin.id, org.id, "ADMIN");
   await addMembership(staff.id, org.id, "STAFF");
   await addMembership(owner.id, otherOrg.id, "OWNER");
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
   const foreignProfile = await createProfile(ownerCtx(otherOrg.id), {
     name: "Organisasi Lain",
@@ -110,7 +110,7 @@ beforeAll(async () => {
   foreignProfileId = foreignProfile.id;
 
   const bank = await saveBankAccount(
-    { bankName: "Bank Uji", accountNumber: "1234567890", accountHolder: "PT Sigit Berkarya" },
+    { bankName: "Bank Uji", accountNumber: "1234567890", accountHolder: "PT Karya Nusantara" },
     ownerCtx(),
   );
   bankId = bank.id;
@@ -120,7 +120,7 @@ beforeAll(async () => {
   );
   foreignBankId = foreignBank.id;
 
-  const signer = await saveSigner({ name: "Sigit Berkarya", title: "Direktur" }, ownerCtx());
+  const signer = await saveSigner({ name: "Karya Nusantara", title: "Direktur" }, ownerCtx());
   signerId = signer.id;
   const foreignSigner = await saveSigner(
     { name: "Petani Asing", title: "Direktur" },

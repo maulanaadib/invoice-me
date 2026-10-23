@@ -144,29 +144,29 @@ test.describe("final acceptance (fitur 11C — master prompt bagian 32 + 33)", (
     }
   });
 
-  test("0a. Seed acceptance data lengkap (Sigit Berkarya, bagian 33)", async () => {
-    // Spec 11C Check When Done: "Seed lengkap: org Sigit Berkarya, profile SB,
+  test("0a. Seed acceptance data lengkap (Karya Nusantara, bagian 33)", async () => {
+    // Spec 11C Check When Done: "Seed lengkap: org Karya Nusantara, profile SB,
     // bank Mandiri, customer PT Dharma Polimetal Tbk + PIC Abdul Aziz,
     // PO 5198021181" dan "Invoice acceptance sample: DOWN_PAYMENT 50%, tanggal
     // 31 Juli 2026, nomor INV/SB/VII/2026/001, grand total 2.250.000, terbilang
     // …, stamp E_METERAI". Diverifikasi terhadap baris DB nyata, bukan klaim.
-    const org = await db.organization.findUnique({ where: { slug: "sigit-berkarya" } });
-    expect(org?.name).toBe("Sigit Berkarya");
+    const org = await db.organization.findUnique({ where: { slug: "karya-nusantara" } });
+    expect(org?.name).toBe("Karya Nusantara");
 
     const profile = await db.invoiceProfile.findFirst({
       where: { organizationId: org!.id, code: "SB" },
     });
-    expect(profile?.name).toBe("Sigit Berkarya");
+    expect(profile?.name).toBe("Karya Nusantara");
     expect(profile?.address).toContain("Yogyakarta");
-    expect(profile?.whatsapp).toBe("0851 5688 8959");
+    expect(profile?.whatsapp).toBe("0812 3456 7890");
 
     const bank = await db.bankAccount.findFirst({
       where: { organizationId: org!.id, bankName: "Bank Mandiri" },
     });
-    expect(bank?.accountNumberLast4).toBe("3449");
+    expect(bank?.accountNumberLast4).toBe("0123");
     expect(bank?.isDefault).toBe(true);
     // Encrypted at rest: the plaintext number never appears in the row.
-    expect(bank?.accountNumberEncrypted).not.toContain("1370021873449");
+    expect(bank?.accountNumberEncrypted).not.toContain("1234567890123");
 
     const customer = await db.customer.findFirst({
       where: { organizationId: org!.id, companyName: "PT Dharma Polimetal Tbk" },

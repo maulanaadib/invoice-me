@@ -159,18 +159,18 @@ beforeAll(async () => {
   owner = await createUser({ username: "pay.owner" });
   staff = await createUser({ username: "pay.staff" });
   viewer = await createUser({ username: "pay.viewer" });
-  org = await createOrganization("Sigit Berkarya");
+  org = await createOrganization("Karya Nusantara");
   otherOrg = await createOrganization("Organisasi Lain");
   await addMembership(owner.id, org.id, "OWNER");
   await addMembership(staff.id, org.id, "STAFF");
   await addMembership(viewer.id, org.id, "VIEWER");
   await addMembership(owner.id, otherOrg.id, "OWNER");
 
-  const profile = await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" });
+  const profile = await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" });
   profileId = profile.id;
 
   await saveBankAccount(
-    { bankName: "Bank Uji", accountNumber: ACCOUNT_NUMBER, accountHolder: "PT Sigit Berkarya" },
+    { bankName: "Bank Uji", accountNumber: ACCOUNT_NUMBER, accountHolder: "PT Karya Nusantara" },
     ownerCtx(),
   );
 

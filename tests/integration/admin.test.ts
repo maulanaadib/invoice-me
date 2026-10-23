@@ -137,7 +137,7 @@ beforeAll(async () => {
   multiOrgUser = await createUser({ username: "multi09" });
   adminCtx.actorUserId = admin.id;
 
-  orgA = await createOrganization("Sigit Berkarya");
+  orgA = await createOrganization("Karya Nusantara");
   suspendOrg = await createOrganization("Org Ditangguhkan");
   activeOrg = await createOrganization("Org Aktif Lain");
   await addMembership(owner.id, orgA.id, "OWNER");
@@ -146,7 +146,7 @@ beforeAll(async () => {
   await addMembership(multiOrgUser.id, suspendOrg.id, "OWNER");
   await addMembership(multiOrgUser.id, activeOrg.id, "OWNER");
 
-  profileId = (await createProfile(ownerCtx(), { name: "Sigit Berkarya", code: "SB" })).id;
+  profileId = (await createProfile(ownerCtx(), { name: "Karya Nusantara", code: "SB" })).id;
   customerId = (await createCustomer(customerInput("PT Dharma Polimetal Tbk"), ownerCtx())).id;
 
   const draft = await createDraft(
@@ -282,7 +282,7 @@ describe("user detail", () => {
     expect(detail.invoiceCount).toBeGreaterThanOrEqual(1);
     expect(invoicesByOrg.length).toBeGreaterThanOrEqual(1);
     expect(invoicesByOrg[0]?.organizationId).toBe(orgA.id);
-    expect(invoicesByOrg[0]?.organizationName).toBe("Sigit Berkarya");
+    expect(invoicesByOrg[0]?.organizationName).toBe("Karya Nusantara");
     expect(invoicesByOrg.reduce((sum, row) => sum + row.count, 0)).toBe(detail.invoiceCount);
   });
 
@@ -339,7 +339,7 @@ describe("invoice monitoring", () => {
     expect(result.total).toBeGreaterThanOrEqual(1);
     const row = result.rows.find((r) => r.id === issuedInvoiceId);
     expect(row).toBeDefined();
-    expect(row?.organizationName).toBe("Sigit Berkarya");
+    expect(row?.organizationName).toBe("Karya Nusantara");
     expect(row?.number).not.toBeNull();
     expect(row?.grandTotal).toBe(issuedGrandTotal);
 
@@ -358,7 +358,7 @@ describe("invoice monitoring", () => {
       where: { action: "ADMIN_VIEWED_INVOICE", entityId: issuedInvoiceId },
     });
     const detail = await adminViewInvoice(adminCtx, issuedInvoiceId, null);
-    expect(detail.organizationName).toBe("Sigit Berkarya");
+    expect(detail.organizationName).toBe("Karya Nusantara");
     expect(detail.customerName).toBe("PT Dharma Polimetal Tbk");
     expect(detail.grandTotal).toBe(issuedGrandTotal);
     expect(detail.items.length).toBeGreaterThanOrEqual(1);
@@ -617,7 +617,7 @@ describe("system health and settings", () => {
 describe("organization detail and suspension", () => {
   it("shows membership, invoice count, storage and last activity", async () => {
     const detail = await getAdminOrganizationDetail(adminCtx, orgA.id);
-    expect(detail.organization.name).toBe("Sigit Berkarya");
+    expect(detail.organization.name).toBe("Karya Nusantara");
     expect(detail.memberships.length).toBeGreaterThanOrEqual(2);
     expect(detail.memberCount).toBeGreaterThanOrEqual(1);
     expect(detail.invoiceCount).toBe(1);

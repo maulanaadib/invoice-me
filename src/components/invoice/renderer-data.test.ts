@@ -50,7 +50,7 @@ function previewInput(overrides: Partial<RendererPreviewInput> = {}): RendererPr
     values: formValues(),
     numberPreview: "INV/SB/VII/2026/001",
     profile: {
-      name: "Sigit Berkarya",
+      name: "Karya Nusantara",
       legalName: null,
       logoPath: null,
       primaryColor: "#2563eb",
@@ -134,7 +134,7 @@ describe("buildRendererPreviewData — draft bank block stays masked", () => {
       previewInput({
         bank: {
           bankName: "Bank Uji",
-          accountHolder: "PT Sigit Berkarya",
+          accountHolder: "PT Karya Nusantara",
           maskedNumber: "**** **** 3449",
           branch: null,
         },
