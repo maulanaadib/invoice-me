@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      tailwind = { config: { corePlugins: { preflight: false } } };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono%3Awght%40100..800&family=Plus+Jakarta+Sans%3Aital%2Cwght%400%2C200..800%3B1%2C200..800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *, ::before, ::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+        data-pencil-name="00 Design tokens — Bento Kausal"
+        class="box-border w-[1360px] h-fitrelative left-0 top-0 flex flex-col gap-[22px] p-[40px] justify-start items-start bg-[#FAF9F7]"
+      >
+        <div
+          data-pencil-name="Sheet Header"
+          class="box-border w-full h-fit shrink-0 flex flex-row gap-[24px] justify-between items-end"
+        >
+          <div
+            data-pencil-name="Title Block"
+            class="box-border w-fit shrink-0 h-fit flex flex-col gap-[10px] justify-start items-start"
+          >
+            <div
+              data-pencil-name="Brand Row"
+              class="box-border w-fit h-fit shrink-0 flex flex-row gap-[9px] justify-start items-center"
+            >
+              <div
+                data-pencil-name="Brand Mark"
+                class="box-border w-[22px] shrink-0 h-[22px] bg-[#1E3A5F] rounded-[7px]"
+              ></div>
+              <div
+                data-pencil-name="Brand Name"
+                class="text-[11px]/[normal] box-border text-[#1E3A5F] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.6px] text-left [white-space:nowrap]"
+              >
+                INVOICE-ME
+              </div>
+            </div>
+            <div
+              data-pencil-name="Sheet Title"
+              class="text-[30px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[-0.4px] text-left [white-space:nowrap]"
+            >
+              Design tokens — Bento Kausal
+            </div>
+            <div
+              data-pencil-name="Sheet Subtitle"
+              class="text-[13px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+            >
+              Light system · Plus Jakarta Sans · the single source of truth for every invoice-me
+              surface
+            </div>
+          </div>
+          <div
+            data-pencil-name="Chips"
+            class="box-border w-fit shrink-0 h-fit flex flex-row gap-[8px] justify-start items-center"
+          >
+            <div
+              data-pencil-name="v4.0 · LIGHT Chip"
+              class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[5px_10px] justify-start items-start bg-[#E8EDF4] rounded-[9999px]"
+            >
+              <div
+                data-pencil-name="v4.0 · LIGHT Chip Label"
+                class="text-[10px]/[normal] box-border text-[#1E3A5F] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[0.9px] text-left [white-space:nowrap]"
+              >
+                v4.0 · LIGHT
+              </div>
+            </div>
+            <div
+              data-pencil-name="10 COLOR TOKENS Chip"
+              class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[5px_10px] justify-start items-start bg-[#F1F5F9] rounded-[9999px]"
+            >
+              <div
+                data-pencil-name="10 COLOR TOKENS Chip Label"
+                class="text-[10px]/[normal] box-border text-[#475569] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[0.9px] text-left [white-space:nowrap]"
+              >
+                10 COLOR TOKENS
+              </div>
+            </div>
+            <div
+              data-pencil-name="8 STATUS STATES Chip"
+              class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[5px_10px] justify-start items-start bg-[#F1F5F9] rounded-[9999px]"
+            >
+              <div
+                data-pencil-name="8 STATUS STATES Chip Label"
+                class="text-[10px]/[normal] box-border text-[#475569] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[0.9px] text-left [white-space:nowrap]"
+              >
+                8 STATUS STATES
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          data-pencil-name="Color Tokens"
+          class="box-border w-full h-fit shrink-0 flex flex-col gap-[14px] justify-start items-start"
+        >
+          <div
+            data-pencil-name="Color Tokens Header"
+            class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+          >
+            <div
+              data-pencil-name="Color Tokens Title"
+              class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.3px] text-left [white-space:nowrap]"
+            >
+              01 · COLOR RAMP
+            </div>
+            <div
+              data-pencil-name="Color Tokens Meta"
+              class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+            >
+              surfaces · text · semantic accents
+            </div>
+          </div>
+          <div
+            data-pencil-name="Ramp Row 1"
+            class="box-border w-full h-fit shrink-0 flex flex-row gap-[14px] justify-start items-start"
+          >
+            <div
+              data-pencil-name="Token Page"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Page Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#FAF9F7] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Page Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Page
+              </div>
+              <div
+                data-pencil-name="Page Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #FAF9F7
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Card"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Card Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#FFFFFF] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Card Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Card
+              </div>
+              <div
+                data-pencil-name="Card Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #FFFFFF
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Border"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Border Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#E4E7EB] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Border Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Border
+              </div>
+              <div
+                data-pencil-name="Border Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #E4E7EB
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Primary"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Primary Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#1E3A5F] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Primary Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Primary
+              </div>
+              <div
+                data-pencil-name="Primary Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #1E3A5F
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Secondary"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Secondary Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#2563EB] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Secondary Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Secondary
+              </div>
+              <div
+                data-pencil-name="Secondary Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #2563EB
+              </div>
+            </div>
+          </div>
+          <div
+            data-pencil-name="Ramp Row 2"
+            class="box-border w-full h-fit shrink-0 flex flex-row gap-[14px] justify-start items-start"
+          >
+            <div
+              data-pencil-name="Token Success"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Success Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#059669] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Success Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Success
+              </div>
+              <div
+                data-pencil-name="Success Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #059669
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Danger"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Danger Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#DC2626] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Danger Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Danger
+              </div>
+              <div
+                data-pencil-name="Danger Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #DC2626
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Amber"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Amber Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#D97706] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Amber Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Amber
+              </div>
+              <div
+                data-pencil-name="Amber Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #D97706
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Muted text"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Muted text Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#64748B] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Muted text Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Muted text
+              </div>
+              <div
+                data-pencil-name="Muted text Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #64748B
+              </div>
+            </div>
+            <div
+              data-pencil-name="Token Heading"
+              class="box-border [flex:1_1_0] h-fit flex flex-col gap-[8px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="Heading Swatch"
+                class="box-border w-full h-[50px] shrink-0 bg-[#0F172A] [border:1px_solid_#0F172A14] rounded-[12px]"
+              ></div>
+              <div
+                data-pencil-name="Heading Name"
+                class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+              >
+                Heading
+              </div>
+              <div
+                data-pencil-name="Heading Hex"
+                class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal tracking-[0.4px] text-left [white-space:nowrap]"
+              >
+                #0F172A
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          data-pencil-name="Main Grid"
+          class="box-border w-full h-fit shrink-0 flex flex-row gap-[24px] justify-start items-start"
+        >
+          <div
+            data-pencil-name="Left Column"
+            class="box-border w-[520px] shrink-0 h-fit flex flex-col gap-[20px] justify-start items-start"
+          >
+            <div
+              data-pencil-name="Hero Card Section"
+              class="box-border w-full h-fit shrink-0 flex flex-col gap-[12px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="02 · HERO CARD Header"
+                class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+              >
+                <div
+                  data-pencil-name="02 · HERO CARD Title"
+                  class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.3px] text-left [white-space:nowrap]"
+                >
+                  02 · HERO CARD
+                </div>
+                <div
+                  data-pencil-name="02 · HERO CARD Meta"
+                  class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                >
+                  the money moment
+                </div>
+              </div>
+              <div
+                data-pencil-name="Hero Card — Navy"
+                class="box-border w-[520px] h-[180px] shrink-0 flex flex-row gap-[16px] p-[26px] justify-between items-center bg-[#1E3A5F] rounded-[24px]"
+              >
+                <div
+                  data-pencil-name="Hero Content"
+                  class="box-border w-fit shrink-0 h-fit flex flex-col gap-[8px] justify-start items-start"
+                >
+                  <div
+                    data-pencil-name="Hero Label"
+                    class="text-[11px]/[normal] box-border text-[#FFFFFFB3] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[1.4px] text-left [white-space:nowrap]"
+                  >
+                    TOTAL DITAGIHKAN
+                  </div>
+                  <div
+                    data-pencil-name="Hero Amount"
+                    class="text-[36px]/[normal] box-border text-[#FFFFFF] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[-0.8px] text-left [white-space:nowrap]"
+                  >
+                    Rp 45.000.000
+                  </div>
+                  <div
+                    data-pencil-name="Hero Subtext"
+                    class="text-[13px]/[normal] box-border text-[#FFFFFFBF] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                  >
+                    12 invoice aktif · 3 jatuh tempo minggu ini
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Hero Sparkline"
+                  class="box-border w-fit shrink-0 h-[84px] flex flex-row gap-[6px] justify-start items-end"
+                >
+                  <div
+                    data-pencil-name="Bar 1"
+                    class="box-border w-[6px] shrink-0 h-[22px] bg-[#FFFFFF52] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 2"
+                    class="box-border w-[6px] shrink-0 h-[34px] bg-[#FFFFFF61] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 3"
+                    class="box-border w-[6px] shrink-0 h-[28px] bg-[#FFFFFF70] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 4"
+                    class="box-border w-[6px] shrink-0 h-[44px] bg-[#FFFFFF80] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 5"
+                    class="box-border w-[6px] shrink-0 h-[38px] bg-[#FFFFFF8F] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 6"
+                    class="box-border w-[6px] shrink-0 h-[52px] bg-[#FFFFFF9E] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 7"
+                    class="box-border w-[6px] shrink-0 h-[46px] bg-[#FFFFFFAD] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 8"
+                    class="box-border w-[6px] shrink-0 h-[62px] bg-[#FFFFFFBD] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 9"
+                    class="box-border w-[6px] shrink-0 h-[55px] bg-[#FFFFFFCC] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 10"
+                    class="box-border w-[6px] shrink-0 h-[70px] bg-[#FFFFFFDB] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 11"
+                    class="box-border w-[6px] shrink-0 h-[60px] bg-[#FFFFFFEB] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                  <div
+                    data-pencil-name="Bar 12"
+                    class="box-border w-[6px] shrink-0 h-[78px] bg-[#FFFFFFFA] rounded-[3px_3px_0px_0px]"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <div
+              data-pencil-name="Button States Section"
+              class="box-border w-full h-fit shrink-0 flex flex-col gap-[12px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="03 · BUTTON STATES Header"
+                class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+              >
+                <div
+                  data-pencil-name="03 · BUTTON STATES Title"
+                  class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.3px] text-left [white-space:nowrap]"
+                >
+                  03 · BUTTON STATES
+                </div>
+                <div
+                  data-pencil-name="03 · BUTTON STATES Meta"
+                  class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                >
+                  1 per intent
+                </div>
+              </div>
+              <div
+                data-pencil-name="Button States Card"
+                class="box-border w-full h-fit shrink-0 [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[16px] p-[20px] justify-start items-start bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[16px]"
+              >
+                <div
+                  data-pencil-name="Button Row 1"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-start items-start"
+                >
+                  <div
+                    data-pencil-name="Buat invoice Cell"
+                    class="box-border [flex:1_1_0] h-fit flex flex-col gap-[7px] justify-start items-start"
+                  >
+                    <div
+                      data-pencil-name="Buat invoice Button"
+                      class="box-border w-full h-[36px] shrink-0 flex flex-row gap-0 p-[0px_14px] justify-center items-center bg-[#1E3A5F] rounded-[10px]"
+                    >
+                      <div
+                        data-pencil-name="Buat invoice Label"
+                        class="text-[13px]/[normal] box-border text-[#FFFFFF] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+                      >
+                        Buat invoice
+                      </div>
+                    </div>
+                    <div
+                      data-pencil-name="Buat invoice Caption"
+                      class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                    >
+                      Primary — aksi utama di setiap layar
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="Simpan draft Cell"
+                    class="box-border [flex:1_1_0] h-fit flex flex-col gap-[7px] justify-start items-start"
+                  >
+                    <div
+                      data-pencil-name="Simpan draft Button"
+                      class="box-border w-full h-[36px] shrink-0 flex flex-row gap-0 p-[0px_14px] justify-center items-center bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[10px]"
+                    >
+                      <div
+                        data-pencil-name="Simpan draft Label"
+                        class="text-[13px]/[normal] box-border text-[#334155] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+                      >
+                        Simpan draft
+                      </div>
+                    </div>
+                    <div
+                      data-pencil-name="Simpan draft Caption"
+                      class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                    >
+                      Secondary — aksi pendukung
+                    </div>
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Button Row 2"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-start items-start"
+                >
+                  <div
+                    data-pencil-name="Lihat detail Cell"
+                    class="box-border [flex:1_1_0] h-fit flex flex-col gap-[7px] justify-start items-start"
+                  >
+                    <div
+                      data-pencil-name="Lihat detail Button"
+                      class="box-border w-full h-[36px] shrink-0 flex flex-row gap-0 p-[0px_14px] justify-center items-center bg-[#FFFFFF00] rounded-[10px]"
+                    >
+                      <div
+                        data-pencil-name="Lihat detail Label"
+                        class="text-[13px]/[normal] box-border text-[#2563EB] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+                      >
+                        Lihat detail
+                      </div>
+                    </div>
+                    <div
+                      data-pencil-name="Lihat detail Caption"
+                      class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                    >
+                      Ghost — aksi tersier &amp; tautan
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="Hapus invoice Cell"
+                    class="box-border [flex:1_1_0] h-fit flex flex-col gap-[7px] justify-start items-start"
+                  >
+                    <div
+                      data-pencil-name="Hapus invoice Button"
+                      class="box-border w-full h-[36px] shrink-0 flex flex-row gap-0 p-[0px_14px] justify-center items-center bg-[#DC2626] rounded-[10px]"
+                    >
+                      <div
+                        data-pencil-name="Hapus invoice Label"
+                        class="text-[13px]/[normal] box-border text-[#FFFFFF] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+                      >
+                        Hapus invoice
+                      </div>
+                    </div>
+                    <div
+                      data-pencil-name="Hapus invoice Caption"
+                      class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                    >
+                      Danger — aksi destruktif
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              data-pencil-name="Metric Anatomy Section"
+              class="box-border w-full h-fit shrink-0 flex flex-col gap-[12px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="07 · METRIC CARD Header"
+                class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+              >
+                <div
+                  data-pencil-name="Metric Title"
+                  class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.3px] text-left [white-space:nowrap]"
+                >
+                  07 · METRIC CARD ANATOMY
+                </div>
+                <div
+                  data-pencil-name="Metric Meta"
+                  class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                >
+                  240 × 140 · 16px radius
+                </div>
+              </div>
+              <div
+                data-pencil-name="Metric Anatomy"
+                class="box-border w-[520px] h-[202px] shrink-0 relative"
+              >
+                <div
+                  data-pencil-name="Metric Card"
+                  class="box-border w-[240px] h-[140px] [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] absolute flex flex-col gap-0 p-[18px] justify-between items-start bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[16px] [z-index:0]"
+                >
+                  <div
+                    data-pencil-name="Metric Top Row"
+                    class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+                  >
+                    <div
+                      data-pencil-name="Metric Label"
+                      class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.9px] text-left [white-space:nowrap]"
+                    >
+                      TOTAL DIBAYAR
+                    </div>
+                    <svg
+                      data-pencil-name="Metric Icon"
+                      data-icon-name="wallet"
+                      data-icon-set="lucide"
+                      viewBox="0 0 13.99993896484375 14"
+                      preserveAspectRatio="xMidYMid meet"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="box-border w-[16px] shrink-0 h-[16px]"
+                    >
+                      <path
+                        d="M2.60449 1.20313q-0.50586 0.08545-0.87842 0.43749-0.36914 0.34863-0.50927 0.86475-0.02734 0.08545-0.02735 0.71436l-0.01367 3.78027 0.01367 3.78027q0 0.62891 0.02735 0.71436 0.2666 0.98096 1.26123 1.28857l0.12646 0.04102 8.28858 0q0.76904 0 0.99121-0.02734 0.15723-0.01367 0.25293-0.07178l0.0581-0.02735q0.15381-0.06836 0.29395-0.20849 0.14014-0.14014 0.20849-0.29395l0.01368-0.01367q0.07178-0.12647 0.08545-0.21191 0.02734-0.09912 0.02734-0.33496l0-1.8628 0.12646-0.09912q0.32129-0.23584 0.43409-0.6289 0.01367-0.06836 0.02734-0.22559l0-0.65625q0-0.57422-0.00684-0.68701-0.00683-0.11279-0.03418-0.2085-0.04443-0.14014-0.09228-0.229-0.04785-0.09229-0.17432-0.23242-0.12646-0.14014-0.21191-0.18457l-0.06836-0.05469-0.01367-2.0166q0-0.16748-0.02735-0.25293-0.07178-0.18115-0.21191-0.35547-0.14014-0.17432-0.29395-0.27344-0.22217-0.12646-0.48877-0.15381l-0.11279-0.01367-0.01367-0.68701q0-0.48877-0.00684-0.6084-0.00683-0.11963-0.03418-0.20166-0.05811-0.15381-0.12304-0.25977-0.06152-0.10596-0.18457-0.23242-0.25293-0.24951-0.54688-0.30761-0.12647-0.02734-4.07422-0.02735-3.94775 0-4.08789 0.02735z m7.89551 1.70898l0 0.58789-7.68701 0-0.0957-0.04102q-0.15381-0.05811-0.26661-0.19824-0.11279-0.14014-0.11279-0.34863 0-0.12646 0.05469-0.23926 0.05811-0.12646 0.17431-0.21533 0.11963-0.09229 0.25977-0.11963 0.08545 0 3.87939-0.01367l3.79395 0 0 0.58789z m-8.02197 1.69531q0.11279 0.02734 0.25293 0.04785 0.14014 0.02051 4.54931 0.02051l4.39551 0 0 1.75-0.7417 0q-0.58789 0-0.72119 0.01367-0.1333 0.01367-0.32812 0.09912-0.23926 0.08203-0.46485 0.25977-0.22217 0.17432-0.3623 0.38281-0.33496 0.50586-0.30078 1.08692 0.03418 0.58105 0.40332 1.0288 0.37256 0.44775 0.97412 0.5879 0.12646 0.02734 0.82715 0.02734l0.71435 0.01367 0 1.75-4.38183 0q-4.38184 0-4.48096-0.02734-0.29395-0.05811-0.43408-0.33496l-0.04102-0.09913 0-6.11816q0-0.5332 0.01367-0.51953l0.12647 0.03076z m9.77197 3.55469l0 0.58789-1.90381-0.01367-0.09912-0.04102q-0.0957-0.04443-0.17432-0.1333-0.0752-0.09229-0.11963-0.18799-0.04102-0.09912-0.03417-0.23242 0.00684-0.1333 0.04785-0.21875 0.07178-0.12646 0.18115-0.21533 0.11279-0.09229 0.25293-0.10596 0.09912-0.02734 0.96728-0.02734l0.88184 0 0 0.58789z"
+                        fill="#64748B"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div
+                    data-pencil-name="Metric Value"
+                    class="text-[22px]/[normal] box-border text-[#059669] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[-0.5px] text-left [white-space:nowrap]"
+                  >
+                    Rp 22.500.000
+                  </div>
+                  <div
+                    data-pencil-name="Metric Caption"
+                    class="text-[12px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                  >
+                    Dari riwayat pembayaran
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Label Callout"
+                  class="text-[10px]/[normal] box-border w-[80px] absolute left-0 top-[58px] text-[#475569] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.8px] text-right [z-index:1]"
+                >
+                  LABEL
+                </div>
+                <div
+                  data-pencil-name="Label Leader"
+                  class="box-border w-[50px] h-[1px] absolute left-[86px] top-[65px] bg-[#CBD5E1] [z-index:2]"
+                ></div>
+                <div
+                  data-pencil-name="Label Dot"
+                  class="box-border w-[5px] h-[5px] absolute left-[138px] top-[63px] bg-[#94A3B8] rounded-[50%] [z-index:3]"
+                ></div>
+                <div
+                  data-pencil-name="Value Callout"
+                  class="text-[10px]/[normal] box-border w-[80px] absolute left-0 top-[95px] text-[#475569] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.8px] text-right [z-index:4]"
+                >
+                  VALUE
+                </div>
+                <div
+                  data-pencil-name="Value Leader"
+                  class="box-border w-[50px] h-[1px] absolute left-[86px] top-[109px] bg-[#CBD5E1] [z-index:5]"
+                ></div>
+                <div
+                  data-pencil-name="Value Dot"
+                  class="box-border w-[5px] h-[5px] absolute left-[138px] top-[107px] bg-[#94A3B8] rounded-[50%] [z-index:6]"
+                ></div>
+                <div
+                  data-pencil-name="Caption Callout"
+                  class="text-[10px]/[normal] box-border w-[80px] absolute left-0 top-[147px] text-[#475569] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.8px] text-right [z-index:7]"
+                >
+                  CAPTION
+                </div>
+                <div
+                  data-pencil-name="Caption Leader"
+                  class="box-border w-[50px] h-[1px] absolute left-[86px] top-[154px] bg-[#CBD5E1] [z-index:8]"
+                ></div>
+                <div
+                  data-pencil-name="Caption Dot"
+                  class="box-border w-[5px] h-[5px] absolute left-[138px] top-[152px] bg-[#94A3B8] rounded-[50%] [z-index:9]"
+                ></div>
+                <div
+                  data-pencil-name="Icon Leader"
+                  class="box-border w-[46px] h-[1px] absolute left-[384px] top-[65px] bg-[#CBD5E1] [z-index:10]"
+                ></div>
+                <div
+                  data-pencil-name="Icon Dot"
+                  class="box-border w-[5px] h-[5px] absolute left-[379px] top-[63px] bg-[#94A3B8] rounded-[50%] [z-index:11]"
+                ></div>
+                <div
+                  data-pencil-name="Icon Callout"
+                  class="text-[10px]/[normal] box-border absolute left-[436px] top-[58px] text-[#475569] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.8px] text-left [white-space:nowrap] [z-index:12]"
+                >
+                  ICON
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            data-pencil-name="Right Column"
+            class="box-border [flex:1_1_0] h-fit flex flex-col gap-[20px] justify-start items-start"
+          >
+            <div
+              data-pencil-name="Type Scale Section"
+              class="box-border w-full h-fit shrink-0 flex flex-col gap-[12px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="04 · TYPE SCALE Header"
+                class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+              >
+                <div
+                  data-pencil-name="04 · TYPE SCALE Title"
+                  class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.3px] text-left [white-space:nowrap]"
+                >
+                  04 · TYPE SCALE
+                </div>
+                <div
+                  data-pencil-name="04 · TYPE SCALE Meta"
+                  class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                >
+                  6 roles · headings → money
+                </div>
+              </div>
+              <div
+                data-pencil-name="Type Scale Card"
+                class="box-border w-full h-fit shrink-0 [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[14px] p-[24px] justify-start items-start bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[16px]"
+              >
+                <div
+                  data-pencil-name="H1 Row"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-between items-end"
+                >
+                  <div
+                    data-pencil-name="H1 Sample"
+                    class="text-[28px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[-0.6px] text-left [white-space:nowrap]"
+                  >
+                    Ringkasan tagihan
+                  </div>
+                  <div
+                    data-pencil-name="H1 Meta"
+                    class="text-[10px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-medium tracking-[0.6px] text-left [white-space:nowrap]"
+                  >
+                    28 / 700
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="H2 Row"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-between items-end"
+                >
+                  <div
+                    data-pencil-name="H2 Sample"
+                    class="text-[18px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+                  >
+                    Tagihan vs pembayaran
+                  </div>
+                  <div
+                    data-pencil-name="H2 Meta"
+                    class="text-[10px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-medium tracking-[0.6px] text-left [white-space:nowrap]"
+                  >
+                    18 / 600
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Body Row"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-between items-end"
+                >
+                  <div
+                    data-pencil-name="Body Sample"
+                    class="text-[14px]/[normal] box-border [flex:1_1_0] text-[#334155] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left"
+                  >
+                    Kirim invoice, pantau pembayaran, dan kelola klien dalam satu dasbor.
+                  </div>
+                  <div
+                    data-pencil-name="Body Meta"
+                    class="text-[10px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-medium tracking-[0.6px] text-left [white-space:nowrap]"
+                  >
+                    14 / 400
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Label Row"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-between items-end"
+                >
+                  <div
+                    data-pencil-name="Label Sample"
+                    class="text-[11px]/[15px] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold text-left [white-space:nowrap]"
+                  >
+                    TOTAL DIBAYAR
+                  </div>
+                  <div
+                    data-pencil-name="Label Meta"
+                    class="text-[10px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-medium tracking-[0.6px] text-left [white-space:nowrap]"
+                  >
+                    11 / 600 · uppercase
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Caption Row"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-between items-end"
+                >
+                  <div
+                    data-pencil-name="Caption Sample"
+                    class="text-[12px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                  >
+                    Dari riwayat pembayaran
+                  </div>
+                  <div
+                    data-pencil-name="Caption Meta"
+                    class="text-[10px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-medium tracking-[0.6px] text-left [white-space:nowrap]"
+                  >
+                    12 / 400
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Money Row"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[16px] justify-between items-end"
+                >
+                  <div
+                    data-pencil-name="Money Sample"
+                    class="text-[24px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[-0.6px] text-left [white-space:nowrap]"
+                  >
+                    Rp 4.500.000
+                  </div>
+                  <div
+                    data-pencil-name="Money Meta"
+                    class="text-[10px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-medium tracking-[0.6px] text-left [white-space:nowrap]"
+                  >
+                    24 / 700
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Type Footer Rule"
+                  class="box-border w-full h-[1px] shrink-0 bg-[#EEF0F3]"
+                ></div>
+                <div
+                  data-pencil-name="Type Footer"
+                  class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                >
+                  Plus Jakarta Sans · 400 / 500 / 600 / 700 · never below 11px
+                </div>
+              </div>
+            </div>
+            <div
+              data-pencil-name="Radius Section"
+              class="box-border w-full h-fit shrink-0 flex flex-col gap-[12px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="05 · RADIUS &amp; SHADOW Header"
+                class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+              >
+                <div
+                  data-pencil-name="05 · RADIUS &amp; SHADOW Title"
+                  class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.3px] text-left [white-space:nowrap]"
+                >
+                  05 · RADIUS &amp; SHADOW
+                </div>
+                <div
+                  data-pencil-name="05 · RADIUS &amp; SHADOW Meta"
+                  class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                >
+                  8 → 9999
+                </div>
+              </div>
+              <div
+                data-pencil-name="Radius Card"
+                class="box-border w-full h-fit shrink-0 [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[16px] p-[20px] justify-start items-start bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[16px]"
+              >
+                <div
+                  data-pencil-name="Radius Samples"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[12px] justify-start items-start"
+                >
+                  <div
+                    data-pencil-name="Radius 8"
+                    class="box-border [flex:1_1_0] h-[76px] [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[3px] justify-center items-center bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[8px]"
+                  >
+                    <div
+                      data-pencil-name="Radius 8 Value"
+                      class="text-[16px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold text-left [white-space:nowrap]"
+                    >
+                      8px
+                    </div>
+                    <div
+                      data-pencil-name="Radius 8 Role"
+                      class="text-[9px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[1px] text-left [white-space:nowrap]"
+                    >
+                      SMALL
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="Radius 12"
+                    class="box-border [flex:1_1_0] h-[76px] [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[3px] justify-center items-center bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[12px]"
+                  >
+                    <div
+                      data-pencil-name="Radius 12 Value"
+                      class="text-[16px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold text-left [white-space:nowrap]"
+                    >
+                      12px
+                    </div>
+                    <div
+                      data-pencil-name="Radius 12 Role"
+                      class="text-[9px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[1px] text-left [white-space:nowrap]"
+                    >
+                      INPUT
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="Radius 16"
+                    class="box-border [flex:1_1_0] h-[76px] [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[3px] justify-center items-center bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[16px]"
+                  >
+                    <div
+                      data-pencil-name="Radius 16 Value"
+                      class="text-[16px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold text-left [white-space:nowrap]"
+                    >
+                      16px
+                    </div>
+                    <div
+                      data-pencil-name="Radius 16 Role"
+                      class="text-[9px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[1px] text-left [white-space:nowrap]"
+                    >
+                      CARD
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="Radius 24"
+                    class="box-border [flex:1_1_0] h-[76px] [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[3px] justify-center items-center bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[24px]"
+                  >
+                    <div
+                      data-pencil-name="Radius 24 Value"
+                      class="text-[16px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold text-left [white-space:nowrap]"
+                    >
+                      24px
+                    </div>
+                    <div
+                      data-pencil-name="Radius 24 Role"
+                      class="text-[9px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[1px] text-left [white-space:nowrap]"
+                    >
+                      HERO
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="Radius 9999"
+                    class="box-border [flex:1_1_0] h-[76px] [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[3px] justify-center items-center bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[9999px]"
+                  >
+                    <div
+                      data-pencil-name="Radius 9999 Value"
+                      class="text-[16px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold text-left [white-space:nowrap]"
+                    >
+                      9999px
+                    </div>
+                    <div
+                      data-pencil-name="Radius 9999 Role"
+                      class="text-[9px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[1px] text-left [white-space:nowrap]"
+                    >
+                      PILL
+                    </div>
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Shadow Spec"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[8px] justify-start items-center"
+                >
+                  <div
+                    data-pencil-name="Shadow Chip"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_7px] justify-start items-start bg-[#EEF2F7] rounded-[5px]"
+                  >
+                    <div
+                      data-pencil-name="Shadow Chip Label"
+                      class="text-[9px]/[normal] box-border text-[#475569] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[0.9px] text-left [white-space:nowrap]"
+                    >
+                      SHADOW CARD
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="Shadow Spec Text"
+                    class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                  >
+                    0 1px 2px + 0 8px 24px rgba(15,23,42,0.06)
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              data-pencil-name="Status Pills Section"
+              class="box-border w-full h-fit shrink-0 flex flex-col gap-[12px] justify-start items-start"
+            >
+              <div
+                data-pencil-name="06 · STATUS PILLS Header"
+                class="box-border w-full h-fit shrink-0 flex flex-row gap-0 justify-between items-center"
+              >
+                <div
+                  data-pencil-name="06 · STATUS PILLS Title"
+                  class="text-[12px]/[normal] box-border text-[#0F172A] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-bold tracking-[1.3px] text-left [white-space:nowrap]"
+                >
+                  06 · STATUS PILLS
+                </div>
+                <div
+                  data-pencil-name="06 · STATUS PILLS Meta"
+                  class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-normal text-left [white-space:nowrap]"
+                >
+                  11px uppercase · 9999px
+                </div>
+              </div>
+              <div
+                data-pencil-name="Status Pills Card"
+                class="box-border w-full h-fit shrink-0 [box-shadow:0px_1px_2px_#0F172A0F,_0px_8px_24px_#0F172A0F] flex flex-col gap-[12px] p-[20px] justify-start items-start bg-[#FFFFFF] [border:1px_solid_#E4E7EB] rounded-[16px]"
+              >
+                <div
+                  data-pencil-name="Pill Row 1"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[10px] justify-start items-center"
+                >
+                  <div
+                    data-pencil-name="DRAFT Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#F1F5F9] rounded-[9999px]"
+                  >
+                    <div
+                      data-pencil-name="DRAFT Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#64748B] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap]"
+                    >
+                      DRAFT
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="ISSUED Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#EFF6FF] rounded-[9999px]"
+                  >
+                    <div
+                      data-pencil-name="ISSUED Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#1D4ED8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap]"
+                    >
+                      ISSUED
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="SENT Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#ECFEFF] rounded-[9999px]"
+                  >
+                    <div
+                      data-pencil-name="SENT Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#0E7490] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap]"
+                    >
+                      SENT
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="PARTIALLY_PAID Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#FFFBEB] rounded-[9999px]"
+                  >
+                    <div
+                      data-pencil-name="PARTIALLY_PAID Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#D97706] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap]"
+                    >
+                      PARTIALLY_PAID
+                    </div>
+                  </div>
+                </div>
+                <div
+                  data-pencil-name="Pill Row 2"
+                  class="box-border w-full h-fit shrink-0 flex flex-row gap-[10px] justify-start items-center"
+                >
+                  <div
+                    data-pencil-name="PAID Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#ECFDF5] rounded-[9999px]"
+                  >
+                    <div
+                      data-pencil-name="PAID Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#059669] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap]"
+                    >
+                      PAID
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="OVERDUE Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#FEF2F2] rounded-[9999px]"
+                  >
+                    <div
+                      data-pencil-name="OVERDUE Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#DC2626] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap]"
+                    >
+                      OVERDUE
+                    </div>
+                  </div>
+                  <div
+                    data-pencil-name="CANCELLED Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#F1F5F9] rounded-[9999px] relative"
+                  >
+                    <div
+                      data-pencil-name="CANCELLED Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap] relative [z-index:0]"
+                    >
+                      CANCELLED
+                    </div>
+                    <div
+                      data-pencil-name="Strike Rule"
+                      class="box-border w-[72px] h-[1px] absolute left-[12px] top-[11px] bg-[#94A3B8] [z-index:1]"
+                    ></div>
+                  </div>
+                  <div
+                    data-pencil-name="REVISED Pill"
+                    class="box-border w-fit shrink-0 h-fit flex flex-row gap-0 p-[4px_12px] justify-start items-start bg-[#F1F5F9] rounded-[9999px] relative"
+                  >
+                    <div
+                      data-pencil-name="REVISED Pill Label"
+                      class="text-[11px]/[normal] box-border text-[#94A3B8] font-['Plus_Jakarta_Sans',system-ui,sans-serif] font-semibold tracking-[0.6px] text-left [white-space:nowrap] relative [z-index:0]"
+                    >
+                      REVISED
+                    </div>
+                    <div
+                      data-pencil-name="Strike Rule"
+                      class="box-border w-[51px] h-[1px] absolute left-[12px] top-[11px] bg-[#94A3B8] [z-index:1]"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+      </div>
+  </body>
+</html>

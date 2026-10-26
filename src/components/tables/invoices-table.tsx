@@ -525,15 +525,15 @@ export function InvoicesTable({
               : "Belum ada invoice di organisasi ini."}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-xs">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+                <TableRow key={headerGroup.id} className="border-b border-border hover:bg-transparent">
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="h-10 px-3 text-xs font-medium tracking-wide text-muted-foreground"
+                      className="h-10 px-3 text-[11px] font-semibold uppercase tracking-[0.8px] text-muted-foreground/80"
                     >
                       {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                     </TableHead>
@@ -543,9 +543,9 @@ export function InvoicesTable({
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} className="border-b border-border/60 last:border-b-0">
                   {row.getAllCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-2.5 px-3">
+                    <TableCell key={cell.id} className="h-12 py-2.5 px-3">
                       <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}

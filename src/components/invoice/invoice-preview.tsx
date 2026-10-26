@@ -68,7 +68,7 @@ const DEFAULT_DATA: InvoicePreviewData = {
   // Token form of the light-mode accent (--primary): the sample document is
   // always light, so this default must not follow the app theme. No hex in
   // components — the value still reaches the accent slots as plain CSS.
-  primaryColor: "hsl(221 83% 53%)",
+  primaryColor: "hsl(217 51% 24%)",
   code: "INV",
   numberPattern: "INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}",
   defaultTaxMode: "EXCLUSIVE",

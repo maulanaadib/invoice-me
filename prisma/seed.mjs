@@ -394,7 +394,7 @@ async function main() {
       organizationId: sbOrg.id,
       name: "Karya Nusantara",
       code: "SB",
-      address: "Jl. Sudirman No. 1, Jakarta",
+      address: "Jl. Kaliurang KM 5, Yogyakarta",
       whatsapp: "0812 3456 7890",
       numberPattern: "INV/{CODE}/{ROMAN_MONTH}/{YYYY}/{SEQ:3}",
       defaultStampMode: "E_METERAI",

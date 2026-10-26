@@ -13,6 +13,7 @@ import {
   Undo2Icon,
 } from "lucide-react";
 import type { DashboardActivity } from "@/modules/dashboard/service";
+import { cn } from "cn";
 
 const ACTION_ICON: Record<string, typeof StampIcon> = {
   INVOICE_DRAFT_CREATED: FilePlus2Icon,
@@ -46,21 +47,34 @@ export function ActivityTimeline({ items }: { items: DashboardActivity[] }) {
 
   return (
     <ol className="flex flex-col">
-      {items.map((item, index) => {
+      {items.map((item) => {
         const Icon = item.action === "PAYMENT_RECORDED" && item.label.includes("reversal")
           ? Undo2Icon
           : ACTION_ICON[item.action] ?? StampIcon;
-        const isLast = index === items.length - 1;
+        // Frame 01 activity card: each event is an icon badge (rounded square,
+        // navy-tinted surface) rather than a dot on a line.
+        const tone =
+          item.action === "PAYMENT_RECORDED"
+            ? item.label.includes("reversal")
+              ? "border-border bg-muted text-warning"
+              : "bg-success/10 text-success"
+            : item.action === "INVOICE_ISSUED"
+              ? "bg-primary/10 text-primary"
+              : item.action === "INVOICE_SENT"
+                ? "bg-[#ECFEFF] text-[#0E7490] dark:bg-[#123037]"
+                : item.action === "INVOICE_CANCELLED"
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-muted text-muted-foreground";
         return (
-          <li key={item.id} className="relative flex gap-3 pb-4 last:pb-0">
-            {!isLast ? (
-              <span
-                className="absolute top-7 left-3 w-px bg-border"
-                aria-hidden="true"
-              />
-            ) : null}
-            <span className="relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-muted/50">
-              <Icon className="size-3.5 text-muted-foreground" aria-hidden="true" />
+          <li key={item.id} className="flex gap-3 pb-4 last:pb-0">
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                tone,
+              )}
+              aria-hidden="true"
+            >
+              <Icon className="size-4" />
             </span>
             <div className="flex min-w-0 flex-col gap-0.5 pt-0.5">
               <span className="text-sm">

@@ -1151,9 +1151,9 @@ export function InvoiceEditor({
           </p>
         </div>
       ) : null}
-      <div className="overflow-auto rounded-lg border border-border bg-muted/20 p-4">
+      <div className="overflow-auto rounded-xl border border-border bg-muted/20 p-4">
         {previewData ? (
-          <InvoiceRenderer data={previewData} className="mx-auto shadow-sm" />
+          <InvoiceRenderer data={previewData} className="mx-auto shadow-md" />
         ) : (
           <p className="py-12 text-center text-sm text-muted-foreground">
             Pilih profil invoice untuk melihat pratinjau.
@@ -1165,13 +1165,16 @@ export function InvoiceEditor({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Desktop: split-screen (form left, sticky A4 preview right).
-          Tablet/mobile: tabs Form / Pratinjau (spec Design). */}
-      <div className="hidden gap-8 lg:flex">
-        <div className="min-w-0 flex-1">{formSection}</div>
+      <div className="hidden gap-8 xl:flex">
+        {/* v4 (frame 04): the form is a white card on the ivory page; the
+            preview canvas stays ivory behind the A4 sheet. */}
+        <div className="min-w-0 flex-1 rounded-xl border border-border bg-card p-6 shadow-xs">
+          {formSection}
+        </div>
         <aside className="w-[46%] min-w-0 shrink-0">{previewSection}</aside>
       </div>
-      <div className="lg:hidden">
+      {/* Tablet/mobile: tabs Form / Pratinjau (spec Design). */}
+      <div className="xl:hidden">
         <Tabs defaultValue="form">
           <TabsList>
             <TabsTrigger value="form">Form</TabsTrigger>

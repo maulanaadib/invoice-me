@@ -4,75 +4,76 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── CSS Custom Property Tokens (ui-context.md — Neutral + Blue Accent) ─── */
+/* ─── CSS Custom Property Tokens (ui-context.md — Bento Kausal light v4) ─── */
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(240 10% 3.9%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(240 10% 3.9%);
+  --background: hsl(60 9% 98%); /* ivory #FAF9F7 — page */
+  --foreground: hsl(217 33% 11%); /* ink #0F172A */
+  --card: hsl(0 0% 100%); /* #FFFFFF */
+  --card-foreground: hsl(217 33% 11%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(240 10% 3.9%);
-  --primary: hsl(221 83% 53%);
+  --popover-foreground: hsl(217 33% 11%);
+  --primary: hsl(217 51% 24%); /* navy #1E3A5F */
   --primary-foreground: hsl(0 0% 100%);
   --secondary: hsl(240 4.8% 95.9%);
-  --secondary-foreground: hsl(240 10% 3.9%);
-  --muted: hsl(240 4.8% 95.9%);
-  --muted-foreground: hsl(240 3.8% 46.1%);
-  --accent: hsl(240 4.8% 95.9%);
-  --accent-foreground: hsl(240 10% 3.9%);
-  --destructive: hsl(0 72% 51%);
+  --secondary-foreground: hsl(217 33% 11%);
+  --muted: hsl(210 40% 96.1%); /* #F1F5F9 */
+  --muted-foreground: hsl(215 16% 47%); /* #64748B */
+  --accent: hsl(210 40% 96.1%); /* #F1F5F9 */
+  --accent-foreground: hsl(217 33% 11%);
+  --destructive: hsl(0 72% 51%); /* #DC2626 */
   --destructive-foreground: hsl(0 0% 100%);
-  --success: hsl(142 71% 45%);
-  --warning: hsl(38 92% 50%);
-  --border: hsl(240 5.9% 90%);
-  --input: hsl(240 5.9% 90%);
-  --ring: hsl(221 83% 53%);
-  --radius: 0.625rem;
+  --success: hsl(160 84% 39%); /* emerald #059669 */
+  --warning: hsl(38 92% 50%); /* #B45309 text */
+  --border: hsl(220 13% 91%); /* #E4E7EB */
+  --input: hsl(220 13% 91%);
+  --ring: hsl(217 51% 24%); /* navy */
+  --radius: 1rem; /* 16px — skala: sm 8 / md 12 / lg 16 / xl 20 (ui-context) */
 
   /* Sidebar */
-  --sidebar: hsl(240 5.9% 97%);
-  --sidebar-foreground: hsl(240 10% 3.9%);
-  --sidebar-primary: hsl(221 83% 53%);
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(217 33% 11%);
+  --sidebar-primary: hsl(217 51% 24%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 10% 3.9%);
-  --sidebar-border: hsl(240 5.9% 90%);
-  --sidebar-ring: hsl(221 83% 53%);
+  --sidebar-accent: hsl(210 40% 96.1%); /* #F1F5F9 */
+  --sidebar-accent-foreground: hsl(217 33% 11%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: hsl(217 51% 24%);
 }
 
 .dark {
-  --background: hsl(240 10% 3.9%);
-  --foreground: hsl(240 5% 96%);
-  --card: hsl(240 10% 5.5%);
-  --card-foreground: hsl(240 5% 96%);
-  --popover: hsl(240 10% 5.5%);
-  --popover-foreground: hsl(240 5% 96%);
-  --primary: hsl(217 91% 60%);
-  --primary-foreground: hsl(240 10% 3.9%);
-  --secondary: hsl(240 3.7% 15.9%);
-  --secondary-foreground: hsl(240 5% 96%);
-  --muted: hsl(240 3.7% 15.9%);
-  --muted-foreground: hsl(240 5% 64.9%);
-  --accent: hsl(240 3.7% 15.9%);
-  --accent-foreground: hsl(240 5% 96%);
+  /* BR-2: dark mode tetap ada (feature GA) — di-adjust ke navy tint, bukan zinc */
+  --background: hsl(217 33% 8%);
+  --foreground: hsl(60 9% 96%);
+  --card: hsl(217 30% 11%);
+  --card-foreground: hsl(60 9% 96%);
+  --popover: hsl(217 30% 11%);
+  --popover-foreground: hsl(60 9% 96%);
+  --primary: hsl(217 51% 65%); /* navy light-on-dark */
+  --primary-foreground: hsl(217 33% 8%);
+  --secondary: hsl(217 20% 16%);
+  --secondary-foreground: hsl(60 9% 96%);
+  --muted: hsl(217 20% 16%);
+  --muted-foreground: hsl(217 10% 65%);
+  --accent: hsl(217 20% 16%);
+  --accent-foreground: hsl(60 9% 96%);
   --destructive: hsl(0 63% 45%);
-  --destructive-foreground: hsl(240 5% 96%);
-  --success: hsl(142 69% 45%);
+  --destructive-foreground: hsl(60 9% 96%);
+  --success: hsl(160 70% 45%);
   --warning: hsl(38 92% 50%);
-  --border: hsl(240 3.7% 18%);
-  --input: hsl(240 3.7% 18%);
-  --ring: hsl(217 91% 60%);
+  --border: hsl(217 20% 22%);
+  --input: hsl(217 20% 22%);
+  --ring: hsl(217 51% 65%);
 
   /* Sidebar */
-  --sidebar: hsl(240 10% 5.5%);
-  --sidebar-foreground: hsl(240 5% 96%);
-  --sidebar-primary: hsl(217 91% 60%);
-  --sidebar-primary-foreground: hsl(240 10% 3.9%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 5% 96%);
-  --sidebar-border: hsl(240 3.7% 18%);
-  --sidebar-ring: hsl(217 91% 60%);
+  --sidebar: hsl(217 30% 11%);
+  --sidebar-foreground: hsl(60 9% 96%);
+  --sidebar-primary: hsl(217 51% 65%);
+  --sidebar-primary-foreground: hsl(217 33% 8%);
+  --sidebar-accent: hsl(217 20% 16%);
+  --sidebar-accent-foreground: hsl(60 9% 96%);
+  --sidebar-border: hsl(217 20% 22%);
+  --sidebar-ring: hsl(217 51% 65%);
 }
 
 /* ─── Tailwind theme mapping ─────────────────────────────────────────────── */
@@ -110,18 +111,18 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
-  --radius-xs: calc(var(--radius) * 0.4);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.6);
+  --radius-xs: calc(var(--radius) * 0.5); /* 8px  — inner controls, badges */
+  --radius-sm: calc(var(--radius) * 0.75); /* 12px — inputs, small cards */
+  --radius-md: var(--radius); /* 16px — default cards */
+  --radius-lg: var(--radius); /* 16px */
+  --radius-xl: calc(var(--radius) * 1.25); /* 20px — hero / outer bento */
 
-  /* Subtle elevation — soft neutral shadows, no heavy drop shadows */
-  --shadow-xs: 0 1px 2px 0 hsl(240 10% 3.9% / 0.05);
-  --shadow-sm: 0 1px 2px 0 hsl(240 10% 3.9% / 0.06), 0 1px 3px 0 hsl(240 10% 3.9% / 0.04);
-  --shadow-md: 0 2px 4px -1px hsl(240 10% 3.9% / 0.06), 0 4px 6px -2px hsl(240 10% 3.9% / 0.05);
-  --shadow-lg: 0 4px 6px -2px hsl(240 10% 3.9% / 0.05), 0 10px 15px -3px hsl(240 10% 3.9% / 0.08);
-  --shadow-xl: 0 8px 10px -4px hsl(240 10% 3.9% / 0.06), 0 20px 25px -5px hsl(240 10% 3.9% / 0.1);
+  /* Layered soft elevation — navy-tinted (v4), no heavy drop shadows */
+  --shadow-xs: 0 1px 2px 0 hsl(217 33% 11% / 0.04), 0 4px 16px 0 hsl(217 33% 11% / 0.06);
+  --shadow-sm: 0 1px 2px 0 hsl(217 33% 11% / 0.04), 0 4px 16px 0 hsl(217 33% 11% / 0.06);
+  --shadow-md: 0 1px 2px 0 hsl(217 33% 11% / 0.05), 0 6px 20px 0 hsl(217 33% 11% / 0.07);
+  --shadow-lg: 0 2px 4px 0 hsl(217 33% 11% / 0.05), 0 12px 28px -4px hsl(217 33% 11% / 0.09);
+  --shadow-xl: 0 4px 8px -2px hsl(217 33% 11% / 0.06), 0 20px 40px -8px hsl(217 33% 11% / 0.12);
 }
 
 /* ─── Base styles ────────────────────────────────────────────────────────── */
@@ -148,13 +149,13 @@
 .invoice-preview {
   color-scheme: light;
   --background: hsl(0 0% 100%);
-  --foreground: hsl(240 10% 3.9%);
+  --foreground: hsl(217 33% 11%);
   --card: hsl(0 0% 100%);
-  --card-foreground: hsl(240 10% 3.9%);
-  --muted: hsl(240 4.8% 95.9%);
-  --muted-foreground: hsl(240 3.8% 46.1%);
-  --border: hsl(240 5.9% 90%);
-  --input: hsl(240 5.9% 90%);
+  --card-foreground: hsl(217 33% 11%);
+  --muted: hsl(210 40% 96.1%);
+  --muted-foreground: hsl(215 16% 47%);
+  --border: hsl(220 13% 91%);
+  --input: hsl(220 13% 91%);
 }
 
 /* ─── Print: always light mode, A4, no nav chrome ───────────────────────── */
@@ -162,12 +163,12 @@
 @media print {
   :root {
     --background: hsl(0 0% 100%);
-    --foreground: hsl(240 10% 3.9%);
+    --foreground: hsl(217 33% 11%);
     --card: hsl(0 0% 100%);
   }
 
   body {
     background-color: white !important;
-    color: hsl(240 10% 3.9%) !important;
+    color: hsl(217 33% 11%) !important;
   }
 }

@@ -68,7 +68,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">
           Halo, {displayName}
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -76,10 +76,13 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <SummaryCards cards={cards} />
+      <SummaryCards
+        cards={cards}
+        billedSeries={series.points.map((point) => Number(point.billed))}
+      />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 ring-border shadow-xs">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="xl:col-span-2 ring-border shadow-xs">
           <CardHeader>
             <CardTitle>Tagihan vs pembayaran</CardTitle>
             <CardDescription>

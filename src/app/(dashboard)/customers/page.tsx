@@ -63,7 +63,10 @@ export default async function CustomersPage({
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Customer</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.8px] text-muted-foreground/80">
+            Master
+          </p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Customer</h1>
           <p className="text-sm text-muted-foreground">
             Master data customer dan PIC untuk penagihan. Soft delete: customer yang dihapus
             tetap tercatat di audit log.

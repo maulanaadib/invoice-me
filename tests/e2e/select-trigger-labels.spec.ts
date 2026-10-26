@@ -140,7 +140,7 @@ test.describe("select trigger labels (card t_5084d0fd)", () => {
   // form copies, so a second popup click in the same page session is flaky.
   // Each select is therefore driven from a FRESH /invoices/new load: the
   // selection persists, then the assert reads the SAME live trigger.
-  const desktopForm = (page: Page) => page.locator("div.hidden.lg\\:flex");
+  const desktopForm = (page: Page) => page.locator("div.hidden.xl\\:flex");
 
   async function openEditor(page: Page) {
     await page.goto("/invoices/new");

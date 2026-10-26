@@ -94,7 +94,10 @@ export default async function InvoicesPage({
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Invoice</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.8px] text-muted-foreground/80">
+            Daftar
+          </p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-[28px]">Invoice</h1>
           <p className="text-sm text-muted-foreground">
             Seluruh invoice organisasi ini — draft sampai yang sudah dilunasi — dalam satu
             halaman.

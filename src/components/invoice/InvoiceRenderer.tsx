@@ -117,13 +117,25 @@ export function InvoiceRenderer({ data, className }: InvoiceRendererProps) {
             </p>
           ) : null}
           {badge ? (
-            <p
-              data-testid="invoice-kind-badge"
-              className="rounded-md px-2 py-1 text-[11px] font-bold tracking-wide text-white"
-              style={{ backgroundColor: accent }}
-            >
-              {badge}
-            </p>
+            /* v4 (frame 03/04): the DP/TERM kind badge is an amber pill — it
+               reads as "partial billing", not as brand accent. Solid dark amber
+               (#B45309) on amber-50 keeps WCAG AA at pill size (4.84:1). */
+            data.invoiceType === "DOWN_PAYMENT" || data.invoiceType === "TERM" ? (
+              <p
+                data-testid="invoice-kind-badge"
+                className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-bold tracking-wide text-[#B45309]"
+              >
+                {badge}
+              </p>
+            ) : (
+              <p
+                data-testid="invoice-kind-badge"
+                className="rounded-md px-2 py-1 text-[11px] font-bold tracking-wide text-white"
+                style={{ backgroundColor: accent }}
+              >
+                {badge}
+              </p>
+            )
           ) : null}
         </div>
       </header>

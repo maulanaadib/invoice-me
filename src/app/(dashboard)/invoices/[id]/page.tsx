@@ -131,7 +131,7 @@ export default async function InvoiceDetailPage({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-mono text-2xl font-semibold tracking-tight">{title}</h1>
+            <h1 className="font-mono text-2xl font-semibold tracking-tight sm:text-[28px]">{title}</h1>
             <InvoiceStatusBadge status={invoice.displayStatus} />
             <Badge variant="secondary">{INVOICE_TYPE_LABELS[invoice.invoiceType]}</Badge>
             {invoice.fromSnapshot ? (

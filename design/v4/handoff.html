@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>invoice-me v4 — Design Handoff (Bento Kausal light)</title>
+    <script>
+      tailwind = { config: { corePlugins: { preflight: false } } };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #E5E7EB; }
+      .frame-card { background: #FAF9F7; border-radius: 16px; box-shadow: 0 8px 30px rgba(15,23,42,0.12); overflow: hidden; }
+      .frame-wrap { overflow-x: auto; padding: 24px; }
+      iframe { border: 0; display: block; margin: 0 auto; background: #FAF9F7; }
+      h1 { color: #0F172A; }
+      .meta { color: #475569; }
+      a { color: #1E3A5F; }
+    </style>
+  </head>
+  <body class="p-[40px]">
+    <h1 class="text-[28px] font-bold mb-[8px]">invoice-me — v4 Design Handoff</h1>
+    <p class="meta text-[14px] mb-[8px]">Bento Kausal light · navy #1E3A5F + emerald #059669 · Plus Jakarta Sans · ivory page #FAF9F7 · radius 16px · layered shadows. Bahasa Indonesia, no emoji, tabular-nums for money.</p>
+    <p class="meta text-[13px] mb-[24px]">Sumber: <code>invoice-me-v4.pen</code> (8 frame) · diekspor <code>html-tailwind</code> · setiap frame di bawah adalah file HTML mandiri (iframe).</p>
+    <div class="flex flex-col gap-[32px]">
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>00 Design tokens</b> <span class="meta">— 1360px</span></div>
+        <div class="frame-wrap"><iframe src="frames/00-design-tokens.html" width="1400" height="1250" loading="lazy"></iframe></div>
+      </div>
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>01 Dashboard</b> <span class="meta">— 1360px</span></div>
+        <div class="frame-wrap"><iframe src="frames/01-dashboard.html" width="1400" height="1250" loading="lazy"></iframe></div>
+      </div>
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>02 Daftar Invoice</b> <span class="meta">— 1360px</span></div>
+        <div class="frame-wrap"><iframe src="frames/02-daftar-invoice.html" width="1400" height="1250" loading="lazy"></iframe></div>
+      </div>
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>03 Detail Invoice</b> <span class="meta">— 1360px</span></div>
+        <div class="frame-wrap"><iframe src="frames/03-detail-invoice.html" width="1400" height="1250" loading="lazy"></iframe></div>
+      </div>
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>04 Editor Invoice</b> <span class="meta">— 1680px</span></div>
+        <div class="frame-wrap"><iframe src="frames/04-editor-invoice.html" width="1720" height="1250" loading="lazy"></iframe></div>
+      </div>
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>05 Customers</b> <span class="meta">— 1360px</span></div>
+        <div class="frame-wrap"><iframe src="frames/05-customers.html" width="1400" height="1250" loading="lazy"></iframe></div>
+      </div>
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>06 Mobile Dashboard</b> <span class="meta">— 390×844</span></div>
+        <div class="frame-wrap"><iframe src="frames/06-mobile-dashboard.html" width="430" height="880" loading="lazy"></iframe></div>
+      </div>
+      <div class="frame-card">
+        <div class="px-[24px] py-[16px] border-b border-[#E4E7EB]"><b>07 Mobile Daftar Invoice</b> <span class="meta">— 390×844</span></div>
+        <div class="frame-wrap"><iframe src="frames/07-mobile-daftar-invoice.html" width="430" height="880" loading="lazy"></iframe></div>
+      </div>
+    </div>
+  </body>
+</html>

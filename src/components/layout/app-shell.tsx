@@ -235,6 +235,18 @@ export function AppShell({
   const isInvoiceEditor =
     pathname === "/invoices/new" || /^\/invoices\/[^/]+\/edit$/.test(pathname);
 
+  // Frame 06/07: a fixed bottom tab bar on mobile with the three primary
+  // destinations (permission-aware — the same visibility flags as the
+  // sidebar). Hidden on the invoice editor (its own tabs own the screen).
+  const visiblePrimaryLinks = NAV_GROUPS.filter((group) => !group.adminOnly).flatMap(
+    (group) => visibleLinks(group.links, navVisibility),
+  );
+  const primaryTabs = ["dashboard", "invoices", "payments", "customers"]
+    .map((segment) =>
+      visiblePrimaryLinks.find((link) => link.href === `/${segment}`),
+    )
+    .filter((link): link is NonNullable<typeof link> => Boolean(link));
+
   // The invoice editor reports unsaved changes through the blocker context —
   // the provider wraps the whole shell so sidebar/topbar navigation is guarded.
   return (
@@ -287,7 +299,7 @@ export function AppShell({
 
         <main
           className={cn(
-            "mx-auto w-full flex-1 px-4 py-8 lg:px-8",
+            "mx-auto w-full flex-1 px-4 pb-24 pt-6 sm:pt-8 lg:px-8 lg:py-8",
             // The split-screen invoice editor owns the widest canvas (form +
             // sticky A4 preview); every other page keeps the reading width.
             isInvoiceEditor ? "max-w-[1680px]" : "max-w-6xl",
@@ -296,6 +308,36 @@ export function AppShell({
           {children}
         </main>
       </div>
+
+      {/* Frame 06/07: fixed bottom tab bar, lg:hidden (sidebar owns ≥lg). */}
+      {primaryTabs.length > 0 && !isInvoiceEditor ? (
+        <nav
+          aria-label="Navigasi utama"
+          className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-stretch border-t border-border bg-card lg:hidden"
+          data-testid="mobile-tab-bar"
+        >
+          {primaryTabs.map((link) => {
+            const active =
+              pathname === link.href || pathname.startsWith(`${link.href}/`);
+            const Icon = link.icon;
+            const label = link.label === "Dashboard" ? "Beranda" : link.label;
+            return (
+              <GuardedLink
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold"
+              >
+                <Icon
+                  aria-hidden="true"
+                  className={cn("size-4", active ? "text-primary" : "text-muted-foreground")}
+                />
+                <span className={active ? "text-primary" : "text-muted-foreground"}>{label}</span>
+              </GuardedLink>
+            );
+          })}
+        </nav>
+      ) : null}
     </div>
     </NavigationBlockerProvider>
   );
